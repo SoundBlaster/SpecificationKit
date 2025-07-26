@@ -151,7 +151,7 @@ provider.setCounter("feature_usage", to: 5)
 provider.recordEvent("user_login")
 provider.recordEvent("purchase_made", at: specificDate)
 
-// Boolean flags  
+// Boolean flags
 provider.setFlag("premium_user", to: true)
 provider.toggleFlag("dark_mode")
 ```
@@ -178,9 +178,9 @@ XCTAssertTrue(spec.isSatisfiedBy(context))
 ```swift
 struct OnboardingSpec: Specification {
     typealias T = EvaluationContext
-    
+
     private let composite: AnySpecification<EvaluationContext>
-    
+
     init() {
         let userEngaged = PredicateSpec<EvaluationContext>.counter(
             "screen_views", .greaterThanOrEqual, 3
@@ -189,12 +189,12 @@ struct OnboardingSpec: Specification {
         let notCompletedYet = PredicateSpec<EvaluationContext>.flag(
             "onboarding_completed", equals: false
         )
-        
+
         composite = AnySpecification(
             userEngaged.and(firstWeek).and(notCompletedYet)
         )
     }
-    
+
     func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
         composite.isSatisfiedBy(context)
     }
@@ -219,13 +219,13 @@ let complexSpec = Satisfies<EvaluationContext>.builder(
 struct ContentView: View {
     @Satisfies(using: CompositeSpec.promoBanner)
     var shouldShowPromo: Bool
-    
+
     var body: some View {
         VStack {
             if shouldShowPromo {
                 PromoBannerView()
             }
-            
+
             MainContentView()
         }
     }
@@ -245,12 +245,12 @@ class MyFeatureTests: XCTestCase {
         )
         .withCounter("banner_shown", value: 1)
         .withEvent("last_banner", date: Date().addingTimeInterval(-3600))
-        
+
         let spec = CompositeSpec.promoBanner
-        
+
         // When
         let result = spec.isSatisfiedBy(mockProvider.currentContext())
-        
+
         // Then
         XCTAssertTrue(result)
         XCTAssertEqual(mockProvider.contextRequestCount, 1)
@@ -279,7 +279,7 @@ SpecificationKit follows a clean, layered architecture:
 
 ```
 ┌─────────────────────────────────────┐
-│           Application Layer          │
+│           Application Layer         │
 │      (@Satisfies, SwiftUI Views)    │
 ├─────────────────────────────────────┤
 │         Property Wrapper Layer      │
@@ -295,7 +295,7 @@ SpecificationKit follows a clean, layered architecture:
 │    (EvaluationContext, Providers)   │
 ├─────────────────────────────────────┤
 │             Core Layer              │
-│   (Specification Protocol, Operators)│
+│ (Specification Protocol, Operators) │
 └─────────────────────────────────────┘
 ```
 
