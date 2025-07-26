@@ -71,7 +71,7 @@ extension MaxCountSpec {
     /// Creates a specification for daily limits (assuming counter tracks daily occurrences)
     /// - Parameters:
     ///   - counterKey: The counter key to check
-    ///   - dailyLimit: The maximum number of times per day
+    ///   - limit: The maximum number of times per day
     /// - Returns: A MaxCountSpec with the daily limit
     public static func dailyLimit(_ counterKey: String, limit: Int) -> MaxCountSpec {
         MaxCountSpec(counterKey: counterKey, limit: limit)
@@ -80,7 +80,7 @@ extension MaxCountSpec {
     /// Creates a specification for weekly limits (assuming counter tracks weekly occurrences)
     /// - Parameters:
     ///   - counterKey: The counter key to check
-    ///   - weeklyLimit: The maximum number of times per week
+    ///   - limit: The maximum number of times per week
     /// - Returns: A MaxCountSpec with the weekly limit
     public static func weeklyLimit(_ counterKey: String, limit: Int) -> MaxCountSpec {
         MaxCountSpec(counterKey: counterKey, limit: limit)
@@ -89,7 +89,7 @@ extension MaxCountSpec {
     /// Creates a specification for monthly limits (assuming counter tracks monthly occurrences)
     /// - Parameters:
     ///   - counterKey: The counter key to check
-    ///   - monthlyLimit: The maximum number of times per month
+    ///   - limit: The maximum number of times per month
     /// - Returns: A MaxCountSpec with the monthly limit
     public static func monthlyLimit(_ counterKey: String, limit: Int) -> MaxCountSpec {
         MaxCountSpec(counterKey: counterKey, limit: limit)
@@ -117,7 +117,7 @@ extension MaxCountSpec {
     /// Creates a specification that checks if a counter is exactly equal to a value
     /// - Parameters:
     ///   - counterKey: The key identifying the counter in the evaluation context
-    ///   - exactCount: The exact value the counter must equal
+    ///   - count: The exact value the counter must equal
     /// - Returns: An AnySpecification that is satisfied only when the counter equals the exact value
     public static func exactly(counterKey: String, count: Int) -> AnySpecification<
         EvaluationContext
