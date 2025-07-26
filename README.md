@@ -24,14 +24,14 @@ A powerful Swift library implementing the **Specification Pattern** with support
 Add SpecificationKit to your project in Xcode:
 
 1. Go to **File** → **Add Package Dependencies**
-2. Enter the repository URL: `https://github.com/youruser/SpecificationKit`
+2. Enter the repository URL: `https://github.com/SoundBlaster/SpecificationKit`
 3. Select the version you want to use
 
 Or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/youruser/SpecificationKit", from: "1.0.0")
+    .package(url: "https://github.com/SoundBlaster/SpecificationKit", from: "1.0.0")
 ]
 ```
 
@@ -315,9 +315,9 @@ SpecificationKit is available under the MIT license. See [LICENSE](LICENSE) for 
 
 ## 📞 Support
 
-- 📖 [Documentation](https://youruser.github.io/SpecificationKit)
-- 💬 [Discussions](https://github.com/youruser/SpecificationKit/discussions)
-- 🐛 [Issue Tracker](https://github.com/youruser/SpecificationKit/issues)
+- 📖 [Documentation](https://SoundBlaster.github.io/SpecificationKit)
+- 💬 [Discussions](https://github.com/SoundBlaster/SpecificationKit/discussions)
+- 🐛 [Issue Tracker](https://github.com/SoundBlaster/SpecificationKit/issues)
 
 ## 🙏 Acknowledgments
 
