@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 5.10
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -16,11 +16,17 @@ let package = Package(
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "SpecificationKit",
-            targets: ["SpecificationKit"])
+            targets: [
+                "SpecificationKit",
+                "SpecificationKitTests"
+            ],
+        )
     ],
     dependencies: [
         // Depend on the latest Swift Syntax package for macro support.
         .package(url: "https://github.com/apple/swift-syntax.git", from: "509.0.0"),
+        // Add swift-macro-testing for a simplified macro testing experience.
+        .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.4.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -39,7 +45,9 @@ let package = Package(
         // It depends on the macro target to use the macros.
         .target(
             name: "SpecificationKit",
-            dependencies: ["SpecificationKitMacros"]),
+            dependencies: [
+                "SpecificationKitMacros"
+            ]),
         
         // This is your test target.
         .testTarget(
@@ -48,6 +56,8 @@ let package = Package(
                 "SpecificationKit",
                 "SpecificationKitMacros", // Add this to test the macro expansion
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+                // This product provides a convenient API for testing macro expansion.
+                .product(name: "MacroTesting", package: "swift-macro-testing"),
             ]
         ),
     ]
