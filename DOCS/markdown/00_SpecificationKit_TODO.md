@@ -56,7 +56,7 @@ This file provides a step-by-step plan for implementing the SpecificationKit lib
 ## 🧠 5. Definitions Layer
 
 - [x] `CompositeSpec.swift` – Example combining multiple specs
-- [ ] `AutoContextSpecification.swift` – Protocol with `static var contextProvider` + `init()`
+- [x] `AutoContextSpecification.swift` – Protocol with `static var contextProvider` + `init()`
 
 ---
 

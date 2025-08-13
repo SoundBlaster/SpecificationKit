@@ -7,15 +7,19 @@
 
 import Foundation
 
-/// Protocol for specifications that provide their own context provider automatically.
-/// Used by @AutoContext macro to inject contextProvider and init().
-public protocol AutoContextSpecification: Specification where T == EvaluationContext {
-    /// The type of context provider this specification uses.
+/// A protocol for specifications that can provide their own context.
+///
+/// When a `Specification` conforms to this protocol, it can be used with the `@Satisfies`
+/// property wrapper without explicitly providing a context provider. The wrapper will
+/// use the `contextProvider` defined by the specification type itself.
+public protocol AutoContextSpecification: Specification {
+    /// The type of context provider this specification uses. The provider's `Context`
+    /// must match the specification's associated type `T`.
     associatedtype Provider: ContextProviding where Provider.Context == T
 
-    /// The context provider for this specification.
+    /// The static context provider that supplies the context for evaluation.
     static var contextProvider: Provider { get }
 
-    /// Default initializer.
+    /// Creates a new instance of this specification.
     init()
 }

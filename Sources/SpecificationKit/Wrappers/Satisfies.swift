@@ -60,18 +60,6 @@ public struct Satisfies<Context> {
 
 // MARK: - AutoContextSpecification Support
 
-/// Protocol for specifications that can provide their own context
-public protocol AutoContextSpecification: Specification {
-    /// The type of context provider this specification uses
-    associatedtype Provider: ContextProviding where Provider.Context == T
-
-    /// The context provider for this specification
-    static var contextProvider: Provider { get }
-
-    /// Creates a new instance of this specification
-    init()
-}
-
 extension Satisfies {
 
     /// Creates a Satisfies property wrapper using an AutoContextSpecification
