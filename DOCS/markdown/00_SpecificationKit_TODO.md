@@ -6,14 +6,14 @@ This file provides a step-by-step plan for implementing the SpecificationKit lib
 
 ## ✅ 1. Repository Initialization
 
-- [ ] Create a new SwiftPM project:
+- [x] Create a new SwiftPM project:
   ```bash
   swift package init --type library
   ```
-- [ ] Update `Package.swift`:
+- [x] Update `Package.swift`:
   - Name: `SpecificationKit`
   - Set minimum Swift version: 5.9+
-- [ ] Create folders:
+- [x] Create folders:
   ```
   Sources/SpecificationKit/Core/
   Sources/SpecificationKit/Specs/
@@ -28,69 +28,71 @@ This file provides a step-by-step plan for implementing the SpecificationKit lib
 
 ## ⚙️ 2. Core Layer
 
-- [ ] `Specification.swift` – Base protocol
-- [ ] `AnySpecification.swift` – Type-erased wrapper
-- [ ] `SpecificationOperators.swift` – `.and`, `.or`, `.not`, operators
-- [ ] `ContextProviding.swift` – Protocol for providing `Context`
+- [x] `Specification.swift` – Base protocol
+- [x] `AnySpecification.swift` – Type-erased wrapper
+- [x] `SpecificationOperators.swift` – `.and`, `.or`, `.not`, operators
+- [x] `ContextProviding.swift` – Protocol for providing `Context`
 
 ---
 
 ## 🧩 3. Composables Layer – General-purpose specifications
 
-- [ ] `TimeSinceEventSpec.swift`
-- [ ] `MaxCountSpec.swift`
-- [ ] `CooldownIntervalSpec.swift`
-- [ ] `PredicateSpec.swift`
+- [x] `TimeSinceEventSpec.swift`
+- [x] `MaxCountSpec.swift`
+- [x] `CooldownIntervalSpec.swift`
+- [x] `PredicateSpec.swift`
 
 ---
 
 ## 🧵 4. Property Wrapper Layer
 
-- [ ] `Satisfies.swift`
+- [x] `Satisfies.swift`
   - Support:
-    - `@Satisfies(using: Spec.self)` (auto context)
-    - `@Satisfies(context: ..., using: Spec.self)` (manual context)
+    - [x] `@Satisfies(using: Spec.self)` (auto context)
+    - [ ] `@Satisfies(context: ..., using: Spec.self)` (manual context)
 
 ---
 
 ## 🧠 5. Definitions Layer
 
-- [ ] `CompositeSpec.swift` – Example combining multiple specs
-- [ ] `AutoContextSpecification.swift` – Protocol with `static var contextProvider` + `init()`
+- [x] `CompositeSpec.swift` – Example combining multiple specs
+- [x] `AutoContextSpecification.swift` – Protocol with `static var contextProvider` + `init()`
 
 ---
 
 ## 🔌 6. Context Layer
 
-- [ ] `EvaluationContext.swift` – Holds evaluation state
-- [ ] `DefaultContextProvider.swift` – Runtime context provider
-- [ ] `MockContextProvider.swift` – For unit testing
+- [x] `EvaluationContext.swift` – Holds evaluation state
+- [x] `DefaultContextProvider.swift` – Runtime context provider
+- [x] `MockContextProvider.swift` – For unit testing
 
 ---
 
 ## 🪄 7. Macro Layer (Optional)
 
-- [ ] `@specs(...)` – Macro to generate composite spec
-- [ ] `MacroPlugin.swift` – Plugin registration
+- [x] `@specs(...)` – Macro to generate composite spec
+- [x] `MacroPlugin.swift` – Plugin registration
+- [x] Update `DemoApp/`: Modify an example in the demo application to use the new macro, showcasing its simplicity.
 
 ---
 
 ## 🧪 8. Tests
 
-- [ ] `TimeSinceEventSpecTests.swift`
-- [ ] `MaxCountSpecTests.swift`
-- [ ] `CooldownIntervalSpecTests.swift`
-- [ ] `CompositeSpecTests.swift`
-- [ ] `SatisfiesWrapperTests.swift`
-- [ ] `MockProviderTests.swift`
+- [x] Core specification tests (`TimeSinceEventSpec`, `MaxCountSpec`, `CooldownIntervalSpec`, `CompositeSpec`) are covered within `SpecificationKitTests.swift`.
+- [x] Mock context provider tests are included in `SpecificationKitTests.swift`.
+- [x] Macro expansion tests are implemented in `SpecsMacroTests.swift`.
+- [ ] `SatisfiesWrapperTests.swift` is currently missing and should be added to cover the `@Satisfies` property wrapper functionality.
+- [ ] Additional tests for property wrapper edge cases and manual context usage are recommended.
 
 ---
 
 ## 📄 9. Documentation
 
-- [ ] `README.md` – Overview, motivation, usage
-- [ ] `CONTRIBUTING.md`, `LICENSE`, `CHANGELOG.md` (if public)
-- [ ] Optional: `Examples/` folder
+- [x] `README.md` – Overview, motivation, usage
+- [x] `CONTRIBUTING.md`
+- [x] `LICENSE`
+- [x] `CHANGELOG.md`
+- [x] Example: `DemoApp/` folder
 
 ---
 
@@ -98,4 +100,4 @@ This file provides a step-by-step plan for implementing the SpecificationKit lib
 
 - [ ] Add GitHub Actions workflow `.github/workflows/test.yml`
 - [ ] Optional: Set up DocC documentation target
-- [ ] Tag `v0.1.0` after initial implementation
+- [x] Tag `v0.1.0` after initial implementation

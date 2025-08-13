@@ -31,7 +31,7 @@ Or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/SoundBlaster/SpecificationKit", from: "1.0.0")
+    .package(url: "https://github.com/SoundBlaster/SpecificationKit", from: "0.2.0")
 ]
 ```
 
@@ -59,6 +59,33 @@ let canShowBanner = timeSinceLaunch.and(maxShowCount).and(cooldownPeriod)
 
 // Evaluate
 if canShowBanner.isSatisfiedBy(context) {
+    print("Show the banner!")
+}
+```
+
+### @specs Macro Usage
+
+The `@specs` macro simplifies the creation of composite specifications by automatically generating the `init()` and `isSatisfiedBy(_:)` methods.
+
+```swift
+import SpecificationKit
+
+@specs(
+    MaxCountSpec(counterKey: "display_count", limit: 3),
+    TimeSinceEventSpec(eventKey: "last_shown", minimumInterval: 3600)
+)
+struct BannerSpec: Specification {
+    typealias T = EvaluationContext
+}
+
+// Usage
+let context = EvaluationContext(
+    counters: ["display_count": 1],
+    events: ["last_shown": Date().addingTimeInterval(-7200)] // 2 hours ago
+)
+
+let bannerSpec = BannerSpec()
+if bannerSpec.isSatisfiedBy(context) {
     print("Show the banner!")
 }
 ```
@@ -272,6 +299,16 @@ The demo showcases:
 - Context provider management
 - Property wrapper integration
 - Interactive state manipulation
+
+### Running the CLI Demo
+
+You can also run a command-line interface (CLI) version of the demo by passing the `--cli` argument when running the executable:
+
+```bash
+swift run SpecificationKitDemo --cli
+```
+
+This mode runs the `CLIDemo` class, demonstrating SpecificationKit features in a terminal output format, useful for quick testing or CI environments.
 
 ## 🏗️ Architecture
 
