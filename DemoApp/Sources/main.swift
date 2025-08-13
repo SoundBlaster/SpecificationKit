@@ -90,6 +90,13 @@ struct ContentView: View {
                 Spacer()
 
                 VStack(spacing: 15) {
+                    Picker("Source of Truth", selection: $demoManager.useMacroSpecs) {
+                        Text("Macro @specs").tag(true)
+                        Text("Property Wrapper @Satisfies").tag(false)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding()
+
                     Button("Show Banner") {
                         demoManager.showBanner()
                     }
@@ -139,11 +146,30 @@ class DemoManager: ObservableObject {
     @Satisfies(using: CooldownIntervalSpec(eventKey: "last_banner", seconds: 3))
     var cooldownComplete: Bool
 
+    // Source of truth toggle: true = use macro @specs, false = use @Satisfies property wrapper
+    @Published var useMacroSpecs: Bool = true
+
     var shouldShowBanner: Bool {
-        bannerSpecs.isSatisfiedBy(contextProvider.currentContext())
+        if useMacroSpecs {
+            return bannerSpecs.isSatisfiedBy(contextProvider.currentContext())
+        } else {
+            return _shouldShowBanner
+        }
     }
 
-    // Specifications
+    // Property wrapper version of shouldShowBanner
+    @Satisfies(
+        using: CompositeSpec(
+            minimumLaunchDelay: 5,
+            maxShowCount: 3,
+            cooldownDays: 3.0 / 86400.0,  // 3 seconds in days
+            counterKey: "banner_count",
+            eventKey: "last_banner"
+        )
+    )
+    private var _shouldShowBanner: Bool
+
+    // Macro version of banner specs
     @specs(
         TimeSinceEventSpec.sinceAppLaunch(seconds: 5),
         MaxCountSpec(counterKey: "banner_count", limit: 3),
