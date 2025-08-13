@@ -29,96 +29,94 @@ struct ContentView: View {
     @StateObject private var demoManager = DemoManager()
 
     var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                Text("SpecificationKit Demo")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .padding()
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("App State")
-                        .font(.headline)
-
-                    Text("Time since launch: \(demoManager.timeSinceLaunch, specifier: "%.1f")s")
-                    Text("Banner shown count: \(demoManager.bannerCount)")
-                    Text("Last banner shown: \(demoManager.lastBannerTime)")
-                }
+        VStack(spacing: 20) {
+            Text("SpecificationKit Demo")
+                .font(.largeTitle)
+                .fontWeight(.bold)
                 .padding()
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(10)
 
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Specifications")
-                        .font(.headline)
+            VStack(alignment: .leading, spacing: 10) {
+                Text("App State")
+                    .font(.headline)
 
-                    HStack {
-                        Circle()
-                            .fill(demoManager.timeSinceAppLaunch ? Color.green : Color.red)
-                            .frame(width: 12, height: 12)
-                        Text(
-                            "Time since launch (>5s): \(demoManager.timeSinceAppLaunch ? "✓" : "✗")"
-                        )
-                    }
+                Text("Time since launch: \(demoManager.timeSinceLaunch, specifier: "%.1f")s")
+                Text("Banner shown count: \(demoManager.bannerCount)")
+                Text("Last banner shown: \(demoManager.lastBannerTime)")
+            }
+            .padding()
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(10)
 
-                    HStack {
-                        Circle()
-                            .fill(demoManager.bannerCountOk ? Color.green : Color.red)
-                            .frame(width: 12, height: 12)
-                        Text("Banner count (<3): \(demoManager.bannerCountOk ? "✓" : "✗")")
-                    }
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Specifications")
+                    .font(.headline)
 
-                    HStack {
-                        Circle()
-                            .fill(demoManager.cooldownComplete ? Color.green : Color.red)
-                            .frame(width: 12, height: 12)
-                        Text("Cooldown (3s): \(demoManager.cooldownComplete ? "✓" : "✗")")
-                    }
-
-                    HStack {
-                        Circle()
-                            .fill(demoManager.shouldShowBanner ? Color.green : Color.red)
-                            .frame(width: 12, height: 12)
-                        Text("Should show banner: \(demoManager.shouldShowBanner ? "YES" : "NO")")
-                            .fontWeight(.bold)
-                    }
+                HStack {
+                    Circle()
+                        .fill(demoManager.timeSinceAppLaunch ? Color.green : Color.red)
+                        .frame(width: 12, height: 12)
+                    Text(
+                        "Time since launch (>5s): \(demoManager.timeSinceAppLaunch ? "✓" : "✗")"
+                    )
                 }
-                .padding()
-                .background(Color.blue.opacity(0.1))
-                .cornerRadius(10)
 
-                Spacer()
+                HStack {
+                    Circle()
+                        .fill(demoManager.bannerCountOk ? Color.green : Color.red)
+                        .frame(width: 12, height: 12)
+                    Text("Banner count (<3): \(demoManager.bannerCountOk ? "✓" : "✗")")
+                }
 
-                VStack(spacing: 15) {
-                    Picker("Source of Truth", selection: $demoManager.useMacroSpecs) {
-                        Text("Macro @specs").tag(true)
-                        Text("Property Wrapper @Satisfies").tag(false)
-                    }
-                    .pickerStyle(.segmented)
-                    .padding()
+                HStack {
+                    Circle()
+                        .fill(demoManager.cooldownComplete ? Color.green : Color.red)
+                        .frame(width: 12, height: 12)
+                    Text("Cooldown (3s): \(demoManager.cooldownComplete ? "✓" : "✗")")
+                }
 
-                    Button("Show Banner") {
-                        demoManager.showBanner()
-                    }
-                    .disabled(!demoManager.shouldShowBanner)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(demoManager.shouldShowBanner ? Color.blue : Color.gray)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-
-                    Button("Reset Demo") {
-                        demoManager.reset()
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.orange)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+                HStack {
+                    Circle()
+                        .fill(demoManager.shouldShowBanner ? Color.green : Color.red)
+                        .frame(width: 12, height: 12)
+                    Text("Should show banner: \(demoManager.shouldShowBanner ? "YES" : "NO")")
+                        .fontWeight(.bold)
                 }
             }
             .padding()
+            .background(Color.blue.opacity(0.1))
+            .cornerRadius(10)
+
+            Spacer()
+
+            VStack(spacing: 15) {
+                Picker("Source of Truth", selection: $demoManager.useMacroSpecs) {
+                    Text("Macro @specs").tag(true)
+                    Text("Property Wrapper @Satisfies").tag(false)
+                }
+                .pickerStyle(.segmented)
+                .padding()
+
+                Button("Show Banner") {
+                    demoManager.showBanner()
+                }
+                .disabled(!demoManager.shouldShowBanner)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(demoManager.shouldShowBanner ? Color.blue : Color.gray)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+
+                Button("Reset Demo") {
+                    demoManager.reset()
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.orange)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+            }
         }
+        .padding()
         .alert("Banner Shown!", isPresented: $demoManager.showingAlert) {
             Button("OK") {}
         } message: {
