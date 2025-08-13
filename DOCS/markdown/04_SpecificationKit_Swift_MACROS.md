@@ -75,10 +75,10 @@ var shouldProceed: Bool
 
 ## 🛠️ Implementation Plan
 
-- [ ] Create new macro target: `SpecificationKitMacros`
-- [ ] Implement attached macro: `@specs`
-- [ ] Use `swift-syntax` to parse initializer arguments
-- [ ] Generate `init()` + `isSatisfiedBy(_:)`
+- [x] Create new macro target: `SpecificationKitMacros`
+- [x] Implement attached macro: `@specs`
+- [x] Use `swift-syntax` to parse initializer arguments
+- [x] Generate `init()` + `isSatisfiedBy(_:)`
 - [ ] Write tests using `MacroTesting`
 
 ---

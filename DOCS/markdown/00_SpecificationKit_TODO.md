@@ -70,8 +70,9 @@ This file provides a step-by-step plan for implementing the SpecificationKit lib
 
 ## 🪄 7. Macro Layer (Optional)
 
-- [ ] `@specs(...)` – Macro to generate composite spec
-- [ ] `MacroPlugin.swift` – Plugin registration
+- [x] `@specs(...)` – Macro to generate composite spec
+- [x] `MacroPlugin.swift` – Plugin registration
+- [x] Update `DemoApp/`: Modify an example in the demo application to use the new macro, showcasing its simplicity.
 
 ---
 

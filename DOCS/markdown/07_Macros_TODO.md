@@ -78,6 +78,6 @@
 ✅ 5. Documentation & Integration
 
 - [x] Update `README.md`: Document the new @specs macro, including its purpose and a clear usage example.
-- [ ] Update `DemoApp/`: Modify an example in the demo application to use the new macro, showcasing its simplicity.
+- [x] Update `DemoApp/`: Modify an example in the demo application to use the new macro, showcasing its simplicity.
 - [x] Update `00_SpecificationKit_TODO.md`: Mark the macro-related tasks as complete.
 ````
