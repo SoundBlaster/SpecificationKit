@@ -57,7 +57,7 @@ struct ContentView: View {
                             .fill(demoManager.timeSinceAppLaunch ? Color.green : Color.red)
                             .frame(width: 12, height: 12)
                         Text(
-                            "Time since launch (>10s): \(demoManager.timeSinceAppLaunch ? "✓" : "✗")"
+                            "Time since launch (>5s): \(demoManager.timeSinceAppLaunch ? "✓" : "✗")"
                         )
                     }
 
@@ -72,7 +72,7 @@ struct ContentView: View {
                         Circle()
                             .fill(demoManager.cooldownComplete ? Color.green : Color.red)
                             .frame(width: 12, height: 12)
-                        Text("Cooldown (30s): \(demoManager.cooldownComplete ? "✓" : "✗")")
+                        Text("Cooldown (3s): \(demoManager.cooldownComplete ? "✓" : "✗")")
                     }
 
                     HStack {
@@ -130,24 +130,30 @@ class DemoManager: ObservableObject {
     private var timer: Timer?
 
     // Specifications using @Satisfies property wrapper
-    @Satisfies(using: TimeSinceEventSpec.sinceAppLaunch(seconds: 10))
+    @Satisfies(using: TimeSinceEventSpec.sinceAppLaunch(seconds: 5))
     var timeSinceAppLaunch: Bool
 
     @Satisfies(using: MaxCountSpec(counterKey: "banner_count", limit: 3))
     var bannerCountOk: Bool
 
-    @Satisfies(using: CooldownIntervalSpec(eventKey: "last_banner", seconds: 30))
+    @Satisfies(using: CooldownIntervalSpec(eventKey: "last_banner", seconds: 3))
     var cooldownComplete: Bool
 
-    @Satisfies(
-        using: CompositeSpec(
-            minimumLaunchDelay: 10,
-            maxShowCount: 3,
-            cooldownDays: 30.0 / 86400.0,  // 30 seconds in days
-            counterKey: "banner_count",
-            eventKey: "last_banner"
-        ))
-    var shouldShowBanner: Bool
+    var shouldShowBanner: Bool {
+        bannerSpecs.isSatisfiedBy(contextProvider.currentContext())
+    }
+
+    // Specifications
+    @specs(
+        TimeSinceEventSpec.sinceAppLaunch(seconds: 5),
+        MaxCountSpec(counterKey: "banner_count", limit: 3),
+        CooldownIntervalSpec(eventKey: "last_banner", seconds: 3)
+    )
+    struct BannerSpecs: Specification {
+        typealias T = EvaluationContext
+    }
+
+    let bannerSpecs = BannerSpecs()
 
     init() {
         // Start timer to update UI every second
