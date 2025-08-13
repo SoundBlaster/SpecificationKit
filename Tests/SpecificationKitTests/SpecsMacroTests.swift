@@ -314,9 +314,6 @@ final class SpecsMacroTests: XCTestCase {
 
         let spec = TestSpec()
 
-        // Verify it conforms to Specification protocol
-        XCTAssertTrue(spec is Specification)
-
         // Verify it can be used in specification operations
         let combinedSpec = spec.and(MaxCountSpec(counterKey: "other", limit: 2))
         let context = EvaluationContext(counters: ["test": 0, "other": 1])
