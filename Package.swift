@@ -14,13 +14,11 @@ let package = Package(
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
+        // A library product should only contain library targets. Test targets should not be included.
         .library(
             name: "SpecificationKit",
-            targets: [
-                "SpecificationKit",
-                "SpecificationKitTests"
-            ],
-        )
+            targets: ["SpecificationKit"]
+        ),
     ],
     dependencies: [
         // Depend on the latest Swift Syntax package for macro support.
@@ -45,17 +43,15 @@ let package = Package(
         // It depends on the macro target to use the macros.
         .target(
             name: "SpecificationKit",
-            dependencies: [
-                "SpecificationKitMacros"
-            ]),
+            dependencies: ["SpecificationKitMacros"]
+        ),
         
         // This is your test target.
+        // We've streamlined the dependencies for a cleaner testing setup.
         .testTarget(
             name: "SpecificationKitTests",
             dependencies: [
                 "SpecificationKit",
-                "SpecificationKitMacros", // Add this to test the macro expansion
-                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
                 // This product provides a convenient API for testing macro expansion.
                 .product(name: "MacroTesting", package: "swift-macro-testing"),
             ]

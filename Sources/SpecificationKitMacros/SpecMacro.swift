@@ -23,7 +23,7 @@ public enum SpecsMacroError: CustomStringConvertible, Error {
 /// `@specs(SpecA(), SpecB())`
 /// will expand to a struct that conforms to `Specification` and combines `SpecA`
 /// and `SpecB` with `.and()` logic.
-public struct SpecsMacro: MemberMacro, AttachedMacro {
+public struct SpecsMacro: MemberMacro {
 
     // MARK: - MemberMacro
 
@@ -34,7 +34,8 @@ public struct SpecsMacro: MemberMacro, AttachedMacro {
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         // Ensure there's at least one specification provided.
-        guard let arguments = node.arguments?.as(LabeledExprListSyntax.self), !arguments.isEmpty else {
+        guard let arguments = node.arguments?.as(LabeledExprListSyntax.self), !arguments.isEmpty
+        else {
             throw SpecsMacroError.requiresAtLeastOneArgument
         }
 
@@ -49,6 +50,7 @@ public struct SpecsMacro: MemberMacro, AttachedMacro {
                 FunctionCallExprSyntax(
                     calledExpression: MemberAccessExprSyntax(
                         base: result,
+                        period: .periodToken(),
                         name: .identifier("and")
                     ),
                     leftParen: .leftParenToken(),
@@ -59,7 +61,7 @@ public struct SpecsMacro: MemberMacro, AttachedMacro {
                 )
             )
         }
-        
+
         // Generate the required code as string literals and parse them into syntax nodes.
         let compositeProperty: DeclSyntax =
             "private let composite: AnySpecification<EvaluationContext>"
@@ -79,27 +81,11 @@ public struct SpecsMacro: MemberMacro, AttachedMacro {
             }
             """
 
-        let typeAlias: DeclSyntax =
-            "public typealias T = EvaluationContext"
-
         return [
-            typeAlias,
             compositeProperty,
             initializer,
-            isSatisfiedByMethod
+            isSatisfiedByMethod,
         ]
     }
 
-    // MARK: - AttachedMacro
-
-    /// This expansion adds the `Specification` protocol conformance to the type.
-    public static func expansion(
-        of node: AttributeSyntax,
-        attachedTo declaration: some DeclGroupSyntax,
-        providingConformancesOf type: some TypeSyntaxProtocol,
-        in context: some MacroExpansionContext
-    ) throws -> [(TypeSyntax, GenericWhereClauseSyntax?)] {
-        // The type that this macro is attached to will conform to `Specification`.
-        return [(TypeSyntax("Specification"), nil)]
-    }
 }
