@@ -78,12 +78,11 @@ This file provides a step-by-step plan for implementing the SpecificationKit lib
 
 ## 🧪 8. Tests
 
-- [ ] `TimeSinceEventSpecTests.swift`
-- [ ] `MaxCountSpecTests.swift`
-- [ ] `CooldownIntervalSpecTests.swift`
-- [ ] `CompositeSpecTests.swift`
-- [ ] `SatisfiesWrapperTests.swift`
-- [ ] `MockProviderTests.swift`
+- [x] Core specification tests (`TimeSinceEventSpec`, `MaxCountSpec`, `CooldownIntervalSpec`, `CompositeSpec`) are covered within `SpecificationKitTests.swift`.
+- [x] Mock context provider tests are included in `SpecificationKitTests.swift`.
+- [x] Macro expansion tests are implemented in `SpecsMacroTests.swift`.
+- [ ] `SatisfiesWrapperTests.swift` is currently missing and should be added to cover the `@Satisfies` property wrapper functionality.
+- [ ] Additional tests for property wrapper edge cases and manual context usage are recommended.
 
 ---
 
