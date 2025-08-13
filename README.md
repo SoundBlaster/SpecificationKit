@@ -63,6 +63,33 @@ if canShowBanner.isSatisfiedBy(context) {
 }
 ```
 
+### @specs Macro Usage
+
+The `@specs` macro simplifies the creation of composite specifications by automatically generating the `init()` and `isSatisfiedBy(_:)` methods.
+
+```swift
+import SpecificationKit
+
+@specs(
+    MaxCountSpec(counterKey: "display_count", limit: 3),
+    TimeSinceEventSpec(eventKey: "last_shown", minimumInterval: 3600)
+)
+struct BannerSpec: Specification {
+    typealias T = EvaluationContext
+}
+
+// Usage
+let context = EvaluationContext(
+    counters: ["display_count": 1],
+    events: ["last_shown": Date().addingTimeInterval(-7200)] // 2 hours ago
+)
+
+let bannerSpec = BannerSpec()
+if bannerSpec.isSatisfiedBy(context) {
+    print("Show the banner!")
+}
+```
+
 ### Property Wrapper Usage
 
 ```swift
