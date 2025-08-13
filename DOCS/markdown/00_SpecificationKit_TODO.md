@@ -89,7 +89,7 @@ This file provides a step-by-step plan for implementing the SpecificationKit lib
 ## 📄 9. Documentation
 
 - [x] `README.md` – Overview, motivation, usage
-- [ ] `CONTRIBUTING.md`
+- [x] `CONTRIBUTING.md`
 - [x] `LICENSE`
 - [x] `CHANGELOG.md`
 - [x] Example: `DemoApp/` folder
