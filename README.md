@@ -300,6 +300,16 @@ The demo showcases:
 - Property wrapper integration
 - Interactive state manipulation
 
+### Running the CLI Demo
+
+You can also run a command-line interface (CLI) version of the demo by passing the `--cli` argument when running the executable:
+
+```bash
+swift run SpecificationKitDemo --cli
+```
+
+This mode runs the `CLIDemo` class, demonstrating SpecificationKit features in a terminal output format, useful for quick testing or CI environments.
+
 ## 🏗️ Architecture
 
 SpecificationKit follows a clean, layered architecture:
