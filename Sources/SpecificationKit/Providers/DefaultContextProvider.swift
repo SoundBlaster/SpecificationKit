@@ -24,6 +24,7 @@ public class DefaultContextProvider: ContextProviding {
     private var _events: [String: Date] = [:]
     private var _flags: [String: Bool] = [:]
     private var _userData: [String: Any] = [:]
+    private var _contextProviders: [String: () -> Any] = [:]
 
     private let lock = NSLock()
 
@@ -41,10 +42,18 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
 
+        // Incorporate any registered context providers
+        var mergedUserData = _userData
+
+        // Add any dynamic context data
+        for (key, provider) in _contextProviders {
+            mergedUserData[key] = provider()
+        }
+
         return EvaluationContext(
             currentDate: Date(),
             launchDate: launchDate,
-            userData: _userData,
+            userData: mergedUserData,
             counters: _counters,
             events: _events,
             flags: _flags
@@ -245,6 +254,26 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _userData.removeAll()
+    }
+
+    // MARK: - Context Registration
+
+    /// Registers a custom context provider for a specific key
+    /// - Parameters:
+    ///   - contextKey: The key to associate with the provided context
+    ///   - provider: A closure that provides the context
+    public func register<T>(contextKey: String, provider: @escaping () -> T) {
+        lock.lock()
+        defer { lock.unlock() }
+        _contextProviders[contextKey] = provider
+    }
+
+    /// Unregisters a custom context provider
+    /// - Parameter contextKey: The key to unregister
+    public func unregister(contextKey: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        _contextProviders.removeValue(forKey: contextKey)
     }
 }
 

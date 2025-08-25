@@ -6,12 +6,45 @@ A powerful Swift library implementing the **Specification Pattern** with support
 [![iOS 13.0+](https://img.shields.io/badge/iOS-13.0+-blue.svg)](https://developer.apple.com/ios/)
 [![macOS 10.15+](https://img.shields.io/badge/macOS-10.15+-blue.svg)](https://developer.apple.com/macos/)
 [![Swift Package Manager](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://swift.org/package-manager/)
+[![Version 0.3.0](https://img.shields.io/badge/Version-0.3.0-green.svg)]()
+
+## 📢 What's New in v0.3.0
+
+### DecisionSpec & FirstMatchSpec
+
+SpecificationKit now supports **decision-oriented specifications** that return typed results beyond just boolean values:
+
+```swift
+// Define decision specifications
+let spec = FirstMatchSpec<UserContext, Int>([
+    (isVipSpec, 50),
+    (promoSpec, 20),
+    (birthdaySpec, 10),
+    (AlwaysTrueSpec<UserContext>(), 0)  // fallback
+])
+
+// Get the appropriate discount
+let discount = spec.decide(userContext) // Returns 50 if user is VIP
+```
+
+With the new `@Spec` property wrapper:
+```swift
+@Spec(FirstMatchSpec([
+    (isVipSpec, 50),
+    (promoSpec, 20),
+    (birthdaySpec, 10),
+    (AlwaysTrueSpec(), 0)
+]))
+var discount: Int // Infers Int from the spec result type
+```
 
 ## ✨ Features
 
 - 🧩 **Composable Specifications** - Build complex business rules from simple, reusable components
-- 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies` for clean integration
+- 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies` and `@Spec` for clean integration
 - 🔄 **Context Providers** - Flexible context injection and dependency management
+- 🚀 **Decision Specifications** - Return typed results beyond just boolean values with `DecisionSpec`
+- 🏆 **Prioritized Rules** - First-match evaluation with `FirstMatchSpec` for categorization and routing
 - 🧪 **Testing Support** - Built-in mock providers and test utilities
 - 📱 **Cross-Platform** - Works on iOS, macOS, tvOS, and watchOS
 - 🔒 **Type-Safe** - Leverages Swift's type system for compile-time safety
@@ -101,11 +134,22 @@ class BannerController {
     // Complex composite specification
     @Satisfies(using: CompositeSpec.promoBanner)
     var shouldShowPromoBanner: Bool
+    
+    // Decision specification for categorization
+    @Spec(FirstMatchSpec([
+        (isVipSpec, 50),
+        (promoSpec, 20),
+        (birthdaySpec, 10),
+        (AlwaysTrueSpec(), 0) // fallback
+    ]))
+    var discount: Int
 
     func checkBannerStatus() {
         if shouldShowPromoBanner {
             displayPromoBanner()
         }
+        
+        print("Applied discount: \(discount)%")
     }
 }
 ```
@@ -162,6 +206,27 @@ let spec = PredicateSpec<EvaluationContext> { context in
 let businessHours = PredicateSpec<EvaluationContext>.currentHour(in: 9...17)
 ```
 
+#### FirstMatchSpec
+Evaluates specifications in order and returns the result of the first match.
+
+```swift
+// Define specifications
+let isVipSpec = PredicateSpec<UserContext> { $0.isVip }
+let promoSpec = PredicateSpec<UserContext> { $0.isInPromo }
+let birthdaySpec = PredicateSpec<UserContext> { $0.isBirthday }
+
+// Create first-match specification with result values
+let discountSpec = FirstMatchSpec<UserContext, Int>([
+    (isVipSpec, 50),
+    (promoSpec, 20),
+    (birthdaySpec, 10),
+    (AlwaysTrueSpec(), 0) // fallback
+])
+
+// Evaluate to get the appropriate discount
+let discount = discountSpec.decide(userContext) // e.g. 50 if user is VIP
+```
+
 ### Context Providers
 
 #### DefaultContextProvider
@@ -200,6 +265,40 @@ XCTAssertTrue(spec.isSatisfiedBy(context))
 
 ## 🎯 Advanced Usage
 
+### Decision Specifications
+
+```swift
+// Define a protocol-conforming decision specification
+struct RouteDecisionSpec: DecisionSpec {
+    typealias Context = RequestContext
+    typealias Result = Route
+    
+    func decide(_ context: RequestContext) -> Route? {
+        if context.isAuthenticated {
+            return Route.dashboard
+        } else if context.hasSession {
+            return Route.login
+        } else {
+            return Route.welcome
+        }
+    }
+}
+
+// Use with @Spec property wrapper
+class Router {
+    @Spec(using: RouteDecisionSpec())
+    var currentRoute: Route
+}
+
+// Or use boolean specs with results
+let authenticatedSpec = PredicateSpec<RequestContext> { $0.isAuthenticated }
+let sessionSpec = PredicateSpec<RequestContext> { $0.hasSession }
+
+// Convert to decision specs with .returning(_:)
+let dashboardDecision = authenticatedSpec.returning(Route.dashboard)
+let loginDecision = sessionSpec.returning(Route.login)
+```
+
 ### Custom Composite Specifications
 
 ```swift
@@ -231,6 +330,7 @@ struct OnboardingSpec: Specification {
 ### Builder Pattern
 
 ```swift
+// For boolean specifications
 let complexSpec = Satisfies<EvaluationContext>.builder(
     provider: DefaultContextProvider.shared
 )
@@ -238,6 +338,23 @@ let complexSpec = Satisfies<EvaluationContext>.builder(
 .with(MaxCountSpec(counterKey: "attempts", limit: 3))
 .with { context in context.flag(for: "feature_enabled") }
 .buildAll()
+
+// For decision specifications
+let discountSpec = FirstMatchSpec<UserContext, Int>.builder()
+    .add(isVipSpec, result: 50)
+    .add(promoSpec, result: 20)
+    .add(birthdaySpec, result: 10)
+    .fallback(0)
+    .build()
+
+// Or using @Spec wrapper with builder
+@Spec(build: { builder in
+    builder
+        .add(isVipSpec, result: 50)
+        .add(promoSpec, result: 20)
+        .fallback(0)
+})
+var discount: Int
 ```
 
 ### SwiftUI Integration
@@ -246,11 +363,20 @@ let complexSpec = Satisfies<EvaluationContext>.builder(
 struct ContentView: View {
     @Satisfies(using: CompositeSpec.promoBanner)
     var shouldShowPromo: Bool
+    
+    // Decision spec for discount tier
+    @Spec(FirstMatchSpec([
+        (vipSpec, 50),
+        (promoSpec, 20),
+        (birthdaySpec, 10),
+        (AlwaysTrueSpec(), 0)
+    ]))
+    var discountPercentage: Int
 
     var body: some View {
         VStack {
             if shouldShowPromo {
-                PromoBannerView()
+                PromoBannerView(discountPercentage: discountPercentage)
             }
 
             MainContentView()
@@ -317,16 +443,16 @@ SpecificationKit follows a clean, layered architecture:
 ```
 ┌─────────────────────────────────────┐
 │           Application Layer         │
-│      (@Satisfies, SwiftUI Views)    │
+│      (@Satisfies, @Spec, Views)     │
 ├─────────────────────────────────────┤
 │         Property Wrapper Layer      │
-│           (@Satisfies)              │
+│        (@Satisfies, @Spec)          │
 ├─────────────────────────────────────┤
 │        Definitions Layer            │
-│      (CompositeSpec, etc.)          │
+│  (CompositeSpec, FirstMatchSpec)    │
 ├─────────────────────────────────────┤
 │         Specifications Layer        │
-│  (TimeSinceEventSpec, MaxCountSpec) │
+│  (Specification, DecisionSpec)      │
 ├─────────────────────────────────────┤
 │           Context Layer             │
 │    (EvaluationContext, Providers)   │
