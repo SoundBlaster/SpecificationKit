@@ -1,4 +1,4 @@
-# SpecificationKit v2.0.0 – Definition of Done
+# SpecificationKit v0.3.0 – Definition of Done
 
 > This document defines a set of deliverables for the next major release of SpecificationKit.
  
