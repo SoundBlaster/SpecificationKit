@@ -27,15 +27,31 @@ let spec = FirstMatchSpec<UserContext, Int>([
 let discount = spec.decide(userContext) // Returns 50 if user is VIP
 ```
 
-With the new `@Decides` property wrapper:
+With the new decision wrappers, choose optional or non-optional:
 ```swift
+// Optional result (no implicit default)
 @Decides(FirstMatchSpec([
     (isVipSpec, 50),
     (promoSpec, 20),
     (birthdaySpec, 10),
-    (AlwaysTrueSpec(), 0)
 ]))
 var discount: Int? // Optional; use withFallback to guarantee non-nil
+
+// Non-optional result with explicit fallback
+@DecidesOr(FirstMatchSpec([
+    (isVipSpec, 50),
+    (promoSpec, 20),
+    (birthdaySpec, 10)
+]), fallback: 0)
+var discountOr: Int
+
+// Or use the default value shorthand (wrappedValue):
+@DecidesOr(FirstMatchSpec([
+    (isVipSpec, 50),
+    (promoSpec, 20),
+    (birthdaySpec, 10)
+]))
+var discountOrDefault: Int = 0
 ```
 
 ## ✨ Features
@@ -135,12 +151,11 @@ class BannerController {
     @Satisfies(using: CompositeSpec.promoBanner)
     var shouldShowPromoBanner: Bool
     
-    // Decision specification for categorization
+    // Decision specification for categorization (optional style)
     @Decides(FirstMatchSpec([
         (isVipSpec, 50),
         (promoSpec, 20),
         (birthdaySpec, 10),
-        (AlwaysTrueSpec(), 0) // fallback
     ]))
     var discount: Int? // Optional; unwrap or provide fallback
 
@@ -347,14 +362,13 @@ let discountSpec = FirstMatchSpec<UserContext, Int>.builder()
     .fallback(0)
     .build()
 
-// Or using @Decides wrapper with builder
-@Decides(build: { builder in
+// Builder with non-optional result via fallback
+@DecidesOr(build: { builder in
     builder
         .add(isVipSpec, result: 50)
         .add(promoSpec, result: 20)
-        .fallback(0)
-})
-var discount: Int?
+}, fallback: 0)
+var discountRequired: Int
 ```
 
 ### SwiftUI Integration
