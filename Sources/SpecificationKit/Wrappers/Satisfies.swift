@@ -12,12 +12,12 @@ import Foundation
 @propertyWrapper
 public struct Satisfies<Context> {
 
-    private let contextProvider: any ContextProviding
+    private let contextFactory: () -> Context
     private let specification: AnySpecification<Context>
 
     /// The wrapped value representing whether the specification is satisfied
     public var wrappedValue: Bool {
-        let context = contextProvider.currentContext() as! Context
+        let context = contextFactory()
         return specification.isSatisfiedBy(context)
     }
 
@@ -29,7 +29,7 @@ public struct Satisfies<Context> {
         provider: Provider,
         using specification: Spec
     ) where Provider.Context == Context, Spec.T == Context {
-        self.contextProvider = provider
+        self.contextFactory = provider.currentContext
         self.specification = AnySpecification(specification)
     }
 
@@ -41,7 +41,7 @@ public struct Satisfies<Context> {
         provider: Provider,
         using specificationType: Spec.Type
     ) where Provider.Context == Context, Spec.T == Context, Spec: ExpressibleByNilLiteral {
-        self.contextProvider = provider
+        self.contextFactory = provider.currentContext
         self.specification = AnySpecification(Spec(nilLiteral: ()))
     }
 
@@ -53,7 +53,7 @@ public struct Satisfies<Context> {
         provider: Provider,
         predicate: @escaping (Context) -> Bool
     ) where Provider.Context == Context {
-        self.contextProvider = provider
+        self.contextFactory = provider.currentContext
         self.specification = AnySpecification(predicate)
     }
 }
@@ -67,7 +67,7 @@ extension Satisfies {
     public init<Spec: AutoContextSpecification>(
         using specificationType: Spec.Type
     ) where Spec.T == Context {
-        self.contextProvider = specificationType.contextProvider
+        self.contextFactory = specificationType.contextProvider.currentContext
         self.specification = AnySpecification(specificationType.init())
     }
 }

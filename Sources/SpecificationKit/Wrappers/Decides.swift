@@ -12,23 +12,18 @@ import Foundation
 @propertyWrapper
 public struct Decides<Context, Result> {
 
-    private let contextProvider: any ContextProviding
+    private let contextFactory: () -> Context
     private let specification: AnyDecisionSpec<Context, Result>
 
     /// The wrapped value representing the result of the decision specification
-    public var wrappedValue: Result {
-        let context = contextProvider.currentContext() as! Context
-        guard let result = specification.decide(context) else {
-            fatalError(
-                "No result was returned from the decision specification. Consider using a fallback."
-            )
-        }
-        return result
+    public var wrappedValue: Result? {
+        let context = contextFactory()
+        return specification.decide(context)
     }
 
     /// The projected value providing optional access to the result
     public var projectedValue: Result? {
-        let context = contextProvider.currentContext() as! Context
+        let context = contextFactory()
         return specification.decide(context)
     }
 
@@ -40,7 +35,7 @@ public struct Decides<Context, Result> {
         provider: Provider,
         using specification: S
     ) where Provider.Context == Context, S.Context == Context, S.Result == Result {
-        self.contextProvider = provider
+        self.contextFactory = provider.currentContext
         self.specification = AnyDecisionSpec(specification)
     }
 
@@ -52,7 +47,7 @@ public struct Decides<Context, Result> {
         provider: Provider,
         firstMatch pairs: [(S, Result)]
     ) where Provider.Context == Context, S.T == Context {
-        self.contextProvider = provider
+        self.contextFactory = provider.currentContext
         self.specification = AnyDecisionSpec(FirstMatchSpec(pairs))
     }
 
@@ -64,7 +59,7 @@ public struct Decides<Context, Result> {
         provider: Provider,
         decide: @escaping (Context) -> Result?
     ) where Provider.Context == Context {
-        self.contextProvider = provider
+        self.contextFactory = provider.currentContext
         self.specification = AnyDecisionSpec(decide)
     }
 }

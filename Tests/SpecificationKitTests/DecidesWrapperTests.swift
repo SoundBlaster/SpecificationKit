@@ -24,7 +24,7 @@ final class DecidesWrapperTests: XCTestCase {
         @Decides(FirstMatchSpec([
             (vip, 1),
             (promo, 2)
-        ])) var value: Int
+        ])) var value: Int?
 
         // Then
         XCTAssertEqual(value, 2)
@@ -37,7 +37,7 @@ final class DecidesWrapperTests: XCTestCase {
         // When: Using deprecated alias @Spec
         @Spec(FirstMatchSpec([
             (pred, 7)
-        ])) var result: Int
+        ])) var result: Int?
 
         // Then: Use default provider
         DefaultContextProvider.shared.setFlag("__test_flag__", to: true)

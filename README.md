@@ -35,7 +35,7 @@ With the new `@Decides` property wrapper:
     (birthdaySpec, 10),
     (AlwaysTrueSpec(), 0)
 ]))
-var discount: Int // Infers Int from the spec result type
+var discount: Int? // Optional; use withFallback to guarantee non-nil
 ```
 
 ## ✨ Features
@@ -142,7 +142,7 @@ class BannerController {
         (birthdaySpec, 10),
         (AlwaysTrueSpec(), 0) // fallback
     ]))
-    var discount: Int
+    var discount: Int? // Optional; unwrap or provide fallback
 
     func checkBannerStatus() {
         if shouldShowPromoBanner {
@@ -287,7 +287,7 @@ struct RouteDecisionSpec: DecisionSpec {
 // Use with @Decides property wrapper
 class Router {
     @Decides(using: RouteDecisionSpec())
-    var currentRoute: Route
+    var currentRoute: Route? // Optional to avoid crashes if no route
 }
 
 // Or use boolean specs with results
@@ -354,7 +354,7 @@ let discountSpec = FirstMatchSpec<UserContext, Int>.builder()
         .add(promoSpec, result: 20)
         .fallback(0)
 })
-var discount: Int
+var discount: Int?
 ```
 
 ### SwiftUI Integration
@@ -371,7 +371,7 @@ struct ContentView: View {
         (birthdaySpec, 10),
         (AlwaysTrueSpec(), 0)
     ]))
-    var discountPercentage: Int
+    var discountPercentage: Int?
 
     var body: some View {
         VStack {
