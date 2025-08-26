@@ -532,6 +532,17 @@ The demo showcases:
 - Context provider management
 - Property wrapper integration
 - Interactive state manipulation
+ - Decisions screen demonstrating `@Decides`, `@Maybe`, and `FirstMatchSpec`
+
+### Decisions Screen
+
+- Overview: A dedicated screen in the demo app that contrasts optional and non-optional decision wrappers and shows explicit `FirstMatchSpec` usage.
+- Toggles: Flip `VIP` and `Promo` to update `DefaultContextProvider.shared` flags in real time.
+- Wrappers:
+  - `@Maybe([(vip, 50), (promo, 20)])` → optional result (`Int?`), returns `nil` when no rule matches.
+  - `@Decides([(vip, 50), (promo, 20)], or: 0)` → non-optional result (`Int`), always returns a value via fallback.
+- Explicit Spec: The screen also evaluates an explicit `FirstMatchSpec<EvaluationContext, Int>` and displays the decided value for comparison.
+- Navigation: Use the sidebar to switch between “Overview” and “Decisions”.
 
 ### Running the CLI Demo
 
@@ -548,25 +559,25 @@ This mode runs the `CLIDemo` class, demonstrating SpecificationKit features in a
 SpecificationKit follows a clean, layered architecture:
 
 ```
-┌───────────────────────┐
-│           Application Layer          │
-│ (@Satisfies, @Decides, @Maybe, Views)│
-├───────────────────────┤
-│         Property Wrapper Layer       │
-│      (@Satisfies, @Decides, @Maybe)  │
-├───────────────────────┤
-│        Definitions Layer             │
-│  (CompositeSpec, FirstMatchSpec)     │
-├───────────────────────┤
-│         Specifications Layer         │
-│    (Specification, DecisionSpec)     │
-├───────────────────────┤
-│            Context Layer             │
-│    (EvaluationContext, Providers)    │
-├───────────────────────┤
-│             Core Layer               │
-│ (Specification Protocol, Operators)  │
-└───────────────────────┘
+┌─────────────────────────────────────────┐
+│ Application Layer                       │
+│ (@Satisfies, @Decides, @Maybe, Views)   │
+├─────────────────────────────────────────┤
+│ Property Wrapper Layer                  │
+│ (@Satisfies, @Decides, @Maybe)          │
+├─────────────────────────────────────────┤
+│ Definitions Layer                       │
+│ (CompositeSpec, FirstMatchSpec)         │
+├─────────────────────────────────────────┤
+│ Specifications Layer                    │
+│ (Specification, DecisionSpec)           │
+├─────────────────────────────────────────┤
+│ Context Layer                           │
+│ (EvaluationContext, Providers)          │
+├─────────────────────────────────────────┤
+│ Core Layer                              │
+│ (Specification Protocol, Operators)     │
+└─────────────────────────────────────────┘
 ```
 
 ## 🤝 Contributing
