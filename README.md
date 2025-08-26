@@ -30,7 +30,7 @@ let discount = spec.decide(userContext) // Returns 50 if user is VIP
 With the new decision wrappers, choose optional or non-optional:
 ```swift
 // Optional result (no implicit default)
-@Decides(FirstMatchSpec([
+@Maybe(FirstMatchSpec([
     (isVipSpec, 50),
     (promoSpec, 20),
     (birthdaySpec, 10),
@@ -38,15 +38,15 @@ With the new decision wrappers, choose optional or non-optional:
 var discount: Int? // Optional; use withFallback to guarantee non-nil
 
 // Non-optional result with explicit fallback
-@DecidesOr(FirstMatchSpec([
+@Decides(FirstMatchSpec([
     (isVipSpec, 50),
     (promoSpec, 20),
     (birthdaySpec, 10)
-]), fallback: 0)
+]), or: 0)
 var discountOr: Int
 
 // Or use the default value shorthand (wrappedValue):
-@DecidesOr(FirstMatchSpec([
+@Decides(FirstMatchSpec([
     (isVipSpec, 50),
     (promoSpec, 20),
     (birthdaySpec, 10)
@@ -57,7 +57,7 @@ var discountOrDefault: Int = 0
 ## ✨ Features
 
 - 🧩 **Composable Specifications** - Build complex business rules from simple, reusable components
-- 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies` and `@Decides` for clean integration
+- 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies`, `@Decides` (non-optional), and `@Maybe` (optional)
 - 🔄 **Context Providers** - Flexible context injection and dependency management
 - 🚀 **Decision Specifications** - Return typed results beyond just boolean values with `DecisionSpec`
 - 🏆 **Prioritized Rules** - First-match evaluation with `FirstMatchSpec` for categorization and routing
@@ -152,7 +152,7 @@ class BannerController {
     var shouldShowPromoBanner: Bool
     
     // Decision specification for categorization (optional style)
-    @Decides(FirstMatchSpec([
+    @Maybe(FirstMatchSpec([
         (isVipSpec, 50),
         (promoSpec, 20),
         (birthdaySpec, 10),

@@ -2,45 +2,57 @@
 //  DecidesWrapperTests.swift
 //  SpecificationKitTests
 //
-//  Created by SpecificationKit on 2024.
-//
 
 import XCTest
 @testable import SpecificationKit
 
 final class DecidesWrapperTests: XCTestCase {
 
-    func test_Decides_returnsExpectedResult_withEvaluationContext() {
+    func test_Decides_returnsFallback_whenNoMatch() {
         // Given
         let vip = PredicateSpec<EvaluationContext> { $0.flag(for: "vip") }
         let promo = PredicateSpec<EvaluationContext> { $0.flag(for: "promo") }
 
-        // Prepare context
         let provider = DefaultContextProvider.shared
         provider.setFlag("vip", to: false)
-        provider.setFlag("promo", to: true)
+        provider.setFlag("promo", to: false)
 
         // When
         @Decides(FirstMatchSpec([
             (vip, 1),
             (promo, 2)
-        ])) var value: Int?
+        ]), or: 0) var value: Int
 
         // Then
-        XCTAssertEqual(value, 2)
+        XCTAssertEqual(value, 0)
     }
 
-    func test_Spec_alias_compiles_and_returnsResult() {
+    func test_Decides_returnsMatchedValue_whenMatchExists() {
         // Given
-        let pred = PredicateSpec<EvaluationContext> { _ in true }
+        let vip = PredicateSpec<EvaluationContext> { $0.flag(for: "vip") }
+        DefaultContextProvider.shared.setFlag("vip", to: true)
 
-        // When: Using deprecated alias @Spec
-        @Spec(FirstMatchSpec([
-            (pred, 7)
-        ])) var result: Int?
+        // When
+        @Decides(FirstMatchSpec([
+            (vip, 42)
+        ]), or: 0) var value: Int
 
-        // Then: Use default provider
-        DefaultContextProvider.shared.setFlag("__test_flag__", to: true)
-        XCTAssertEqual(result, 7)
+        // Then
+        XCTAssertEqual(value, 42)
+    }
+
+    func test_Decides_wrappedValueDefault_initializesFallback() {
+        // Given
+        let vip = PredicateSpec<EvaluationContext> { $0.flag(for: "vip") }
+        DefaultContextProvider.shared.setFlag("vip", to: false)
+
+        // When: use default value shorthand for fallback
+        @Decides(FirstMatchSpec([
+            (vip, 99)
+        ])) var discount: Int = 0
+
+        // Then: no match -> returns default value
+        XCTAssertEqual(discount, 0)
     }
 }
+
