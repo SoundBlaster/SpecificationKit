@@ -30,27 +30,27 @@ let discount = spec.decide(userContext) // Returns 50 if user is VIP
 With the new decision wrappers, choose optional or non-optional:
 ```swift
 // Optional result (no implicit default)
-@Maybe(FirstMatchSpec([
+@Maybe([
     (isVipSpec, 50),
     (promoSpec, 20),
     (birthdaySpec, 10),
-]))
-var discount: Int? // Optional; use withFallback to guarantee non-nil
+])
+var discount: Int? // Optional; use @Decides for non-optional with fallback
 
 // Non-optional result with explicit fallback
-@Decides(FirstMatchSpec([
+@Decides([
     (isVipSpec, 50),
     (promoSpec, 20),
     (birthdaySpec, 10)
-]), or: 0)
+], or: 0)
 var discountOr: Int
 
 // Or use the default value shorthand (wrappedValue):
-@Decides(FirstMatchSpec([
+@Decides([
     (isVipSpec, 50),
     (promoSpec, 20),
     (birthdaySpec, 10)
-]))
+])
 var discountOrDefault: Int = 0
 ```
 
@@ -150,20 +150,20 @@ class BannerController {
     // Complex composite specification
     @Satisfies(using: CompositeSpec.promoBanner)
     var shouldShowPromoBanner: Bool
-    
+
     // Decision specification for categorization (optional style)
-    @Maybe(FirstMatchSpec([
+    @Maybe([
         (isVipSpec, 50),
         (promoSpec, 20),
         (birthdaySpec, 10),
-    ]))
+    ])
     var discount: Int? // Optional; unwrap or provide fallback
 
     func checkBannerStatus() {
         if shouldShowPromoBanner {
             displayPromoBanner()
         }
-        
+
         print("Applied discount: \(discount)%")
     }
 }
@@ -287,7 +287,7 @@ XCTAssertTrue(spec.isSatisfiedBy(context))
 struct RouteDecisionSpec: DecisionSpec {
     typealias Context = RequestContext
     typealias Result = Route
-    
+
     func decide(_ context: RequestContext) -> Route? {
         if context.isAuthenticated {
             return Route.dashboard
@@ -299,11 +299,23 @@ struct RouteDecisionSpec: DecisionSpec {
     }
 }
 
-// Use with @Decides property wrapper
-class Router {
-    @Decides(using: RouteDecisionSpec())
-    var currentRoute: Route? // Optional to avoid crashes if no route
-}
+// Use with property wrappers
+// Optional style with Maybe (EvaluationContext convenience)
+// Example assumes flags stored in EvaluationContext
+@Maybe(decide: { ctx in
+    if ctx.flag(for: "authenticated") { return .dashboard }
+    if ctx.flag(for: "has_session") { return .login }
+    return .welcome
+})
+var currentRouteOptional: Route?
+
+// Non-optional style with Decides and explicit fallback
+@Decides(decide: { ctx in
+    if ctx.flag(for: "authenticated") { return .dashboard }
+    if ctx.flag(for: "has_session") { return .login }
+    return nil
+}, or: .welcome)
+var currentRoute: Route
 
 // Or use boolean specs with results
 let authenticatedSpec = PredicateSpec<RequestContext> { $0.isAuthenticated }
@@ -363,12 +375,90 @@ let discountSpec = FirstMatchSpec<UserContext, Int>.builder()
     .build()
 
 // Builder with non-optional result via fallback
-@DecidesOr(build: { builder in
+@Decides(build: { builder in
     builder
         .add(isVipSpec, result: 50)
         .add(promoSpec, result: 20)
-}, fallback: 0)
+}, or: 0)
 var discountRequired: Int
+```
+
+### Using FirstMatchSpec explicitly
+
+You can use `FirstMatchSpec` directly with wrappers when you want full control or to reuse specs.
+
+When to use explicit FirstMatchSpec
+- Complex construction with `FirstMatchSpec.builder()`.
+- Access to `decideWithMetadata` to inspect the matched rule index.
+- Supplying a non-`EvaluationContext` provider or custom provider instance.
+- Reusing the same `FirstMatchSpec` across multiple wrappers.
+
+Optional result (explicit vs shorthand)
+```swift
+// Explicit FirstMatchSpec
+@Maybe(FirstMatchSpec([
+    (isVipSpec, 50),
+    (promoSpec, 20),
+    (birthdaySpec, 10)
+])) var discountOptA: Int?
+
+// Shorthand pairs
+@Maybe([
+    (isVipSpec, 50),
+    (promoSpec, 20),
+    (birthdaySpec, 10)
+]) var discountOptB: Int?
+```
+
+Non-optional with fallback (explicit vs shorthand)
+```swift
+// Explicit FirstMatchSpec
+@Decides(FirstMatchSpec([
+    (isVipSpec, 50),
+    (promoSpec, 20),
+    (birthdaySpec, 10)
+]), or: 0) var discountA: Int
+
+// Shorthand pairs
+@Decides([
+    (isVipSpec, 50),
+    (promoSpec, 20),
+    (birthdaySpec, 10)
+], or: 0) var discountB: Int
+```
+
+Using a custom provider (non-EvaluationContext)
+```swift
+struct UserContext { let isVip: Bool; let isInPromo: Bool }
+let provider = staticContext(UserContext(isVip: true, isInPromo: false))
+let spec = FirstMatchSpec<UserContext, Int>([
+    (PredicateSpec { $0.isVip }, 50),
+    (PredicateSpec { $0.isInPromo }, 20)
+])
+
+@Maybe(provider: provider, using: spec)
+var discountOptional: Int?
+
+@Decides(provider: provider, using: spec, fallback: 0)
+var discountRequired: Int
+```
+
+Builder and metadata APIs
+
+```swift
+// Builder for complex, reusable rules
+let built = FirstMatchSpec<UserContext, Int>.builder()
+    .add(PredicateSpec { $0.isVip }, result: 50)
+    .add(PredicateSpec { $0.isInPromo }, result: 20)
+    .build()
+
+// Use the built spec explicitly
+@Decides(built, or: 0) var discountFromBuilt: Int
+
+// Metadata access when evaluating directly
+if let info = built.decideWithMetadata(UserContext(isVip: true, isInPromo: false)) {
+    print("Matched index: ", info.index, " result: ", info.result)
+}
 ```
 
 ### SwiftUI Integration
@@ -377,15 +467,14 @@ var discountRequired: Int
 struct ContentView: View {
     @Satisfies(using: CompositeSpec.promoBanner)
     var shouldShowPromo: Bool
-    
-    // Decision spec for discount tier
-    @Decides(FirstMatchSpec([
+
+    // Decision spec for discount tier (non-optional)
+    @Decides([
         (vipSpec, 50),
         (promoSpec, 20),
-        (birthdaySpec, 10),
-        (AlwaysTrueSpec(), 0)
-    ]))
-    var discountPercentage: Int?
+        (birthdaySpec, 10)
+    ], or: 0)
+    var discountPercentage: Int
 
     var body: some View {
         VStack {
@@ -459,25 +548,25 @@ This mode runs the `CLIDemo` class, demonstrating SpecificationKit features in a
 SpecificationKit follows a clean, layered architecture:
 
 ```
-┌─────────────────────────────────────┐
-│           Application Layer         │
-│      (@Satisfies, @Spec, Views)     │
-├─────────────────────────────────────┤
-│         Property Wrapper Layer      │
-│        (@Satisfies, @Spec)          │
-├─────────────────────────────────────┤
-│        Definitions Layer            │
-│  (CompositeSpec, FirstMatchSpec)    │
-├─────────────────────────────────────┤
-│         Specifications Layer        │
-│  (Specification, DecisionSpec)      │
-├─────────────────────────────────────┤
-│           Context Layer             │
-│    (EvaluationContext, Providers)   │
-├─────────────────────────────────────┤
-│             Core Layer              │
-│ (Specification Protocol, Operators) │
-└─────────────────────────────────────┘
+┌───────────────────────┐
+│           Application Layer          │
+│ (@Satisfies, @Decides, @Maybe, Views)│
+├───────────────────────┤
+│         Property Wrapper Layer       │
+│      (@Satisfies, @Decides, @Maybe)  │
+├───────────────────────┤
+│        Definitions Layer             │
+│  (CompositeSpec, FirstMatchSpec)     │
+├───────────────────────┤
+│         Specifications Layer         │
+│    (Specification, DecisionSpec)     │
+├───────────────────────┤
+│            Context Layer             │
+│    (EvaluationContext, Providers)    │
+├───────────────────────┤
+│             Core Layer               │
+│ (Specification Protocol, Operators)  │
+└───────────────────────┘
 ```
 
 ## 🤝 Contributing
