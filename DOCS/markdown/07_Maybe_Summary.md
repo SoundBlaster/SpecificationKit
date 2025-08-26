@@ -47,3 +47,28 @@ Notes
 - The new API is clean and expressive:
   - Use Maybe when you want to propagate “no decision”.
   - Use Decides when you always want a value (either matched or fallback).
+
+## Tests
+
+codex
+Added comprehensive tests for the optional wrapper Maybe and verified they pass.
+
+What I changed
+- Tests/SpecificationKitTests/MaybeWrapperTests.swift
+  - test_Maybe_returnsNil_whenNoMatch: Verifies nil when no specs match.
+  - test_Maybe_returnsMatchedValue_whenMatchExists: Verifies returning the match
+ed result.
+  - test_Maybe_projectedValue_matchesWrappedValue: Checks that $value equals wra
+pped value.
+  - test_Maybe_withDecideClosure: Uses the decide: closure initializer.
+  - test_Maybe_builder_buildsOptionalSpec: Validates the builder pattern returns
+ an optional result.
+
+Notes
+- Used @Maybe([...]) pairs convenience to align with Maybe’s EvaluationContext i
+nitializers.
+- Tests isolate DefaultContextProvider state with clearAll() in setUp().
+
+Result
+- All tests pass: Decides, Maybe, DecisionSpec, FirstMatchSpec, and existing sui
+tes.
