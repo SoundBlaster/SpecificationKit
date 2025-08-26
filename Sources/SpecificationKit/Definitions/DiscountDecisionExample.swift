@@ -78,14 +78,13 @@ public enum DiscountDecisionExample {
     // MARK: - FirstMatchSpec Implementation
 
     /// A specification that determines the appropriate discount tier for a user
-    public static let discountTierSpec = FirstMatchSpec<UserContext, DiscountTier>([
+    public static let discountTierSpec = FirstMatchSpec<UserContext, DiscountTier>.withFallback([
         (isVipSpec, .vip),  // 50%
         (isInPromoSpec, .promo),  // 20%
         (isLoyalCustomerSpec, .loyal),  // 25%
         (isBirthdaySpec, .birthday),  // 10%
-        (isBasicCustomerSpec, .basic),  // 5%
-        (AlwaysTrueSpec<UserContext>(), .none),  // 0%
-    ])
+        (isBasicCustomerSpec, .basic)  // 5%
+    ], fallback: .none)
 
     // MARK: - Example Usage Methods
 
@@ -132,24 +131,17 @@ public enum DiscountDecisionExample {
         }
     }
 
-    // MARK: - Property Wrapper Example
+    // MARK: - Service Example (without property wrapper)
 
-    /// A service that demonstrates using @Spec for discount determination
+    /// A service that demonstrates using FirstMatchSpec for discount determination
     public final class DiscountService {
         /// The current user context
         public var userContext: UserContext
 
         /// The discount tier determined by the first-match spec
-        @Spec(
-            FirstMatchSpec([
-                (isVipSpec, DiscountTier.vip),
-                (isInPromoSpec, DiscountTier.promo),
-                (isLoyalCustomerSpec, DiscountTier.loyal),
-                (isBirthdaySpec, DiscountTier.birthday),
-                (isBasicCustomerSpec, DiscountTier.basic),
-                (AlwaysTrueSpec<UserContext>(), DiscountTier.none),
-            ]))
-        public var discountTier: DiscountTier
+        public var discountTier: DiscountTier {
+            DiscountDecisionExample.discountTierSpec.decide(userContext) ?? .none
+        }
 
         /// The discount message determined by a custom DecisionSpec
         public var discountMessage: String {
@@ -160,12 +152,6 @@ public enum DiscountDecisionExample {
         /// - Parameter userContext: The user context to use for discount determination
         public init(userContext: UserContext) {
             self.userContext = userContext
-
-            // Register the context with the default provider
-            DefaultContextProvider.shared.register(
-                contextKey: "UserContext",
-                provider: { [weak self] in self?.userContext ?? UserContext() }
-            )
         }
 
         /// Calculates the final price after applying the discount

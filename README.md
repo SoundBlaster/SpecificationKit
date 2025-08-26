@@ -27,9 +27,9 @@ let spec = FirstMatchSpec<UserContext, Int>([
 let discount = spec.decide(userContext) // Returns 50 if user is VIP
 ```
 
-With the new `@Spec` property wrapper:
+With the new `@Decides` property wrapper:
 ```swift
-@Spec(FirstMatchSpec([
+@Decides(FirstMatchSpec([
     (isVipSpec, 50),
     (promoSpec, 20),
     (birthdaySpec, 10),
@@ -41,7 +41,7 @@ var discount: Int // Infers Int from the spec result type
 ## ✨ Features
 
 - 🧩 **Composable Specifications** - Build complex business rules from simple, reusable components
-- 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies` and `@Spec` for clean integration
+- 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies` and `@Decides` for clean integration
 - 🔄 **Context Providers** - Flexible context injection and dependency management
 - 🚀 **Decision Specifications** - Return typed results beyond just boolean values with `DecisionSpec`
 - 🏆 **Prioritized Rules** - First-match evaluation with `FirstMatchSpec` for categorization and routing
@@ -136,7 +136,7 @@ class BannerController {
     var shouldShowPromoBanner: Bool
     
     // Decision specification for categorization
-    @Spec(FirstMatchSpec([
+    @Decides(FirstMatchSpec([
         (isVipSpec, 50),
         (promoSpec, 20),
         (birthdaySpec, 10),
@@ -284,9 +284,9 @@ struct RouteDecisionSpec: DecisionSpec {
     }
 }
 
-// Use with @Spec property wrapper
+// Use with @Decides property wrapper
 class Router {
-    @Spec(using: RouteDecisionSpec())
+    @Decides(using: RouteDecisionSpec())
     var currentRoute: Route
 }
 
@@ -347,8 +347,8 @@ let discountSpec = FirstMatchSpec<UserContext, Int>.builder()
     .fallback(0)
     .build()
 
-// Or using @Spec wrapper with builder
-@Spec(build: { builder in
+// Or using @Decides wrapper with builder
+@Decides(build: { builder in
     builder
         .add(isVipSpec, result: 50)
         .add(promoSpec, result: 20)
@@ -365,7 +365,7 @@ struct ContentView: View {
     var shouldShowPromo: Bool
     
     // Decision spec for discount tier
-    @Spec(FirstMatchSpec([
+    @Decides(FirstMatchSpec([
         (vipSpec, 50),
         (promoSpec, 20),
         (birthdaySpec, 10),
@@ -410,6 +410,10 @@ class MyFeatureTests: XCTestCase {
     }
 }
 ```
+
+## 🔁 Migration: @Spec → @Decides
+
+Use `@Decides` instead of `@Spec` for decision specifications. The old `@Spec` remains available as a deprecated alias and will be removed in a future release.
 
 ## 📱 Demo App
 

@@ -83,13 +83,10 @@ final class FirstMatchSpecTests: XCTestCase {
         // Arrange
         let vipSpec = PredicateSpec<UserContext> { $0.isVip }
         let promoSpec = PredicateSpec<UserContext> { $0.isInPromo }
-        let alwaysTrueSpec = AlwaysTrueSpec<UserContext>()
-
-        let spec = FirstMatchSpec<UserContext, Int>([
+        let spec = FirstMatchSpec<UserContext, Int>.withFallback([
             (vipSpec, 50),
-            (promoSpec, 20),
-            (alwaysTrueSpec, 0),  // Fallback
-        ])
+            (promoSpec, 20)
+        ], fallback: 0)
 
         let context = UserContext(isVip: false, isInPromo: false, isBirthday: false)
 

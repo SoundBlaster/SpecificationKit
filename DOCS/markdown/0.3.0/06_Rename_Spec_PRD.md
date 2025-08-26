@@ -60,7 +60,7 @@ A backward-compatible migration where `@Decides` becomes the canonical name, and
    - Add “Migration from @Spec to @Decides” section.
 
 3. **Release Phase**
-   - Ship in version `0.3.1`.
+   - Ship in version `0.3.0`.
    - Mark `@Spec` as deprecated but functional.
 
 4. **Future Removal**

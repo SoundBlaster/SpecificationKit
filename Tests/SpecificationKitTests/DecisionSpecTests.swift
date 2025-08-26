@@ -116,15 +116,12 @@ final class DecisionSpecTests: XCTestCase {
         let vipSpec = PredicateSpec<UserContext> { $0.isVip }
         let promoSpec = PredicateSpec<UserContext> { $0.isInPromo }
         let birthdaySpec = PredicateSpec<UserContext> { $0.isBirthday }
-        let alwaysTrueSpec = AlwaysTrueSpec<UserContext>()
-
         // Create a specification with fallback
-        let discountSpec = FirstMatchSpec<UserContext, Int>([
+        let discountSpec = FirstMatchSpec<UserContext, Int>.withFallback([
             (vipSpec, 50),
             (promoSpec, 20),
-            (birthdaySpec, 10),
-            (alwaysTrueSpec, 0),  // Fallback
-        ])
+            (birthdaySpec, 10)
+        ], fallback: 0)
 
         // None matching - should return fallback value
         let noMatchContext = UserContext(isVip: false, isInPromo: false, isBirthday: false)

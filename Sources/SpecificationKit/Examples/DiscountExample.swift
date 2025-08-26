@@ -65,12 +65,11 @@ public enum DiscountExample {
     // MARK: - FirstMatchSpec Usage
 
     /// A first-match specification that determines the appropriate discount
-    public static let discountSpec = FirstMatchSpec<UserContext, Int>([
+    public static let discountSpec = FirstMatchSpec<UserContext, Int>.withFallback([
         (vipSpec, 50),
         (promoSpec, 20),
-        (birthdaySpec, 10),
-        (AlwaysTrueSpec<UserContext>(), 0),  // Fallback
-    ])
+        (birthdaySpec, 10)
+    ], fallback: 0)
 
     /// Gets the discount percentage for a user
     public static func getDiscount(for user: UserContext) -> Int {
