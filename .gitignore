@@ -1,9 +1,9 @@
-.DS_Store
-/.build
-/Packages
-xcuserdata/
-DerivedData/
-.swiftpm/configuration/registries.json
-.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
-.netrc
-/DOCS/.obsidian
+# Ignore lockfiles for SwiftPM
+Package.resolved
+**/Package.resolved
+
+# Ignore SwiftPM/Xcode metadata and build artifacts
+.swiftpm/
+.build/
+
+.build
