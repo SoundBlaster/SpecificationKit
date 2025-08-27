@@ -35,6 +35,15 @@ public struct GenericContextProvider<Context>: ContextProviding {
     }
 }
 
+// MARK: - Async Convenience
+
+extension ContextProviding {
+    /// Async variant returning the current context. Default implementation bridges to sync.
+    public func currentContextAsync() async throws -> Context {
+        currentContext()
+    }
+}
+
 // MARK: - Static Context Provider
 
 /// A context provider that always returns the same static context
