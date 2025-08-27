@@ -90,6 +90,10 @@ extension Satisfies where Context == EvaluationContext {
         self.init(provider: DefaultContextProvider.shared, using: specificationType)
     }
 
+    // Note: A provider-less initializer for @AutoContext types is intentionally
+    // not provided here due to current macro toolchain limitations around
+    // conformance synthesis. Use the provider-based initializers instead.
+
     /// Creates a Satisfies property wrapper with a predicate using the shared default context provider
     /// - Parameter predicate: A predicate function that takes EvaluationContext and returns Bool
     public init(predicate: @escaping (EvaluationContext) -> Bool) {

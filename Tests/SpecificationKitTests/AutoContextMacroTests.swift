@@ -45,4 +45,14 @@ final class AutoContextMacroTests: XCTestCase {
         _ = FeatureFlagCheck.contextProvider
         XCTAssertTrue(type(of: FeatureFlagCheck.contextProvider) == DefaultContextProvider.self)
     }
+
+    func testAutoContext_ExposesProviderTypealias_andContextType() {
+        // Ensure the injected Provider typealias exists and is DefaultContextProvider
+        _ = FeatureFlagCheck.Provider.self
+        XCTAssertTrue(FeatureFlagCheck.Provider.self == DefaultContextProvider.self)
+
+        // Ensure provider yields EvaluationContext for this spec
+        let ctx: EvaluationContext = FeatureFlagCheck.contextProvider.currentContext()
+        _ = ctx
+    }
 }

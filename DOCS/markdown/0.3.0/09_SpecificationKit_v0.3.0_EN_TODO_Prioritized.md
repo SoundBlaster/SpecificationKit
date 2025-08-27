@@ -11,8 +11,8 @@
 - [x] Implement attached macro `@AutoContext` to convert plain spec into auto-context spec.
 - [x] Inject `static contextProvider` with default provider in `@AutoContext`.
 - [x] Synthesize default initializer in `@AutoContext` when missing.
-- [ ] Ensure provider `Context` matches spec `Context` for `@AutoContext`.
-- [ ] Provide tests showing `@AutoContext` works with `@Satisfies` without manual context.
+- [ ] Ensure provider `Context` matches spec `Context` for `@AutoContext`. (blocked by toolchain: conformance macro not available)
+- [ ] Provide tests showing `@AutoContext` works with `@Satisfies` without manual context. (blocked by toolchain; provider-based path covered by tests)
 - [ ] Add negative tests for `@AutoContext` type mismatches.
 - [ ] Implement `DateRangeSpec` using `EvaluationContext.currentDate` within range.
 - [ ] Implement `FeatureFlagSpec` using `EvaluationContext.flags` matching expected value.
