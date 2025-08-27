@@ -12,6 +12,30 @@ struct MissingTypealiasTMessage: DiagnosticMessage {
     var diagnosticID: MessageID { .init(domain: "SpecificationKitMacros", id: "missingTypealiasT") }
 }
 
+struct NonInstanceArgumentMessage: DiagnosticMessage {
+    let index: Int
+    var message: String { "Argument #\(index + 1) to @specs does not appear to be a specification instance." }
+    var severity: DiagnosticSeverity { .error }
+    var diagnosticID: MessageID { .init(domain: "SpecificationKitMacros", id: "nonInstanceArg") }
+}
+
+struct TypeArgumentWarning: DiagnosticMessage {
+    let index: Int
+    var message: String { "Argument #\(index + 1) to @specs looks like a type reference. Did you mean to pass an instance?" }
+    var severity: DiagnosticSeverity { .warning }
+    var diagnosticID: MessageID { .init(domain: "SpecificationKitMacros", id: "typeArgWarning") }
+}
+
+struct MixedContextsWarning: DiagnosticMessage {
+    let contexts: [String]
+    var message: String {
+        let list = contexts.joined(separator: ", ")
+        return "@specs arguments appear to use mixed Context types (\(list)). Ensure all specs share the same Context."
+    }
+    var severity: DiagnosticSeverity { .warning }
+    var diagnosticID: MessageID { .init(domain: "SpecificationKitMacros", id: "mixedContextsWarning") }
+}
+
 /// An error that can be thrown by the SpecsMacro.
 public enum SpecsMacroError: CustomStringConvertible, Error {
     /// Thrown when the `@specs` macro is used without any arguments.
@@ -85,6 +109,60 @@ public struct SpecsMacro: MemberMacro {
         // The first spec is the base of our chain.
         let firstSpec = arguments.first!.expression
         let otherSpecs = arguments.dropFirst()
+
+        // Best-effort validations on arguments
+        var inferredContexts = [String]()
+        let knownEvaluationContextSpecs = [
+            "MaxCountSpec",
+            "TimeSinceEventSpec",
+            "CooldownIntervalSpec",
+            "FeatureFlagSpec",
+            "DateRangeSpec",
+            "DateComparisonSpec",
+            "UserSegmentSpec",
+            "SubscriptionStatusSpec",
+        ]
+
+        func extractContext(from text: String) -> String? {
+            if let lt = text.firstIndex(of: "<"), let gt = text[lt...].firstIndex(of: ">") {
+                let inside = text[text.index(after: lt)..<gt]
+                if let first = inside.split(separator: ",").first {
+                    let trimmed = first.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !trimmed.isEmpty { return trimmed }
+                }
+            }
+            if let name = text.split(separator: "(").first?.split(separator: ".").last,
+               knownEvaluationContextSpecs.contains(String(name)) {
+                return "EvaluationContext"
+            }
+            return nil
+        }
+
+        func isLiteral(_ expr: ExprSyntax) -> Bool {
+            expr.is(StringLiteralExprSyntax.self)
+            || expr.is(BooleanLiteralExprSyntax.self)
+            || expr.is(IntegerLiteralExprSyntax.self)
+            || expr.is(FloatLiteralExprSyntax.self)
+        }
+
+        for (idx, arg) in arguments.enumerated() {
+            let expr = arg.expression
+            let text = expr.trimmedDescription
+            if isLiteral(expr) {
+                context.diagnose(Diagnostic(node: Syntax(node), message: NonInstanceArgumentMessage(index: idx)))
+            } else if text.hasSuffix(".self") {
+                context.diagnose(Diagnostic(node: Syntax(node), message: TypeArgumentWarning(index: idx)))
+            }
+
+            if let ctx = extractContext(from: text) {
+                inferredContexts.append(ctx)
+            }
+        }
+
+        let uniqueContexts = Set(inferredContexts)
+        if uniqueContexts.count > 1 {
+            context.diagnose(Diagnostic(node: Syntax(node), message: MixedContextsWarning(contexts: Array(uniqueContexts).sorted())))
+        }
 
         // Build the chain of .and() calls from the arguments.
         // e.g., spec1.and(spec2).and(spec3)
