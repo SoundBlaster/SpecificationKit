@@ -71,3 +71,49 @@ ntContextAsync.
 Status
 - All tests pass, including the new async tests.
 - Changes kept minimal and localized.
+
+## Step 3
+
+codex
+Async features extended and demo added — implemented and verified via TDD.
+
+What I added
+- Async tests
+  - File: Tests/SpecificationKitTests/AsyncFeaturesTests.swift
+  - New cases:
+    - Throws + delay: AnyAsyncSpecification that throws on a flag and awaits a s
+hort delay.
+    - Already present: async context bridge, async predicate, and Satisfies.eval
+uateAsync usage.
+- Async core APIs
+  - File: Sources/SpecificationKit/Core/AsyncSpecification.swift
+    - AsyncSpecification protocol.
+    - AnyAsyncSpecification<T> with:
+      - init((_:) async throws -> Bool)
+      - init<S: AsyncSpecification>(_:)
+      - Sync Specification bridge init.
+  - File: Sources/SpecificationKit/Core/ContextProviding.swift
+    - currentContextAsync() default implementation bridging to sync.
+- Property wrapper async eval
+  - File: Sources/SpecificationKit/Wrappers/Satisfies.swift
+    - Stores optional async context factory.
+    - Added evaluateAsync() returning Bool using async context if present.
+    - Initializers now capture provider.currentContextAsync.
+- DemoApp: Async Specs screen
+  - File: DemoApp/Sources/AsyncDemoView.swift
+    - Toggles: feature flag, simulate error, add delay.
+    - Button evaluates an AnyAsyncSpecification with optional delay and error, t
+hen reports result.
+  - App nav updated:
+    - File: DemoApp/Sources/main.swift
+    - Adds “Async Specs” navigation link.
+  - Build verified for both root and DemoApp.
+
+Notes
+- I used currentContextAsync() instead of overloading currentContext() to avoid
+ambiguity.
+- Satisfies.evaluateAsync evaluates the stored sync spec with an async context;
+async spec composition remains explicit via AnyAsyncSpecification in the demo/te
+sts.
+- Tests cover both thrown errors and delays without adding significant runtime (
+10ms delay).

@@ -35,6 +35,9 @@ struct AppContentView: View {
                 NavigationLink(destination: DecisionsDemoView()) {
                     Label("Decisions", systemImage: "switch.2")
                 }
+                NavigationLink(destination: AsyncDemoView()) {
+                    Label("Async Specs", systemImage: "timer")
+                }
             }
             .listStyle(SidebarListStyle())
             .navigationTitle("SpecificationKit Demo")

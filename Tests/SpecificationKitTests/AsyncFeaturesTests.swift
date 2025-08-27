@@ -12,6 +12,43 @@ final class AsyncFeaturesTests: XCTestCase {
         XCTAssertTrue(ctx.flag(for: "async_flag"))
     }
 
+    func test_AnyAsyncSpecification_canThrow_andDelay() async {
+        enum TestError: Error { case failed }
+
+        let throwingSpec = AnyAsyncSpecification<EvaluationContext> { ctx in
+            if ctx.flag(for: "fail") { throw TestError.failed }
+            return true
+        }
+
+        let delayedSpec = AnyAsyncSpecification<EvaluationContext> { ctx in
+            _ = ctx // use ctx
+            try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
+            return true
+        }
+
+        // Throws when flag is set
+        let failingCtx = EvaluationContext(flags: ["fail": true])
+        do {
+            _ = try await throwingSpec.isSatisfiedBy(failingCtx)
+            XCTFail("Expected throw")
+        } catch {
+            // ok
+        }
+
+        // Succeeds when flag is false
+        let okCtx = EvaluationContext(flags: ["fail": false])
+        do {
+            let v = try await throwingSpec.isSatisfiedBy(okCtx)
+            XCTAssertTrue(v)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+
+        // Delay completes and returns true
+        let v2 = try? await delayedSpec.isSatisfiedBy(EvaluationContext())
+        XCTAssertEqual(v2, true)
+    }
+
     func test_AnyAsyncSpecification_predicate() async throws {
         let asyncSpec = AnyAsyncSpecification<EvaluationContext> { ctx in
             // Simulate async work
