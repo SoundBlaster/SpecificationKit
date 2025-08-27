@@ -27,5 +27,24 @@ final class SpecsMacroDiagnosticsTests: XCTestCase {
             macros: testMacros
         )
     }
-}
 
+    func test_specs_mustBeAppliedToSpecificationType() {
+        assertMacroExpansion(
+            """
+            @specs(MaxCountSpec(counterKey: "c", limit: 1))
+            struct NotSpec {}
+            """,
+            expandedSource: """
+            struct NotSpec {}
+            """,
+            diagnostics: [
+                .init(
+                    message: "@specs macro must be used on a type conforming to `Specification`.",
+                    line: 1,
+                    column: 1
+                )
+            ],
+            macros: testMacros
+        )
+    }
+}

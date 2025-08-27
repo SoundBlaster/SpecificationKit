@@ -7,11 +7,15 @@ import SwiftSyntaxMacros
 public enum SpecsMacroError: CustomStringConvertible, Error {
     /// Thrown when the `@specs` macro is used without any arguments.
     case requiresAtLeastOneArgument
+    /// Thrown when the `@specs` macro is attached to a type not conforming to `Specification`.
+    case mustBeAppliedToSpecificationType
 
     public var description: String {
         switch self {
         case .requiresAtLeastOneArgument:
             return "@specs macro requires at least one specification argument."
+        case .mustBeAppliedToSpecificationType:
+            return "@specs macro must be used on a type conforming to `Specification`."
         }
     }
 }
@@ -39,6 +43,27 @@ public struct SpecsMacro: MemberMacro {
             throw SpecsMacroError.requiresAtLeastOneArgument
         }
 
+        // Ensure the macro is applied to a type that conforms to `Specification`.
+        let conformsToSpecification: Bool = {
+            if let s = declaration.as(StructDeclSyntax.self) {
+                return s.inheritanceClause?.inheritedTypes.contains(where: { $0.type.trimmedDescription == "Specification" }) ?? false
+            }
+            if let c = declaration.as(ClassDeclSyntax.self) {
+                return c.inheritanceClause?.inheritedTypes.contains(where: { $0.type.trimmedDescription == "Specification" }) ?? false
+            }
+            if let a = declaration.as(ActorDeclSyntax.self) {
+                return a.inheritanceClause?.inheritedTypes.contains(where: { $0.type.trimmedDescription == "Specification" }) ?? false
+            }
+            if let e = declaration.as(EnumDeclSyntax.self) {
+                return e.inheritanceClause?.inheritedTypes.contains(where: { $0.type.trimmedDescription == "Specification" }) ?? false
+            }
+            return false
+        }()
+
+        guard conformsToSpecification else {
+            throw SpecsMacroError.mustBeAppliedToSpecificationType
+        }
+
         // The first spec is the base of our chain.
         let firstSpec = arguments.first!.expression
         let otherSpecs = arguments.dropFirst()
@@ -64,7 +89,7 @@ public struct SpecsMacro: MemberMacro {
 
         // Generate the required code as string literals and parse them into syntax nodes.
         let compositeProperty: DeclSyntax =
-            "private let composite: AnySpecification<EvaluationContext>"
+            "private let composite: AnySpecification<T>"
 
         let initializer: DeclSyntax =
             """
@@ -76,7 +101,7 @@ public struct SpecsMacro: MemberMacro {
 
         let isSatisfiedByMethod: DeclSyntax =
             """
-            public func isSatisfiedBy(_ candidate: EvaluationContext) -> Bool {
+            public func isSatisfiedBy(_ candidate: T) -> Bool {
                 composite.isSatisfiedBy(candidate)
             }
             """
