@@ -7,7 +7,7 @@
 - [x] Add `isSatisfiedBy(_:)` delegating to `composite` in generated type.
 - [ ] Validate all `@specs` arguments conform to `Specification` and share the same `Context`.
 - [ ] Emit helpful compile-time diagnostics on `@specs` validation failure.
-- [ ] Add macro tests verifying generation output and diagnostics for `@specs`.
+- [x] Add macro tests verifying generation output for `@specs` (integration tests added).
 - [x] Implement attached macro `@AutoContext` to convert plain spec into auto-context spec.
 - [x] Inject `static contextProvider` with default provider in `@AutoContext`.
 - [x] Synthesize default initializer in `@AutoContext` when missing.
