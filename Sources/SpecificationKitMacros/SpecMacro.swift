@@ -2,6 +2,15 @@ import SwiftCompilerPlugin
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
+import SwiftDiagnostics
+
+struct MissingTypealiasTMessage: DiagnosticMessage {
+    var message: String {
+        "Specification type appears to be missing typealias T (e.g. 'typealias T = EvaluationContext')."
+    }
+    var severity: DiagnosticSeverity { .warning }
+    var diagnosticID: MessageID { .init(domain: "SpecificationKitMacros", id: "missingTypealiasT") }
+}
 
 /// An error that can be thrown by the SpecsMacro.
 public enum SpecsMacroError: CustomStringConvertible, Error {
@@ -62,6 +71,15 @@ public struct SpecsMacro: MemberMacro {
 
         guard conformsToSpecification else {
             throw SpecsMacroError.mustBeAppliedToSpecificationType
+        }
+
+        // Suggest adding `typealias T = ...` if missing.
+        let hasTypealiasT: Bool = declaration.memberBlock.members.contains { member in
+            guard let typealiasDecl = member.decl.as(TypeAliasDeclSyntax.self) else { return false }
+            return typealiasDecl.name.text == "T"
+        }
+        if !hasTypealiasT {
+            context.diagnose(Diagnostic(node: Syntax(node), message: MissingTypealiasTMessage()))
         }
 
         // The first spec is the base of our chain.
