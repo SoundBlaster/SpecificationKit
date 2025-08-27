@@ -60,6 +60,7 @@ var discountOrDefault: Int = 0
 - 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies`, `@Decides` (non-optional), and `@Maybe` (optional)
 - 🔄 **Context Providers** - Flexible context injection and dependency management
 - 🚀 **Decision Specifications** - Return typed results beyond just boolean values with `DecisionSpec`
+- 🧭 **Date & Flags Specs** - New built-ins: `DateRangeSpec`, `DateComparisonSpec`, `FeatureFlagSpec`, `UserSegmentSpec`, `SubscriptionStatusSpec`
 - 🏆 **Prioritized Rules** - First-match evaluation with `FirstMatchSpec` for categorization and routing
 - 🧪 **Testing Support** - Built-in mock providers and test utilities
 - 📱 **Cross-Platform** - Works on iOS, macOS, tvOS, and watchOS
@@ -137,6 +138,24 @@ let bannerSpec = BannerSpec()
 if bannerSpec.isSatisfiedBy(context) {
     print("Show the banner!")
 }
+```
+
+### @AutoContext Macro Usage
+
+Annotate a spec to inject a default context provider and a synthesized `init()`.
+
+```swift
+@AutoContext
+struct PromoEnabled: Specification {
+    typealias T = EvaluationContext
+    func isSatisfiedBy(_ ctx: EvaluationContext) -> Bool {
+        ctx.flag(for: "promo")
+    }
+}
+
+// Use with provider-based Satisfies initializer
+@Satisfies(provider: PromoEnabled.contextProvider, using: PromoEnabled())
+var isPromoOn: Bool
 ```
 
 ### Property Wrapper Usage
@@ -609,3 +628,41 @@ SpecificationKit is available under the MIT license. See [LICENSE](LICENSE) for 
 ---
 
 **Made with ❤️ by the SpecificationKit team**
+### Additional Built-in Specs
+
+#### DateRangeSpec
+Checks if `currentDate` is within an inclusive range.
+
+```swift
+let start = Date(timeIntervalSinceNow: -86400) // 1 day ago
+let end = Date(timeIntervalSinceNow: 86400)    // 1 day ahead
+let spec = DateRangeSpec(start: start, end: end)
+```
+
+#### DateComparisonSpec
+Compares an event date to a reference date using `.before` or `.after`.
+
+```swift
+let spec = DateComparisonSpec(eventKey: "last_login", comparison: .before, date: Date())
+```
+
+#### FeatureFlagSpec
+Matches a boolean flag to an expected value. Missing flags do not match.
+
+```swift
+let enabled = FeatureFlagSpec(flagKey: "feature_enabled")
+```
+
+#### UserSegmentSpec
+Checks membership in a user segment (e.g., "vip", "beta").
+
+```swift
+let isVip = UserSegmentSpec(.vip)
+```
+
+#### SubscriptionStatusSpec
+Matches a subscription status stored in `userData["subscription_status"]`.
+
+```swift
+let isPremium = SubscriptionStatusSpec(.premium)
+```

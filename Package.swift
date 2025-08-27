@@ -54,6 +54,10 @@ let package = Package(
                 "SpecificationKit",
                 // This product provides a convenient API for testing macro expansion.
                 .product(name: "MacroTesting", package: "swift-macro-testing"),
+                // Access macro types for MacroTesting
+                "SpecificationKitMacros",
+                // Apple macro test support for diagnostics and expansions
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
         ),
     ]
