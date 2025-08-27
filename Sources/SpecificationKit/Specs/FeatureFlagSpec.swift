@@ -13,7 +13,8 @@ public struct FeatureFlagSpec: Specification {
     }
 
     public func isSatisfiedBy(_ candidate: EvaluationContext) -> Bool {
-        candidate.flag(for: flagKey) == expected
+        // Treat missing flags as non-satisfying (do not conflate missing with false)
+        guard let value = candidate.flags[flagKey] else { return false }
+        return value == expected
     }
 }
-
