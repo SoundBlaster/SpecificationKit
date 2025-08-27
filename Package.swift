@@ -22,7 +22,7 @@ let package = Package(
     ],
     dependencies: [
         // Depend on the latest Swift Syntax package for macro support.
-        .package(url: "https://github.com/apple/swift-syntax.git", from: "509.0.0"),
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "509.0.0"),
         // Add swift-macro-testing for a simplified macro testing experience.
         .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.4.0"),
     ],
