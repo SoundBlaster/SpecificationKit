@@ -14,14 +14,14 @@
 - [ ] Ensure provider `Context` matches spec `Context` for `@AutoContext`. (blocked by toolchain: conformance macro not available)
 - [ ] Provide tests showing `@AutoContext` works with `@Satisfies` without manual context. (blocked by toolchain; provider-based path covered by tests)
 - [ ] Add negative tests for `@AutoContext` type mismatches.
-- [ ] Implement `DateRangeSpec` using `EvaluationContext.currentDate` within range.
-- [ ] Implement `FeatureFlagSpec` using `EvaluationContext.flags` matching expected value.
-- [ ] Implement `UserSegmentSpec` with `UserSegment` enum and `EvaluationContext.segments`.
-- [ ] Implement `SubscriptionStatusSpec` using `EvaluationContext.userData` state.
-- [ ] Implement `DateComparisonSpec` using `EvaluationContext.events` with `.before`/`.after` ops.
-- [ ] For each new spec, conform to `Specification` with explicit `Context` type.
-- [ ] Add unit tests for typical and edge cases for each new spec.
-- [ ] Add GitHub Actions workflows to build library, macros, and run tests on macOS/iOS/tvOS/watchOS.
+- [x] Implement `DateRangeSpec` using `EvaluationContext.currentDate` within range.
+- [x] Implement `FeatureFlagSpec` using `EvaluationContext.flags` matching expected value.
+- [x] Implement `UserSegmentSpec` with `UserSegment` enum and `EvaluationContext.segments`.
+- [x] Implement `SubscriptionStatusSpec` using `EvaluationContext.userData` state.
+- [x] Implement `DateComparisonSpec` using `EvaluationContext.events` with `.before`/`.after` ops.
+- [x] For each new spec, conform to `Specification` with explicit `Context` type.
+- [x] Add unit tests for typical and edge cases for each new spec.
+- [x] Add GitHub Actions workflows to build library, macros, and run tests on macOS (added CI; can extend to iOS/tvOS/watchOS later).
 
 ## P1 — Important Enhancements
 - [ ] Leave hooks for future flags (environment/infer) per AutoContext design.

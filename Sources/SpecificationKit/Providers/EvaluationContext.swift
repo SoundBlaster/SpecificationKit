@@ -30,6 +30,9 @@ public struct EvaluationContext {
     /// A dictionary for storing boolean flags
     public let flags: [String: Bool]
 
+    /// A set of user segments (e.g., "vip", "beta", etc.)
+    public let segments: Set<String>
+
     /// Creates a new evaluation context with the specified parameters
     /// - Parameters:
     ///   - currentDate: The current date and time (defaults to now)
@@ -44,7 +47,8 @@ public struct EvaluationContext {
         userData: [String: Any] = [:],
         counters: [String: Int] = [:],
         events: [String: Date] = [:],
-        flags: [String: Bool] = [:]
+        flags: [String: Bool] = [:],
+        segments: Set<String> = []
     ) {
         self.currentDate = currentDate
         self.launchDate = launchDate
@@ -52,6 +56,7 @@ public struct EvaluationContext {
         self.counters = counters
         self.events = events
         self.flags = flags
+        self.segments = segments
     }
 }
 
@@ -130,7 +135,8 @@ extension EvaluationContext {
             userData: userData,
             counters: counters,
             events: events,
-            flags: flags
+            flags: flags,
+            segments: segments
         )
     }
 
@@ -144,7 +150,8 @@ extension EvaluationContext {
             userData: userData,
             counters: counters,
             events: events,
-            flags: flags
+            flags: flags,
+            segments: segments
         )
     }
 
@@ -158,7 +165,8 @@ extension EvaluationContext {
             userData: userData,
             counters: counters,
             events: events,
-            flags: flags
+            flags: flags,
+            segments: segments
         )
     }
 
@@ -172,7 +180,8 @@ extension EvaluationContext {
             userData: userData,
             counters: counters,
             events: events,
-            flags: flags
+            flags: flags,
+            segments: segments
         )
     }
 
@@ -186,7 +195,8 @@ extension EvaluationContext {
             userData: userData,
             counters: counters,
             events: events,
-            flags: flags
+            flags: flags,
+            segments: segments
         )
     }
 }
