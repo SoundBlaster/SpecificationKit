@@ -23,7 +23,7 @@ struct DecisionsDemoView: View {
         (PredicateSpec<EvaluationContext> { $0.flag(for: "promo") }, 20)
     ], or: 0) var discountRequired: Int
 
-    // Local UI state mirroring DefaultContextProvider flags
+    // Local UI state with synchronous provider updates
     @State private var isVip = false
     @State private var isInPromo = false
 
@@ -36,15 +36,21 @@ struct DecisionsDemoView: View {
                 .fontWeight(.semibold)
 
             HStack(spacing: 24) {
-                Toggle("VIP", isOn: $isVip)
-                    .onChange(of: isVip) { newValue in
+                Toggle("VIP", isOn: .init(
+                    get: { isVip },
+                    set: { newValue in
+                        isVip = newValue
                         provider.setFlag("vip", to: newValue)
                     }
+                ))
 
-                Toggle("Promo", isOn: $isInPromo)
-                    .onChange(of: isInPromo) { newValue in
+                Toggle("Promo", isOn: .init(
+                    get: { isInPromo },
+                    set: { newValue in
+                        isInPromo = newValue
                         provider.setFlag("promo", to: newValue)
                     }
+                ))
             }
 
             Group {
@@ -67,7 +73,7 @@ struct DecisionsDemoView: View {
         }
         .padding()
         .onAppear {
-            // Sync toggles with provider flags
+            // Initialize from provider once at appear
             isVip = provider.getFlag("vip")
             isInPromo = provider.getFlag("promo")
         }
@@ -78,4 +84,3 @@ struct DecisionsDemoView: View {
 #Preview {
     DecisionsDemoView()
 }
-
