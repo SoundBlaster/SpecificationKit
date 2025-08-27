@@ -1,10 +1,10 @@
 # SpecificationKit v0.3.0 — Prioritized TODO (from 08_)
 
 ## P0 — Critical Path
-- [ ] Create `SpecificationKitMacros` SwiftPM target for code generation.
-- [ ] Implement attached macro `@specs` accepting types conforming to `Specification`.
-- [ ] Generate private `composite: AnySpecification` and initializer using `.and()`/`.or()`.
-- [ ] Add `isSatisfiedBy(_:)` delegating to `composite` in generated type.
+- [x] Create `SpecificationKitMacros` SwiftPM target for code generation.
+- [x] Implement attached macro `@specs` accepting types conforming to `Specification`.
+- [x] Generate private `composite: AnySpecification` and initializer using `.and()`/`.or()`.
+- [x] Add `isSatisfiedBy(_:)` delegating to `composite` in generated type.
 - [ ] Validate all `@specs` arguments conform to `Specification` and share the same `Context`.
 - [ ] Emit helpful compile-time diagnostics on `@specs` validation failure.
 - [ ] Add macro tests verifying generation output and diagnostics for `@specs`.
@@ -52,4 +52,3 @@
 - [ ] Investigate potential bottlenecks in `AnySpecification`; consider `@inlinable` where appropriate.
 - [ ] Measure macro compilation impact and optimize macro code to minimize build times.
 - [ ] Refactor existing code for clarity and maintainability; ensure consistent use of generics and extensions.
-
