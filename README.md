@@ -61,6 +61,7 @@ var discountOrDefault: Int = 0
 - 🔄 **Context Providers** - Flexible context injection and dependency management
 - 🚀 **Decision Specifications** - Return typed results beyond just boolean values with `DecisionSpec`
 - 🧭 **Date & Flags Specs** - New built-ins: `DateRangeSpec`, `DateComparisonSpec`, `FeatureFlagSpec`, `UserSegmentSpec`, `SubscriptionStatusSpec`
+- ⚙️ **Async Capable** - Evaluate rules asynchronously via `AsyncSpecification`, `AnyAsyncSpecification`, and `Satisfies.evaluateAsync()`
 - 🏆 **Prioritized Rules** - First-match evaluation with `FirstMatchSpec` for categorization and routing
 - 🧪 **Testing Support** - Built-in mock providers and test utilities
 - 📱 **Cross-Platform** - Works on iOS, macOS, tvOS, and watchOS
@@ -140,6 +141,33 @@ if bannerSpec.isSatisfiedBy(context) {
 }
 ```
 
+### Async Specs (Quick Start)
+
+Evaluate rules asynchronously when inputs require awaiting (network, disk, timers). Use `AnyAsyncSpecification` or await a provider with `Satisfies.evaluateAsync()`.
+
+```swift
+// 1) Async spec with a small delay, checking a flag
+let asyncSpec = AnyAsyncSpecification<EvaluationContext> { ctx in
+    try? await Task.sleep(nanoseconds: 50_000_000)
+    return ctx.flag(for: "feature_enabled")
+}
+
+let asyncOK = try await asyncSpec.isSatisfiedBy(
+    EvaluationContext(flags: ["feature_enabled": true])
+)
+
+// 2) Await provider context via Satisfies
+struct Gate {
+    @Satisfies(provider: DefaultContextProvider.shared,
+               predicate: { $0.flag(for: "feature_async") })
+    var isOn: Bool
+
+    func check() async throws -> Bool {
+        try await _isOn.evaluateAsync()
+    }
+}
+```
+
 ### @AutoContext Macro Usage
 
 Annotate a spec to inject a default context provider and a synthesized `init()`.
@@ -157,6 +185,45 @@ struct PromoEnabled: Specification {
 @Satisfies(provider: PromoEnabled.contextProvider, using: PromoEnabled())
 var isPromoOn: Bool
 ```
+
+### Async Specifications
+
+Evaluate specs asynchronously when your inputs require awaiting (network, disk, timers):
+
+```swift
+// Async API with a type-erased wrapper
+let asyncSpec = AnyAsyncSpecification<EvaluationContext> { ctx in
+    try? await Task.sleep(nanoseconds: 50_000_000) // 50 ms
+    return ctx.flag(for: "feature_enabled")
+}
+
+let ctx = EvaluationContext(flags: ["feature_enabled": true])
+let ok = try await asyncSpec.isSatisfiedBy(ctx) // true
+```
+
+Bridge sync specs to async when needed:
+
+```swift
+let syncSpec = MaxCountSpec(counterKey: "attempts", limit: 3)
+let bridged = AnyAsyncSpecification(syncSpec)
+let ok = try await bridged.isSatisfiedBy(EvaluationContext(counters: ["attempts": 1]))
+```
+
+Use `Satisfies.evaluateAsync()` to await the provider’s context and evaluate a sync spec:
+
+```swift
+struct FeatureGate {
+    @Satisfies(provider: DefaultContextProvider.shared,
+               predicate: { $0.flag(for: "feature_async") })
+    var isEnabled: Bool
+
+    func check() async throws -> Bool {
+        try await _isEnabled.evaluateAsync()
+    }
+}
+```
+
+Default providers expose `currentContextAsync()` which bridges to the sync call by default; override it in your provider to perform real async work.
 
 ### Property Wrapper Usage
 
@@ -552,6 +619,7 @@ The demo showcases:
 - Property wrapper integration
 - Interactive state manipulation
  - Decisions screen demonstrating `@Decides`, `@Maybe`, and `FirstMatchSpec`
+ - Async Specs screen demonstrating `AnyAsyncSpecification`, delays, and error handling
 
 ### Decisions Screen
 
