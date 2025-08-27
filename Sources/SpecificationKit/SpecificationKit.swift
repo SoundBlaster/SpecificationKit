@@ -35,3 +35,15 @@ public enum SpecificationKit {
 public macro specs(
     _ specifications: Any...
 ) = #externalMacro(module: "SpecificationKitMacros", type: "SpecsMacro")
+
+/// A macro that augments a `Specification` type to become an `AutoContextSpecification`.
+///
+/// It injects:
+/// - `public typealias Provider = DefaultContextProvider`
+/// - `public static var contextProvider: DefaultContextProvider { .shared }`
+/// - `public init()` if not present
+@attached(member, names: named(Provider), named(contextProvider), named(init))
+public macro AutoContext() = #externalMacro(
+    module: "SpecificationKitMacros",
+    type: "AutoContextMacro"
+)

@@ -7,6 +7,15 @@ import SwiftUI
 import SpecificationKit
 
 struct DecisionsDemoView: View {
+    // AutoContext demo spec: uses DefaultContextProvider.shared via @AutoContext
+    @AutoContext
+    struct PromoEnabledSpec: Specification {
+        typealias T = EvaluationContext
+        func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+            context.flag(for: "promo")
+        }
+    }
+
     // Demo specs
     private let vip = PredicateSpec<EvaluationContext> { $0.flag(for: "vip") }
     private let promo = PredicateSpec<EvaluationContext> { $0.flag(for: "promo") }
@@ -56,6 +65,8 @@ struct DecisionsDemoView: View {
             Group {
                 Text("@Maybe result: \(discountOptional?.description ?? "nil")")
                 Text("@Decides result: \(discountRequired)")
+                // AutoContext demo: use macro-injected contextProvider
+                AutoContextRow()
             }
             .font(.headline)
 
@@ -83,4 +94,17 @@ struct DecisionsDemoView: View {
 
 #Preview {
     DecisionsDemoView()
+}
+
+// MARK: - Subviews
+
+private struct AutoContextRow: View {
+    // Using provider injected by @AutoContext macro
+    @Satisfies(provider: DecisionsDemoView.PromoEnabledSpec.contextProvider,
+               using: DecisionsDemoView.PromoEnabledSpec())
+    private var isPromoOn: Bool
+
+    var body: some View {
+        Text("@AutoContext PromoEnabledSpec: \(isPromoOn ? "ON" : "OFF")")
+    }
 }

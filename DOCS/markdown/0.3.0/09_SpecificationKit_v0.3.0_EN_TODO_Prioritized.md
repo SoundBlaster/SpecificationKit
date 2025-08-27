@@ -8,9 +8,9 @@
 - [ ] Validate all `@specs` arguments conform to `Specification` and share the same `Context`.
 - [ ] Emit helpful compile-time diagnostics on `@specs` validation failure.
 - [ ] Add macro tests verifying generation output and diagnostics for `@specs`.
-- [ ] Implement attached macro `@AutoContext` to convert plain spec into auto-context spec.
-- [ ] Inject `static contextProvider` with default provider in `@AutoContext`.
-- [ ] Synthesize default initializer in `@AutoContext` when missing.
+- [x] Implement attached macro `@AutoContext` to convert plain spec into auto-context spec.
+- [x] Inject `static contextProvider` with default provider in `@AutoContext`.
+- [x] Synthesize default initializer in `@AutoContext` when missing.
 - [ ] Ensure provider `Context` matches spec `Context` for `@AutoContext`.
 - [ ] Provide tests showing `@AutoContext` works with `@Satisfies` without manual context.
 - [ ] Add negative tests for `@AutoContext` type mismatches.
