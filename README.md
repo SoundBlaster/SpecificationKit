@@ -54,6 +54,40 @@ var discountOr: Int
 var discountOrDefault: Int = 0
 ```
 
+### Observation for SwiftUI
+
+Reactive UI updates are now supported with an observed wrapper and provider hooks:
+
+- `@ObservedSatisfies`: a `DynamicProperty` that re-evaluates automatically when the underlying context provider changes.
+- `ContextUpdatesProviding`: optional protocol for providers to publish update signals (Combine) and/or offer an `AsyncStream` bridge.
+- Built-in providers:
+  - `DefaultContextProvider` publishes updates when counters/flags/events/userData change.
+  - `EnvironmentContextProvider` forwards SwiftUI `objectWillChange`.
+
+Example:
+
+```swift
+import SwiftUI
+import SpecificationKit
+
+struct GateView: View {
+    @ObservedSatisfies(provider: DefaultContextProvider.shared,
+                       predicate: { $0.flag(for: "promo_enabled") })
+    private var promoOn: Bool
+
+    var body: some View {
+        VStack {
+            Text(promoOn ? "Promo ON" : "Promo OFF")
+            Button("Toggle") {
+                DefaultContextProvider.shared.toggleFlag("promo_enabled")
+            }
+        }
+    }
+}
+```
+
+DemoApp includes an “Observation” screen showcasing live updates for flags, counters, and cooldowns.
+
 ## ✨ Features
 
 - 🧩 **Composable Specifications** - Build complex business rules from simple, reusable components
@@ -62,6 +96,7 @@ var discountOrDefault: Int = 0
 - 🚀 **Decision Specifications** - Return typed results beyond just boolean values with `DecisionSpec`
 - 🧭 **Date & Flags Specs** - New built-ins: `DateRangeSpec`, `DateComparisonSpec`, `FeatureFlagSpec`, `UserSegmentSpec`, `SubscriptionStatusSpec`
 - ⚙️ **Async Capable** - Evaluate rules asynchronously via `AsyncSpecification`, `AnyAsyncSpecification`, and `Satisfies.evaluateAsync()`
+- 👀 **Observation for SwiftUI** - `@ObservedSatisfies` auto-updates when providers publish changes (via `ContextUpdatesProviding`)
 - 🏆 **Prioritized Rules** - First-match evaluation with `FirstMatchSpec` for categorization and routing
 - 🧪 **Testing Support** - Built-in mock providers and test utilities
 - 📱 **Cross-Platform** - Works on iOS, macOS, tvOS, and watchOS
@@ -271,6 +306,51 @@ class BannerController {
     }
 }
 ```
+
+### Observation in SwiftUI
+
+Use `@ObservedSatisfies` to keep views in sync with provider changes. Providers that conform to `ContextUpdatesProviding` will trigger re-evaluation.
+
+```swift
+struct ObservationExample: View {
+    @ObservedSatisfies(provider: DefaultContextProvider.shared,
+                       using: MaxCountSpec(counterKey: "attempts", limit: 3))
+    private var underLimit: Bool
+
+    var body: some View {
+        VStack {
+            Text(underLimit ? "Below limit" : "Limit reached")
+            Button("+1") { _ = DefaultContextProvider.shared.incrementCounter("attempts") }
+            Button("Reset") { DefaultContextProvider.shared.setCounter("attempts", to: 0) }
+        }
+    }
+}
+```
+
+Custom providers can opt into observation by conforming to `ContextUpdatesProviding` and exposing a Combine publisher:
+
+```swift
+import Combine
+
+final class MyProvider: ContextProviding, ContextUpdatesProviding {
+    typealias Context = MyContext
+
+    private let subject = PassthroughSubject<Void, Never>()
+
+    func currentContext() -> MyContext { /* snapshot */ }
+
+    // Publish when state changes
+    func mutate() { /* ... */ subject.send() }
+
+    var contextUpdates: AnyPublisher<Void, Never> { subject.eraseToAnyPublisher() }
+    var contextStream: AsyncStream<Void> { AsyncStream { cont in
+        let c = subject.sink { _ in cont.yield(()) }
+        cont.onTermination = { _ in _ = c }
+    }}
+}
+```
+
+See DemoApp → Observation for a working example.
 
 ## 🧱 Core Components
 

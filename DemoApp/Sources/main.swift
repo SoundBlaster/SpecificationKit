@@ -41,6 +41,9 @@ struct AppContentView: View {
                 NavigationLink(destination: EnvironmentDemoView()) {
                     Label("Environment Context", systemImage: "globe")
                 }
+                NavigationLink(destination: ObservationDemoView()) {
+                    Label("Observation", systemImage: "eye")
+                }
             }
             .listStyle(SidebarListStyle())
             .navigationTitle("SpecificationKit Demo")

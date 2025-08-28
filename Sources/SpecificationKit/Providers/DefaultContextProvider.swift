@@ -6,6 +6,9 @@
 //
 
 import Foundation
+#if canImport(Combine)
+import Combine
+#endif
 
 /// A default context provider that supplies evaluation context from runtime state.
 /// This provider can be configured with various data sources and maintains
@@ -27,6 +30,10 @@ public class DefaultContextProvider: ContextProviding {
     private var _contextProviders: [String: () -> Any] = [:]
 
     private let lock = NSLock()
+
+    #if canImport(Combine)
+    public let objectWillChange = PassthroughSubject<Void, Never>()
+    #endif
 
     // MARK: - Initialization
 
@@ -70,6 +77,9 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _counters[key] = value
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 
     /// Increments a counter by the specified amount
@@ -83,6 +93,9 @@ public class DefaultContextProvider: ContextProviding {
         defer { lock.unlock() }
         let newValue = (_counters[key] ?? 0) + amount
         _counters[key] = newValue
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
         return newValue
     }
 
@@ -97,6 +110,9 @@ public class DefaultContextProvider: ContextProviding {
         defer { lock.unlock() }
         let newValue = max(0, (_counters[key] ?? 0) - amount)
         _counters[key] = newValue
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
         return newValue
     }
 
@@ -115,6 +131,9 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _counters[key] = 0
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 
     // MARK: - Event Management
@@ -133,6 +152,9 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _events[key] = date
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 
     /// Gets the timestamp of an event
@@ -150,6 +172,9 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _events.removeValue(forKey: key)
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 
     // MARK: - Flag Management
@@ -162,6 +187,9 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _flags[key] = value
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 
     /// Toggles a boolean flag
@@ -173,6 +201,9 @@ public class DefaultContextProvider: ContextProviding {
         defer { lock.unlock() }
         let newValue = !(_flags[key] ?? false)
         _flags[key] = newValue
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
         return newValue
     }
 
@@ -195,6 +226,9 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _userData[key] = value
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 
     /// Gets user data for a key
@@ -214,6 +248,9 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _userData.removeValue(forKey: key)
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 
     // MARK: - Bulk Operations
@@ -226,6 +263,9 @@ public class DefaultContextProvider: ContextProviding {
         _events.removeAll()
         _flags.removeAll()
         _userData.removeAll()
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 
     /// Clears all counters
@@ -233,6 +273,9 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _counters.removeAll()
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 
     /// Clears all events
@@ -240,6 +283,9 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _events.removeAll()
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 
     /// Clears all flags
@@ -247,6 +293,9 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _flags.removeAll()
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 
     /// Clears all user data
@@ -254,6 +303,9 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _userData.removeAll()
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 
     // MARK: - Context Registration
@@ -266,6 +318,9 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _contextProviders[contextKey] = provider
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 
     /// Unregisters a custom context provider
@@ -274,6 +329,9 @@ public class DefaultContextProvider: ContextProviding {
         lock.lock()
         defer { lock.unlock() }
         _contextProviders.removeValue(forKey: contextKey)
+        #if canImport(Combine)
+        objectWillChange.send()
+        #endif
     }
 }
 
@@ -305,3 +363,23 @@ extension DefaultContextProvider {
         }
     }
 }
+
+#if canImport(Combine)
+// MARK: - Observation bridging
+extension DefaultContextProvider: ContextUpdatesProviding {
+    /// Emits a signal when internal state changes.
+    public var contextUpdates: AnyPublisher<Void, Never> { objectWillChange.eraseToAnyPublisher() }
+
+    /// Async bridge of updates; yields whenever `objectWillChange` fires.
+    public var contextStream: AsyncStream<Void> {
+        AsyncStream { continuation in
+            let subscription = objectWillChange.sink { _ in
+                continuation.yield(())
+            }
+            continuation.onTermination = { _ in
+                _ = subscription
+            }
+        }
+    }
+}
+#endif

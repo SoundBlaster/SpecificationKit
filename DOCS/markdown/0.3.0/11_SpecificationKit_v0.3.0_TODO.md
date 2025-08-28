@@ -59,8 +59,9 @@ Legend: [x] Completed • [ ] Pending • (blocked) indicates an external/toolch
 
 ### Pending
 - [ ] Leave hooks for future flags (environment/infer) per AutoContext design.
-- [ ] Provide observation (Combine or `AsyncSequence`) to re-evaluate when context changes.
-- [ ] Add `@Satisfies` variant that publishes changes so SwiftUI updates automatically.
+- [x] Provide observation (Combine or `AsyncSequence`) to re-evaluate when context changes.
+- [x] Add `@Satisfies` variant that publishes changes so SwiftUI updates automatically.
+- [x] Add DemoApp screen showcasing observation and live updates.
 - [ ] Support constructing specs via wrapper parameters, e.g. `@Satisfies(using: CooldownIntervalSpec.self, interval: 10)`.
 - [ ] Generate DocC documentation for all public APIs, including macros and examples.
 - [ ] Prepare for Swift Package Index: metadata, license confirmation, and semantic tag `2.0.0`.
@@ -80,3 +81,11 @@ Legend: [x] Completed • [ ] Pending • (blocked) indicates an external/toolch
 ## Notes
 - Items labeled “blocked” are deferred pending toolchain support (e.g., conformance macros) or external constraints. Where feasible, tests cover provider-based or runtime paths.
 - CI currently targets macOS; consider extending to iOS/tvOS/watchOS via `xcodebuild` destinations.
+
+### Observation Completion Notes
+- Introduced `ContextUpdatesProviding` (optional) for providers to publish update signals via Combine and an `AsyncStream` bridge.
+- `DefaultContextProvider` now emits updates on all state mutations (counters/flags/events/userData and registrations).
+- `EnvironmentContextProvider` forwards `objectWillChange` to observation hooks.
+- Added `@ObservedSatisfies` (`DynamicProperty`) for SwiftUI that re-evaluates on provider updates.
+- DemoApp now includes an “Observation” screen demonstrating flags, counters, cooldowns, and a composite spec updating live.
+- Follow-ups (not done): observed variants for `@Decides` and `@Maybe`; unit tests for Combine bridge could be added if we include Combine in test target.

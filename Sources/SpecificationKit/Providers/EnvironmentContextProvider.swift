@@ -72,3 +72,21 @@ public final class EnvironmentContextProvider: ObservableObject, @preconcurrency
         )
     }
 }
+
+// MARK: - Observation bridging
+extension EnvironmentContextProvider: @preconcurrency ContextUpdatesProviding {
+    /// Emits a signal when observable properties change.
+    public var contextUpdates: AnyPublisher<Void, Never> { objectWillChange.eraseToAnyPublisher() }
+
+    /// Async bridge of updates; yields whenever `objectWillChange` fires.
+    public var contextStream: AsyncStream<Void> {
+        AsyncStream { continuation in
+            let subscription = objectWillChange.sink { _ in
+                continuation.yield(())
+            }
+            continuation.onTermination = { _ in
+                _ = subscription
+            }
+        }
+    }
+}
