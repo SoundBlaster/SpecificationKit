@@ -7,6 +7,9 @@ struct AsyncDemoView: View {
     @State private var simulateError = false
     @State private var addDelay = true
     @State private var featureOn = false
+    @State private var asyncCount: Int = 0
+    @State private var macroAsyncResult: String = "—"
+    @State private var autoCtxAsyncResult: String = "—"
 
     private let provider = DefaultContextProvider.shared
 
@@ -43,14 +46,47 @@ struct AsyncDemoView: View {
             Divider()
 
             Text("Using AnyAsyncSpecification<EvaluationContext>")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(.title)
+
+            // MARK: - @specs async demos
+            Group {
+                Text("Local spec types for this demo:")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+                Text("- @specs(MaxCountSpec(counterKey: \"async_count\", limit: 3)) → MacroAsyncCountSpec")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                Text("- @AutoContext + @specs(MaxCountSpec(...)) → AutoCtxAsyncCountSpec (async computed isSatisfied)")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+
+                HStack(spacing: 12) {
+                    Text("Counter (async_count): \(asyncCount)")
+                    Button("+1") { incrementCount() }
+                    Button("Reset") { resetCount() }
+                }
+
+                HStack(spacing: 12) {
+                    Button(action: evaluateMacroAsync) {
+                        Text("Evaluate @specs.isSatisfiedByAsync(ctx)")
+                    }
+                    Text("Result: \(macroAsyncResult)")
+                }
+
+                HStack(spacing: 12) {
+                    Button(action: evaluateAutoCtxAsync) {
+                        Text("Evaluate @AutoContext @specs .isSatisfied")
+                    }
+                    Text("Result: \(autoCtxAsyncResult)")
+                }
+            }
 
             Spacer()
         }
         .padding()
         .onAppear {
             provider.setFlag("feature_async", to: featureOn)
+            asyncCount = provider.getCounter("async_count")
         }
         .navigationTitle("Async Specs")
     }
@@ -80,9 +116,45 @@ struct AsyncDemoView: View {
             isEvaluating = false
         }
     }
+
+    // MARK: - @specs async helpers
+
+    @specs(MaxCountSpec(counterKey: "async_count", limit: 3))
+    struct MacroAsyncCountSpec: Specification { typealias T = EvaluationContext }
+
+    @AutoContext
+    @specs(MaxCountSpec(counterKey: "async_count", limit: 3))
+    struct AutoCtxAsyncCountSpec: Specification { typealias T = EvaluationContext }
+
+    private func incrementCount() {
+        _ = provider.incrementCounter("async_count")
+        asyncCount = provider.getCounter("async_count")
+    }
+
+    private func resetCount() {
+        provider.setCounter("async_count", to: 0)
+        asyncCount = 0
+    }
+
+    private func evaluateMacroAsync() {
+        macroAsyncResult = "…"
+        let spec = MacroAsyncCountSpec()
+        let ctx = provider.currentContext()
+        Task {
+            let ok = try await spec.isSatisfiedByAsync(ctx)
+            macroAsyncResult = ok ? "TRUE" : "FALSE"
+        }
+    }
+
+    private func evaluateAutoCtxAsync() {
+        autoCtxAsyncResult = "…"
+        Task {
+            let ok = try await AutoCtxAsyncCountSpec().isSatisfied
+            autoCtxAsyncResult = ok ? "TRUE" : "FALSE"
+        }
+    }
 }
 
 #Preview {
     AsyncDemoView()
 }
-

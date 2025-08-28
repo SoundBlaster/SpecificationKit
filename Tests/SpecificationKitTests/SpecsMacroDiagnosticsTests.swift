@@ -66,6 +66,10 @@ final class SpecsMacroDiagnosticsTests: XCTestCase {
 
                 public func isSatisfiedBy(_ candidate: T) -> Bool {
                     composite.isSatisfiedBy(candidate)
+                }
+
+                public func isSatisfiedByAsync(_ candidate: T) async throws -> Bool {
+                    composite.isSatisfiedBy(candidate)
                 }}
             """,
             diagnostics: [
@@ -97,6 +101,10 @@ final class SpecsMacroDiagnosticsTests: XCTestCase {
                 }
 
                 public func isSatisfiedBy(_ candidate: T) -> Bool {
+                    composite.isSatisfiedBy(candidate)
+                }
+
+                public func isSatisfiedByAsync(_ candidate: T) async throws -> Bool {
                     composite.isSatisfiedBy(candidate)
                 }}
             """,
@@ -130,6 +138,10 @@ final class SpecsMacroDiagnosticsTests: XCTestCase {
                 }
 
                 public func isSatisfiedBy(_ candidate: T) -> Bool {
+                    composite.isSatisfiedBy(candidate)
+                }
+
+                public func isSatisfiedByAsync(_ candidate: T) async throws -> Bool {
                     composite.isSatisfiedBy(candidate)
                 }}
             """,

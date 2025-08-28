@@ -28,15 +28,6 @@ public struct AutoContextMacro: MemberMacro {
         members.append(typeAlias)
         members.append(provider)
 
-        // Add a public init() if the declaration doesn't already declare one
-        let hasInit = declaration.memberBlock.members.contains { member in
-            member.decl.as(InitializerDeclSyntax.self) != nil
-        }
-        if !hasInit {
-            let initializer: DeclSyntax = "public init() {}"
-            members.append(initializer)
-        }
-
         return members
     }
 }

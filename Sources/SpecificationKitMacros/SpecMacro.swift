@@ -202,11 +202,53 @@ public struct SpecsMacro: MemberMacro {
             }
             """
 
-        return [
+        let isSatisfiedByAsyncMethod: DeclSyntax =
+            """
+            public func isSatisfiedByAsync(_ candidate: T) async throws -> Bool {
+                composite.isSatisfiedBy(candidate)
+            }
+            """
+
+        // Conditionally add AutoContext async computed property if the type is annotated with @AutoContext
+        func hasAutoContext(_ attrs: AttributeListSyntax?) -> Bool {
+            guard let attrs else { return false }
+            for element in attrs {
+                guard case .attribute(let attr) = element,
+                      let simple = attr.attributeName.as(IdentifierTypeSyntax.self) else { continue }
+                if simple.name.text == "AutoContext" { return true }
+            }
+            return false
+        }
+
+        let hasAutoContextAttribute: Bool = {
+            if let s = declaration.as(StructDeclSyntax.self) { return hasAutoContext(s.attributes) }
+            if let c = declaration.as(ClassDeclSyntax.self) { return hasAutoContext(c.attributes) }
+            if let a = declaration.as(ActorDeclSyntax.self) { return hasAutoContext(a.attributes) }
+            if let e = declaration.as(EnumDeclSyntax.self) { return hasAutoContext(e.attributes) }
+            return false
+        }()
+
+        var decls: [DeclSyntax] = [
             compositeProperty,
             initializer,
             isSatisfiedByMethod,
+            isSatisfiedByAsyncMethod,
         ]
+
+        if hasAutoContextAttribute {
+            let isSatisfiedComputed: DeclSyntax =
+                """
+                public var isSatisfied: Bool {
+                    get async throws {
+                        let ctx = try await Self.contextProvider.currentContextAsync()
+                        return composite.isSatisfiedBy(ctx)
+                    }
+                }
+                """
+            decls.append(isSatisfiedComputed)
+        }
+
+        return decls
     }
 
 }

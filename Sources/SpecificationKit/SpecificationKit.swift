@@ -31,7 +31,7 @@ public enum SpecificationKit {
 /// struct PromoBannerSpec: Specification<PromoContext> {}
 /// ```
 /// This will generate the necessary implementation to combine the two specifications.
-@attached(member, names: named(init), named(isSatisfiedBy), named(composite))
+@attached(member, names: named(init), named(isSatisfiedBy), named(isSatisfiedByAsync), named(isSatisfied), named(composite))
 public macro specs(
     _ specifications: Any...
 ) = #externalMacro(module: "SpecificationKitMacros", type: "SpecsMacro")
