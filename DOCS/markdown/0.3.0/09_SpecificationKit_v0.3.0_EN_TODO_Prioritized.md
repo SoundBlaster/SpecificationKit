@@ -5,7 +5,7 @@
 - [x] Implement attached macro `@specs` accepting types conforming to `Specification`.
 - [x] Generate private `composite: AnySpecification` and initializer using `.and()`/`.or()`.
 - [x] Add `isSatisfiedBy(_:)` delegating to `composite` in generated type.
-- [ ] Validate all `@specs` arguments conform to `Specification` and share the same `Context`.
+- [x] Validate all `@specs` arguments conform to `Specification` and share the same `Context`.
 - [x] Emit helpful compile-time diagnostics on `@specs` validation failure.
 - [x] Add macro tests verifying generation output for `@specs` (integration tests added).
 - [x] Implement attached macro `@AutoContext` to convert plain spec into auto-context spec.

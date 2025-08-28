@@ -3,6 +3,7 @@ import XCTest
 
 final class EnvironmentContextProviderTests: XCTestCase {
 
+    @MainActor
     func testContextReflectsFlagsCountersEvents() {
         let provider = EnvironmentContextProvider(launchDate: Date(timeIntervalSince1970: 0))
         provider.flags["feature.promo"] = true
@@ -18,6 +19,7 @@ final class EnvironmentContextProviderTests: XCTestCase {
         XCTAssertEqual(ctx.segments, ["beta", "vip"])
     }
 
+    @MainActor
     func testEnvironmentSnapshotInjectedIntoUserData() {
         let provider = EnvironmentContextProvider()
         provider.calendar = Calendar(identifier: .iso8601)

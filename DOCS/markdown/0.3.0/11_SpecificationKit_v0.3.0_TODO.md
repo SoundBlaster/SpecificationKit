@@ -30,9 +30,9 @@ Legend: [x] Completed • [ ] Pending • (blocked) indicates an external/toolch
 - [x] For each new spec, conform to `Specification` with explicit `Context` type.
 - [x] Add unit tests for typical and edge cases for each new spec.
 - [x] Add GitHub Actions workflows to build library, macros, and run tests on macOS (added CI; can extend to iOS/tvOS/watchOS later).
+- [x] Validate all `@specs` arguments conform to `Specification` and share the same `Context` (heuristic compile-time checks; error on mixed contexts when confidently inferred; diagnostics tests added).
 
 ### Pending / Blocked
-- [ ] Validate all `@specs` arguments conform to `Specification` and share the same `Context`.
 - [ ] Ensure provider `Context` matches spec `Context` for `@AutoContext`. (blocked by toolchain: conformance macro not available)
 - [ ] Provide tests showing `@AutoContext` works with `@Satisfies` without manual context. (blocked by toolchain; provider-based path covered by tests)
 - [ ] Add negative tests for `@AutoContext` type mismatches.

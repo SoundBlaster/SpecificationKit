@@ -1,4 +1,4 @@
-# 📋 SpecificationKit
+# SpecificationKit
 
 A powerful Swift library implementing the **Specification Pattern** with support for context providers, property wrappers, and composable business rules. Perfect for feature flags, conditional logic, banner display rules, and complex business requirements.
 
@@ -140,6 +140,23 @@ if bannerSpec.isSatisfiedBy(context) {
     print("Show the banner!")
 }
 ```
+
+#### Macro Diagnostics for `@specs`
+
+The macro performs syntax-level validations and emits diagnostics to guide correct usage:
+
+- Mixed Contexts (confident): If all argument contexts are confidently inferred and differ, the macro emits an error and the build fails. Example message:
+  - "@specs arguments use mixed Context types (CustomContext, EvaluationContext). All specs must share the same Context."
+- Mixed Contexts (non-confident): If only some argument contexts can be inferred and they appear mixed, the macro emits a warning (not an error):
+  - "@specs arguments appear to use mixed Context types (CustomContext, EvaluationContext). Ensure all specs share the same Context."
+- Invalid/literal arguments: Passing literals (e.g., strings, numbers) emits an error that the argument does not appear to be a specification instance.
+- Type references: Passing a type (e.g., `SpecType.self`) emits a warning suggesting to pass an instance instead.
+- Async spec arguments: Using async specs (e.g., `AnyAsyncSpecification<...>` or `AsyncSpecification` types) emits an error — `@specs` expects synchronous `Specification` arguments.
+- Missing `typealias T`: If the attached type lacks `typealias T`, the macro emits a warning suggesting to add one (e.g., `typealias T = EvaluationContext`).
+- Host conformance: Applying `@specs` to a type that does not conform to `Specification` emits an error.
+
+Notes
+- The macro generates `isSatisfiedBy(_:)` and also an async bridge `isSatisfiedByAsync(_:)` on the annotated type. The async bridge currently delegates to the sync composite for convenience.
 
 ### Async Specs (Quick Start)
 

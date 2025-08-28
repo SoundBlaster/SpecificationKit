@@ -36,6 +36,23 @@ struct MixedContextsWarning: DiagnosticMessage {
     var diagnosticID: MessageID { .init(domain: "SpecificationKitMacros", id: "mixedContextsWarning") }
 }
 
+struct MixedContextsError: DiagnosticMessage {
+    let contexts: [String]
+    var message: String {
+        let list = contexts.joined(separator: ", ")
+        return "@specs arguments use mixed Context types (\(list)). All specs must share the same Context."
+    }
+    var severity: DiagnosticSeverity { .error }
+    var diagnosticID: MessageID { .init(domain: "SpecificationKitMacros", id: "mixedContextsError") }
+}
+
+struct AsyncSpecArgumentMessage: DiagnosticMessage {
+    let index: Int
+    var message: String { "Argument #\(index + 1) to @specs appears to be an async specification. Use a synchronous Specification instead." }
+    var severity: DiagnosticSeverity { .error }
+    var diagnosticID: MessageID { .init(domain: "SpecificationKitMacros", id: "asyncSpecArg") }
+}
+
 /// An error that can be thrown by the SpecsMacro.
 public enum SpecsMacroError: CustomStringConvertible, Error {
     /// Thrown when the `@specs` macro is used without any arguments.
@@ -112,6 +129,7 @@ public struct SpecsMacro: MemberMacro {
 
         // Best-effort validations on arguments
         var inferredContexts = [String]()
+        var inferredCount = 0
         let knownEvaluationContextSpecs = [
             "MaxCountSpec",
             "TimeSinceEventSpec",
@@ -152,16 +170,24 @@ public struct SpecsMacro: MemberMacro {
                 context.diagnose(Diagnostic(node: Syntax(node), message: NonInstanceArgumentMessage(index: idx)))
             } else if text.hasSuffix(".self") {
                 context.diagnose(Diagnostic(node: Syntax(node), message: TypeArgumentWarning(index: idx)))
+            } else if text.contains("AnyAsyncSpecification<") || text.contains("AsyncSpecification") {
+                context.diagnose(Diagnostic(node: Syntax(node), message: AsyncSpecArgumentMessage(index: idx)))
             }
 
             if let ctx = extractContext(from: text) {
                 inferredContexts.append(ctx)
+                inferredCount += 1
             }
         }
 
         let uniqueContexts = Set(inferredContexts)
         if uniqueContexts.count > 1 {
-            context.diagnose(Diagnostic(node: Syntax(node), message: MixedContextsWarning(contexts: Array(uniqueContexts).sorted())))
+            let contextsSorted = Array(uniqueContexts).sorted()
+            if inferredCount == arguments.count {
+                context.diagnose(Diagnostic(node: Syntax(node), message: MixedContextsError(contexts: contextsSorted)))
+            } else {
+                context.diagnose(Diagnostic(node: Syntax(node), message: MixedContextsWarning(contexts: contextsSorted)))
+            }
         }
 
         // Build the chain of .and() calls from the arguments.
