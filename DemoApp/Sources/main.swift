@@ -38,6 +38,9 @@ struct AppContentView: View {
                 NavigationLink(destination: AsyncDemoView()) {
                     Label("Async Specs", systemImage: "timer")
                 }
+                NavigationLink(destination: EnvironmentDemoView()) {
+                    Label("Environment Context", systemImage: "globe")
+                }
             }
             .listStyle(SidebarListStyle())
             .navigationTitle("SpecificationKit Demo")

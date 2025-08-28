@@ -349,6 +349,23 @@ provider.setFlag("premium_user", to: true)
 provider.toggleFlag("dark_mode")
 ```
 
+#### EnvironmentContextProvider
+Bridge SwiftUI `@Environment` and `@AppStorage` into `EvaluationContext`.
+
+```swift
+let envProvider = EnvironmentContextProvider()
+// Bridge from SwiftUI in your View
+envProvider.locale = locale                      // from @Environment(\.locale)
+envProvider.interfaceStyle = (colorScheme == .dark ? "dark" : "light")
+envProvider.flags["promo_enabled"] = promoEnabled // from @AppStorage
+envProvider.counters["launch_count"] = launchCount
+
+// Evaluate with the current snapshot
+let ctx = envProvider.currentContext()
+let promoGate = FeatureFlagSpec(flagKey: "promo_enabled")
+let canShowPromo = promoGate.isSatisfiedBy(ctx)
+```
+
 #### MockContextProvider
 Perfect for unit testing with controllable state.
 
@@ -620,6 +637,7 @@ The demo showcases:
 - Interactive state manipulation
  - Decisions screen demonstrating `@Decides`, `@Maybe`, and `FirstMatchSpec`
  - Async Specs screen demonstrating `AnyAsyncSpecification`, delays, and error handling
+ - Environment Context screen bridging `@Environment`/`@AppStorage` to EvaluationContext
 
 ### Decisions Screen
 

@@ -47,8 +47,8 @@ Legend: [x] Completed • [ ] Pending • (blocked) indicates an external/toolch
 
 ### Pending
 - [ ] Leave hooks for future flags (environment/infer) per AutoContext design.
-- [ ] Implement `EnvironmentContextProvider` reading SwiftUI `@Environment`/`@AppStorage` into `EvaluationContext`.
-- [ ] Add SwiftUI example integrating `EnvironmentContextProvider` in a view.
+- [x] Implement `EnvironmentContextProvider` reading SwiftUI `@Environment`/`@AppStorage` into `EvaluationContext`.
+- [x] Add SwiftUI example integrating `EnvironmentContextProvider` in a view.
 - [ ] Provide observation (Combine or `AsyncSequence`) to re-evaluate when context changes.
 - [ ] Add `@Satisfies` variant that publishes changes so SwiftUI updates automatically.
 - [ ] Support constructing specs via wrapper parameters, e.g. `@Satisfies(using: CooldownIntervalSpec.self, interval: 10)`.

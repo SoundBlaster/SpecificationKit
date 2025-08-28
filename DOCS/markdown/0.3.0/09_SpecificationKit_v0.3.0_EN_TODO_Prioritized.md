@@ -31,8 +31,8 @@
 - [x] Implement type-erased `AnyAsyncSpecification` wrapper.
 - [x] Add async-capable property wrapper (`@AsyncSatisfies` or async API to `Satisfies`) that awaits context and evaluation. (`@AsyncSatisfies` + `Satisfies.evaluateAsync()`)
 - [x] Write tests covering async behavior, delays, successes, and thrown errors.
-- [ ] Implement `EnvironmentContextProvider` reading SwiftUI `@Environment`/`@AppStorage` into `EvaluationContext`.
-- [ ] Add SwiftUI example integrating `EnvironmentContextProvider` in a view.
+- [x] Implement `EnvironmentContextProvider` reading SwiftUI `@Environment`/`@AppStorage` into `EvaluationContext`.
+- [x] Add SwiftUI example integrating `EnvironmentContextProvider` in a view.
 - [x] Support DI: allow global provider and initializer injection; document the pattern. (code complete; docs pending)
 - [ ] Provide observation (Combine or `AsyncSequence`) to re-evaluate when context changes.
 - [ ] Add `@Satisfies` variant that publishes changes so SwiftUI updates automatically.
