@@ -50,6 +50,7 @@ Legend: [x] Completed • [ ] Pending • (blocked) indicates an external/toolch
 - [x] Ensure `@Satisfies` works with any `ContextProviding` implementation.
 - [x] Update `README.md` with macro system (`@specs`, `@AutoContext`), new specs, and async features.
 - [x] Extend or create DemoApp showcasing macros, AutoContext, and async context retrieval in SwiftUI.
+- [x] For `@AutoContext` + `@specs` types, generate async computed property `isSatisfied` using `contextProvider.currentContextAsync()`.
 - [x] Add Async Demo screen (`AsyncDemoView`) with delay/error toggles and navigation entry.
 - [x] Expand README with Async Specs Quick Start and macro diagnostics section.
 - [x] Add unit tests for `EnvironmentContextProvider` mapping to `EvaluationContext`.
