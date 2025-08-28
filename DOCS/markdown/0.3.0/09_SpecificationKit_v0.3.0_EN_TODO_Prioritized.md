@@ -6,7 +6,7 @@
 - [x] Generate private `composite: AnySpecification` and initializer using `.and()`/`.or()`.
 - [x] Add `isSatisfiedBy(_:)` delegating to `composite` in generated type.
 - [ ] Validate all `@specs` arguments conform to `Specification` and share the same `Context`.
-- [ ] Emit helpful compile-time diagnostics on `@specs` validation failure.
+- [x] Emit helpful compile-time diagnostics on `@specs` validation failure.
 - [x] Add macro tests verifying generation output for `@specs` (integration tests added).
 - [x] Implement attached macro `@AutoContext` to convert plain spec into auto-context spec.
 - [x] Inject `static contextProvider` with default provider in `@AutoContext`.
@@ -25,12 +25,12 @@
 
 ## P1 — Important Enhancements
 - [ ] Leave hooks for future flags (environment/infer) per AutoContext design.
-- [ ] Extend `ContextProviding` with `func currentContext() async throws -> Context`.
-- [ ] Provide default synchronous and asynchronous implementations for context providers.
-- [ ] Define `AsyncSpecification` with `associatedtype Context` and `isSatisfiedBy(_:) async throws -> Bool`.
-- [ ] Implement type-erased `AnyAsyncSpecification` wrapper.
-- [ ] Add async-capable property wrapper (`@AsyncSatisfies` or async API to `Satisfies`) that awaits context and evaluation.
-- [ ] Write tests covering async behavior, delays, successes, and thrown errors.
+- [x] Extend `ContextProviding` with `func currentContext() async throws -> Context`. (implemented as `currentContextAsync()` to avoid overload ambiguity)
+- [x] Provide default synchronous and asynchronous implementations for context providers. (async bridges to sync by default)
+- [x] Define `AsyncSpecification` with `associatedtype Context` and `isSatisfiedBy(_:) async throws -> Bool`.
+- [x] Implement type-erased `AnyAsyncSpecification` wrapper.
+- [x] Add async-capable property wrapper (`@AsyncSatisfies` or async API to `Satisfies`) that awaits context and evaluation. (`@AsyncSatisfies` + `Satisfies.evaluateAsync()`)
+- [x] Write tests covering async behavior, delays, successes, and thrown errors.
 - [ ] Implement `EnvironmentContextProvider` reading SwiftUI `@Environment`/`@AppStorage` into `EvaluationContext`.
 - [ ] Add SwiftUI example integrating `EnvironmentContextProvider` in a view.
 - [x] Support DI: allow global provider and initializer injection; document the pattern. (code complete; docs pending)
@@ -38,9 +38,9 @@
 - [ ] Add `@Satisfies` variant that publishes changes so SwiftUI updates automatically.
 - [ ] Support constructing specs via wrapper parameters, e.g. `@Satisfies(using: CooldownIntervalSpec.self, interval: 10)`.
 - [x] Ensure `@Satisfies` works with any `ContextProviding` implementation.
-- [ ] Update `README.md` with macro system (`@specs`, `@AutoContext`), new specs, and async features.
+- [x] Update `README.md` with macro system (`@specs`, `@AutoContext`), new specs, and async features.
 - [ ] Generate DocC documentation for all public APIs, including macros and examples.
-- [ ] Extend or create DemoApp showcasing macros, AutoContext, and async context retrieval in SwiftUI.
+- [x] Extend or create DemoApp showcasing macros, AutoContext, and async context retrieval in SwiftUI.
 - [ ] Prepare for Swift Package Index: metadata, license confirmation, and semantic tag `2.0.0`.
 - [ ] Maintain `CHANGELOG.md` describing new features and breaking changes for 2.0.0.
 
