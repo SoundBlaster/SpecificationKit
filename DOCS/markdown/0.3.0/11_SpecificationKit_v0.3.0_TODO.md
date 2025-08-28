@@ -11,6 +11,11 @@ Legend: [x] Completed • [ ] Pending • (blocked) indicates an external/toolch
 - [x] Implement attached macro `@specs` accepting types conforming to `Specification`.
 - [x] Generate private `composite: AnySpecification` and initializer using `.and()`/`.or()`.
 - [x] Add `isSatisfiedBy(_:)` delegating to `composite` in generated type.
+- [x] Make `@specs` generated members use associated type `T` (e.g., `AnySpecification<T>`, `isSatisfiedBy(_ candidate: T)`).
+- [x] Diagnostics: warn when attached type is missing `typealias T` with a friendly suggestion.
+- [x] Diagnostics: error when `@specs` is applied to a non-`Specification` type.
+- [x] Add async bridge `isSatisfiedByAsync(_:)` to `@specs` output.
+- [x] Add tests for the async bridge in `@specs` and update diagnostics tests' expected expansions.
 - [x] Emit helpful compile-time diagnostics on `@specs` validation failure.
 - [x] Add macro tests verifying generation output for `@specs` (integration tests added).
 - [x] Implement attached macro `@AutoContext` to convert plain spec into auto-context spec.
@@ -18,6 +23,7 @@ Legend: [x] Completed • [ ] Pending • (blocked) indicates an external/toolch
 - [x] Synthesize default initializer in `@AutoContext` when missing.
 - [x] Implement `DateRangeSpec` using `EvaluationContext.currentDate` within range.
 - [x] Implement `FeatureFlagSpec` using `EvaluationContext.flags` matching expected value.
+- [x] Bugfix: Treat missing feature flags as failure in `FeatureFlagSpec`; added dedicated test.
 - [x] Implement `UserSegmentSpec` with `UserSegment` enum and `EvaluationContext.segments`.
 - [x] Implement `SubscriptionStatusSpec` using `EvaluationContext.userData` state.
 - [x] Implement `DateComparisonSpec` using `EvaluationContext.events` with `.before`/`.after` ops.
@@ -44,11 +50,14 @@ Legend: [x] Completed • [ ] Pending • (blocked) indicates an external/toolch
 - [x] Ensure `@Satisfies` works with any `ContextProviding` implementation.
 - [x] Update `README.md` with macro system (`@specs`, `@AutoContext`), new specs, and async features.
 - [x] Extend or create DemoApp showcasing macros, AutoContext, and async context retrieval in SwiftUI.
+- [x] Add Async Demo screen (`AsyncDemoView`) with delay/error toggles and navigation entry.
+- [x] Expand README with Async Specs Quick Start and macro diagnostics section.
+- [x] Add unit tests for `EnvironmentContextProvider` mapping to `EvaluationContext`.
+- [x] Implement `EnvironmentContextProvider` reading SwiftUI `@Environment`/`@AppStorage` into `EvaluationContext`.
+- [x] Add SwiftUI example integrating `EnvironmentContextProvider` in a view.
 
 ### Pending
 - [ ] Leave hooks for future flags (environment/infer) per AutoContext design.
-- [x] Implement `EnvironmentContextProvider` reading SwiftUI `@Environment`/`@AppStorage` into `EvaluationContext`.
-- [x] Add SwiftUI example integrating `EnvironmentContextProvider` in a view.
 - [ ] Provide observation (Combine or `AsyncSequence`) to re-evaluate when context changes.
 - [ ] Add `@Satisfies` variant that publishes changes so SwiftUI updates automatically.
 - [ ] Support constructing specs via wrapper parameters, e.g. `@Satisfies(using: CooldownIntervalSpec.self, interval: 10)`.
