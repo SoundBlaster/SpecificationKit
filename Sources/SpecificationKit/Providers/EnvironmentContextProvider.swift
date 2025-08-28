@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 /// A context provider that bridges platform/environment values and simple persisted settings
 /// (e.g., UserDefaults/AppStorage) into `EvaluationContext`.
@@ -18,21 +19,21 @@ public final class EnvironmentContextProvider: ObservableObject, @preconcurrency
 
     // MARK: - Environment Snapshot
     /// Calendar to be reflected into the generated context (defaults to `.current`).
-    public var calendar: Calendar = .current
+    @Published public var calendar: Calendar = .current
     /// Time zone to be reflected into the generated context (defaults to `.current`).
-    public var timeZone: TimeZone = .current
+    @Published public var timeZone: TimeZone = .current
     /// Locale to be reflected into the generated context (defaults to `.current`).
-    public var locale: Locale = .current
+    @Published public var locale: Locale = .current
     /// Interface style hint (e.g., "light"/"dark"). Populate from SwiftUI colorScheme.
-    public var interfaceStyle: String = "light"
+    @Published public var interfaceStyle: String = "light"
 
     // MARK: - App State
-    public var launchDate: Date
-    public var flags: [String: Bool]
-    public var counters: [String: Int]
-    public var events: [String: Date]
-    public var userData: [String: Any]
-    public var segments: Set<String>
+    @Published public var launchDate: Date
+    @Published public var flags: [String: Bool]
+    @Published public var counters: [String: Int]
+    @Published public var events: [String: Date]
+    @Published public var userData: [String: Any]
+    @Published public var segments: Set<String>
 
     // MARK: - Initialization
     public init(
