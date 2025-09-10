@@ -849,3 +849,42 @@ Matches a subscription status stored in `userData["subscription_status"]`.
 ```swift
 let isPremium = SubscriptionStatusSpec(.premium)
 ```
+
+## 📖 Documentation
+
+### API Documentation
+Comprehensive DocC documentation is available online:
+
+**🌐 [View Documentation](https://soundblaster.github.io/SpecificationKit/documentation/specificationkit/)**
+
+The documentation includes:
+- Complete API reference with examples
+- Usage guides for all property wrappers
+- Macro system documentation
+- Context provider integration patterns
+- SwiftUI and async/await examples
+
+### Building Documentation Locally
+
+Generate documentation locally using Swift-DocC:
+
+```bash
+# Generate static documentation website
+swift package generate-documentation --target SpecificationKit \
+  --output-path ./docs --transform-for-static-hosting
+
+# Serve locally
+cd docs && python3 -m http.server 8000
+# Open http://localhost:8000
+```
+
+Or build in Xcode:
+- **Product → Build Documentation** (⌃⇧⌘D)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+## 📄 License
+
+This project is available under the MIT license. See the LICENSE file for more info.
