@@ -57,15 +57,17 @@ Legend: [x] Completed • [ ] Pending • (blocked) indicates an external/toolch
 - [x] Implement `EnvironmentContextProvider` reading SwiftUI `@Environment`/`@AppStorage` into `EvaluationContext`.
 - [x] Add SwiftUI example integrating `EnvironmentContextProvider` in a view.
 
-### Pending
-- [ ] Leave hooks for future flags (environment/infer) per AutoContext design.
+### Completed
 - [x] Provide observation (Combine or `AsyncSequence`) to re-evaluate when context changes.
 - [x] Add `@Satisfies` variant that publishes changes so SwiftUI updates automatically.
 - [x] Add DemoApp screen showcasing observation and live updates.
+- [x] Generate DocC documentation for all public APIs, including macros and examples.
+- [x] Maintain `CHANGELOG.md` describing new features and breaking changes for 2.0.0.
+
+### Pending
+- [ ] Leave hooks for future flags (environment/infer) per AutoContext design.
 - [ ] Support constructing specs via wrapper parameters, e.g. `@Satisfies(using: CooldownIntervalSpec.self, interval: 10)`.
-- [ ] Generate DocC documentation for all public APIs, including macros and examples.
 - [ ] Prepare for Swift Package Index: metadata, license confirmation, and semantic tag `2.0.0`.
-- [ ] Maintain `CHANGELOG.md` describing new features and breaking changes for 2.0.0.
 
 ## P2 — Polish and Performance
 
@@ -89,3 +91,10 @@ Legend: [x] Completed • [ ] Pending • (blocked) indicates an external/toolch
 - Added `@ObservedSatisfies` (`DynamicProperty`) for SwiftUI that re-evaluates on provider updates.
 - DemoApp now includes an “Observation” screen demonstrating flags, counters, cooldowns, and a composite spec updating live.
 - Follow-ups (not done): observed variants for `@Decides` and `@Maybe`; unit tests for Combine bridge could be added if we include Combine in test target.
+
+### DocC Documentation Completion Notes
+- Comprehensive DocC documentation implemented for SpecificationKit v2.0.0 with detailed API documentation, usage examples, and deployment automation.
+- GitHub Pages deployment setup with Swift-DocC plugin integration and automated workflow.
+- Enhanced documentation for all public APIs including property wrappers, macro system, context providers, and built-in specifications.
+- Rich code examples, cross-references using DocC linking syntax, and modern Swift patterns (async/await, SwiftUI, macros).
+- Professional presentation suitable for Swift Package Index with automated deployment pipeline.
