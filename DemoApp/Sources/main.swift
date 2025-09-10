@@ -17,7 +17,7 @@ if CommandLine.arguments.contains("--cli") {
     struct SpecificationKitDemoApp: App {
         var body: some Scene {
             WindowGroup {
-                ContentView()
+                AppContentView()
             }
         }
     }
@@ -25,7 +25,35 @@ if CommandLine.arguments.contains("--cli") {
     SpecificationKitDemoApp.main()
 }
 
-struct ContentView: View {
+struct AppContentView: View {
+    var body: some View {
+        NavigationView {
+            List {
+                NavigationLink(destination: MainDemoView()) {
+                    Label("Overview", systemImage: "rectangle.grid.1x2")
+                }
+                NavigationLink(destination: DecisionsDemoView()) {
+                    Label("Decisions", systemImage: "switch.2")
+                }
+                NavigationLink(destination: AsyncDemoView()) {
+                    Label("Async Specs", systemImage: "timer")
+                }
+                NavigationLink(destination: EnvironmentDemoView()) {
+                    Label("Environment Context", systemImage: "globe")
+                }
+                NavigationLink(destination: ObservationDemoView()) {
+                    Label("Observation", systemImage: "eye")
+                }
+            }
+            .listStyle(SidebarListStyle())
+            .navigationTitle("SpecificationKit Demo")
+
+            MainDemoView()
+        }
+    }
+}
+
+struct MainDemoView: View {
     @StateObject private var demoManager = DemoManager()
 
     var body: some View {
@@ -238,5 +266,5 @@ class DemoManager: ObservableObject {
 }
 
 #Preview {
-    ContentView()
+    AppContentView()
 }

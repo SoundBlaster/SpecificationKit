@@ -12,12 +12,13 @@ import Foundation
 @propertyWrapper
 public struct Satisfies<Context> {
 
-    private let contextProvider: any ContextProviding
+    private let contextFactory: () -> Context
+    private let asyncContextFactory: (() async throws -> Context)?
     private let specification: AnySpecification<Context>
 
     /// The wrapped value representing whether the specification is satisfied
     public var wrappedValue: Bool {
-        let context = contextProvider.currentContext() as! Context
+        let context = contextFactory()
         return specification.isSatisfiedBy(context)
     }
 
@@ -29,7 +30,8 @@ public struct Satisfies<Context> {
         provider: Provider,
         using specification: Spec
     ) where Provider.Context == Context, Spec.T == Context {
-        self.contextProvider = provider
+        self.contextFactory = provider.currentContext
+        self.asyncContextFactory = provider.currentContextAsync
         self.specification = AnySpecification(specification)
     }
 
@@ -41,7 +43,8 @@ public struct Satisfies<Context> {
         provider: Provider,
         using specificationType: Spec.Type
     ) where Provider.Context == Context, Spec.T == Context, Spec: ExpressibleByNilLiteral {
-        self.contextProvider = provider
+        self.contextFactory = provider.currentContext
+        self.asyncContextFactory = provider.currentContextAsync
         self.specification = AnySpecification(Spec(nilLiteral: ()))
     }
 
@@ -53,7 +56,8 @@ public struct Satisfies<Context> {
         provider: Provider,
         predicate: @escaping (Context) -> Bool
     ) where Provider.Context == Context {
-        self.contextProvider = provider
+        self.contextFactory = provider.currentContext
+        self.asyncContextFactory = provider.currentContextAsync
         self.specification = AnySpecification(predicate)
     }
 }
@@ -61,13 +65,27 @@ public struct Satisfies<Context> {
 // MARK: - AutoContextSpecification Support
 
 extension Satisfies {
+    /// Async evaluation using the provider's async context if available.
+    public func evaluateAsync() async throws -> Bool {
+        if let asyncContextFactory {
+            let context = try await asyncContextFactory()
+            return specification.isSatisfiedBy(context)
+        } else {
+            let context = contextFactory()
+            return specification.isSatisfiedBy(context)
+        }
+    }
+
+    /// Projected value to access helper methods like evaluateAsync.
+    public var projectedValue: Satisfies<Context> { self }
 
     /// Creates a Satisfies property wrapper using an AutoContextSpecification
     /// - Parameter specificationType: The specification type that provides its own context
     public init<Spec: AutoContextSpecification>(
         using specificationType: Spec.Type
     ) where Spec.T == Context {
-        self.contextProvider = specificationType.contextProvider
+        self.contextFactory = specificationType.contextProvider.currentContext
+        self.asyncContextFactory = specificationType.contextProvider.currentContextAsync
         self.specification = AnySpecification(specificationType.init())
     }
 }
@@ -89,6 +107,10 @@ extension Satisfies where Context == EvaluationContext {
     ) where Spec.T == EvaluationContext, Spec: ExpressibleByNilLiteral {
         self.init(provider: DefaultContextProvider.shared, using: specificationType)
     }
+
+    // Note: A provider-less initializer for @AutoContext types is intentionally
+    // not provided here due to current macro toolchain limitations around
+    // conformance synthesis. Use the provider-based initializers instead.
 
     /// Creates a Satisfies property wrapper with a predicate using the shared default context provider
     /// - Parameter predicate: A predicate function that takes EvaluationContext and returns Bool

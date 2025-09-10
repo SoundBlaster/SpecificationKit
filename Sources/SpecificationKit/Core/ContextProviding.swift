@@ -6,6 +6,9 @@
 //
 
 import Foundation
+#if canImport(Combine)
+import Combine
+#endif
 
 /// A protocol for types that can provide context for specification evaluation.
 /// This enables dependency injection and testing by abstracting context creation.
@@ -17,6 +20,16 @@ public protocol ContextProviding {
     /// - Returns: A context instance containing the necessary data for evaluation
     func currentContext() -> Context
 }
+
+// MARK: - Optional observation capability
+
+#if canImport(Combine)
+/// A provider that can emit update signals when its context may have changed.
+public protocol ContextUpdatesProviding {
+    var contextUpdates: AnyPublisher<Void, Never> { get }
+    var contextStream: AsyncStream<Void> { get }
+}
+#endif
 
 // MARK: - Generic Context Provider
 
@@ -33,6 +46,19 @@ public struct GenericContextProvider<Context>: ContextProviding {
     public func currentContext() -> Context {
         contextFactory()
     }
+}
+
+// MARK: - Async Convenience
+
+extension ContextProviding {
+    /// Async variant returning the current context. Default implementation bridges to sync.
+    public func currentContextAsync() async throws -> Context {
+        currentContext()
+    }
+
+    // Optional observation hooks for providers that can publish updates.
+    // Defaults emit nothing; concrete providers may override.
+    // Intentionally no default observation here to avoid protocol-extension dispatch pitfalls.
 }
 
 // MARK: - Static Context Provider
