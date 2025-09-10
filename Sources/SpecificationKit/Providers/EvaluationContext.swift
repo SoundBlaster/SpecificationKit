@@ -41,6 +41,7 @@ public struct EvaluationContext {
     ///   - counters: Numeric counters dictionary
     ///   - events: Event timestamps dictionary
     ///   - flags: Boolean flags dictionary
+    ///   - segments: Set of string segments
     public init(
         currentDate: Date = Date(),
         launchDate: Date = Date(),
@@ -107,6 +108,7 @@ extension EvaluationContext {
 
     /// Gets user data for the given key
     /// - Parameter key: The data key
+    /// - Parameter type: The type of data
     /// - Returns: The user data value, or nil if not found
     public func userData<T>(for key: String, as type: T.Type = T.self) -> T? {
         userData[key] as? T
