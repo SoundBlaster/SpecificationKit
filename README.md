@@ -6,9 +6,9 @@ A powerful Swift library implementing the **Specification Pattern** with support
 [![iOS 13.0+](https://img.shields.io/badge/iOS-13.0+-blue.svg)](https://developer.apple.com/ios/)
 [![macOS 10.15+](https://img.shields.io/badge/macOS-10.15+-blue.svg)](https://developer.apple.com/macos/)
 [![Swift Package Manager](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://swift.org/package-manager/)
-[![Version 0.3.0](https://img.shields.io/badge/Version-0.3.0-green.svg)]()
+[![Version 2.0.0](https://img.shields.io/badge/Version-2.0.0-green.svg)]()
 
-## 📢 What's New in v0.3.0
+## 📢 What's New in v2.0.0
 
 ### DecisionSpec & FirstMatchSpec
 
@@ -117,7 +117,7 @@ Or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/SoundBlaster/SpecificationKit", from: "0.2.0")
+    .package(url: "https://github.com/SoundBlaster/SpecificationKit", from: "2.0.0")
 ]
 ```
 
