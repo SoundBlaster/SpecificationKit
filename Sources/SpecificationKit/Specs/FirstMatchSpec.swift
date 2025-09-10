@@ -10,8 +10,62 @@ import Foundation
 /// A decision specification that evaluates child specifications in order and returns
 /// the result of the first one that is satisfied.
 ///
-/// This is useful for prioritized rules, such as determining which discount tier to apply,
-/// which experiment group a user belongs to, or how to route a request.
+/// `FirstMatchSpec` implements a priority-based decision system where specifications are
+/// evaluated in order until one is satisfied. This is useful for tiered business rules,
+/// routing decisions, discount calculations, and any scenario where you need to select
+/// the first applicable option from a prioritized list.
+///
+/// ## Usage Examples
+///
+/// ### Discount Tier Selection
+/// ```swift
+/// let discountSpec = FirstMatchSpec([
+///     (PremiumMemberSpec(), 0.20),           // 20% for premium members
+///     (LoyalCustomerSpec(), 0.15),           // 15% for loyal customers
+///     (FirstTimeUserSpec(), 0.10),           // 10% for first-time users
+///     (RegularUserSpec(), 0.05)              // 5% for everyone else
+/// ])
+///
+/// @Decides(using: discountSpec, or: 0.0)
+/// var discountRate: Double
+/// ```
+///
+/// ### Feature Experiment Assignment
+/// ```swift
+/// let experimentSpec = FirstMatchSpec([
+///     (UserSegmentSpec(expectedSegment: .beta), "variant_a"),
+///     (FeatureFlagSpec(flagKey: "experiment_b"), "variant_b"),
+///     (RandomPercentageSpec(percentage: 50), "variant_c")
+/// ])
+///
+/// @Maybe(using: experimentSpec)
+/// var experimentVariant: String?
+/// ```
+///
+/// ### Content Routing
+/// ```swift
+/// let routingSpec = FirstMatchSpec.builder()
+///     .add(UserSegmentSpec(expectedSegment: .premium), result: "premium_content")
+///     .add(DateRangeSpec(startDate: campaignStart, endDate: campaignEnd), result: "campaign_content")
+///     .add(MaxCountSpec(counterKey: "onboarding_completed", maximumCount: 1), result: "onboarding_content")
+///     .fallback("default_content")
+///     .build()
+/// ```
+///
+/// ### With Macro Integration
+/// ```swift
+/// @specs(
+///     FirstMatchSpec([
+///         (PremiumUserSpec(), "premium_theme"),
+///         (BetaUserSpec(), "beta_theme")
+///     ])
+/// )
+/// @AutoContext
+/// struct ThemeSelectionSpec: DecisionSpec {
+///     typealias Context = EvaluationContext
+///     typealias Result = String
+/// }
+/// ```
 public struct FirstMatchSpec<Context, Result>: DecisionSpec {
 
     /// A pair consisting of a specification and its associated result
