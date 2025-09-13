@@ -91,7 +91,7 @@ DemoApp includes an “Observation” screen showcasing live updates for flags, 
 ## ✨ Features
 
 - 🧩 **Composable Specifications** - Build complex business rules from simple, reusable components
-- 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies`, `@Decides` (non-optional), and `@Maybe` (optional)
+- 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies`, `@Decides` (non-optional), `@Maybe` (optional), and `@CachedSatisfies` (cached with TTL)
 - 🔄 **Context Providers** - Flexible context injection and dependency management
 - 🚀 **Decision Specifications** - Return typed results beyond just boolean values with `DecisionSpec`
 - 🧭 **Date & Flags Specs** - New built-ins: `DateRangeSpec`, `DateComparisonSpec`, `FeatureFlagSpec`, `UserSegmentSpec`, `SubscriptionStatusSpec`
@@ -351,6 +351,63 @@ final class MyProvider: ContextProviding, ContextUpdatesProviding {
 ```
 
 See DemoApp → Observation for a working example.
+
+### Performance Optimization with Caching
+
+Use `@CachedSatisfies` to cache expensive specification evaluations with automatic TTL (Time-To-Live) expiration. This is particularly useful for computationally expensive specifications or when evaluating the same specification frequently.
+
+```swift
+class PerformanceController {
+    // Cache result for 5 minutes to avoid expensive re-evaluation
+    @CachedSatisfies(using: ExpensiveAnalysisSpec(), ttl: 300.0)
+    var analysisComplete: Bool
+    
+    // Cache user permission check for 60 seconds
+    @CachedSatisfies(provider: DefaultContextProvider.shared,
+                     predicate: { $0.flag(for: "user_premium") },
+                     ttl: 60.0)
+    var isPremiumUser: Bool
+    
+    func processRequest() {
+        // First call may be expensive, subsequent calls return cached result
+        if analysisComplete && isPremiumUser {
+            handlePremiumRequest()
+        }
+    }
+}
+```
+
+#### Key Features
+- **TTL Expiration**: Cached results automatically expire after specified time
+- **Thread Safety**: Safe for concurrent access across multiple threads
+- **Memory Management**: Automatic cleanup on memory pressure
+- **Cache Control**: Manual invalidation and refresh capabilities
+- **Performance**: Dramatically reduces evaluation overhead for expensive specs
+
+#### Cache Management
+Access cache management through the projected value:
+
+```swift
+struct CacheExample {
+    @CachedSatisfies(using: SlowNetworkCheckSpec(), ttl: 120.0)
+    var networkAvailable: Bool
+    
+    func refreshNetworkStatus() {
+        // Force refresh by invalidating cache
+        _networkAvailable.invalidateCache()
+        
+        // Check if result is cached
+        if _networkAvailable.isCached {
+            print("Using cached network status")
+        }
+        
+        // Get cache statistics
+        if let info = _networkAvailable.cacheInfo {
+            print("Cached at: \(info.timestamp), expires in: \(info.remainingTTL)s")
+        }
+    }
+}
+```
 
 #### ObservedMaybe (optional, reactive)
 
@@ -805,7 +862,8 @@ SpecificationKit follows a clean, layered architecture:
 │ (@Satisfies, @Decides, @Maybe, Views)   │
 ├─────────────────────────────────────────┤
 │ Property Wrapper Layer                  │
-│ (@Satisfies, @Decides, @Maybe)          │
+│ (@Satisfies, @Decides, @Maybe,          │
+│  @CachedSatisfies)                      │
 ├─────────────────────────────────────────┤
 │ Definitions Layer                       │
 │ (CompositeSpec, FirstMatchSpec)         │
@@ -970,7 +1028,7 @@ Tests the core evaluation performance of different specification types:
 
 - **Simple Specifications**: `PredicateSpec`, `MaxCountSpec`, `TimeSinceEventSpec`
 - **Composite Specifications**: Complex `.and()` and `.or()` chains
-- **Property Wrapper Overhead**: `@Satisfies`, `@Decides`, `@Maybe` evaluation costs
+- **Property Wrapper Overhead**: `@Satisfies`, `@Decides`, `@Maybe`, `@CachedSatisfies` evaluation costs
 - **Context Provider Impact**: Evaluation with different provider implementations
 
 Typical performance baseline: **< 0.1ms per evaluation** for simple specifications.

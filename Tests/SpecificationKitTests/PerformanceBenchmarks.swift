@@ -183,6 +183,92 @@ final class PerformanceBenchmarks: XCTestCase {
         let report = profiler.generateReport()
         XCTAssertTrue(report.contains("PredicateSpec"), "Report should contain specification type")
     }
+
+    // MARK: - CachedSatisfies Performance
+
+    /// Tests CachedSatisfies performance against baseline requirements
+    func testCachedSatisfiesPerformance() {
+        // Create an expensive specification that takes time to evaluate
+        struct ExpensiveSpec: Specification {
+            func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+                // Simulate expensive computation
+                usleep(100)  // 0.1ms delay
+                return context.counter(for: "test") < 100
+            }
+        }
+
+        let expensiveSpec = ExpensiveSpec()
+        let cachedSpec = CachedSatisfies(using: expensiveSpec, ttl: 60.0)
+
+        _ = EvaluationContext(
+            currentDate: Date(),
+            counters: ["test": 50]
+        )
+
+        // Prime the cache with first evaluation
+        _ = cachedSpec.wrappedValue
+
+        // Measure cached evaluation performance
+        measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
+            for _ in 1...1000 {
+                _ = cachedSpec.wrappedValue
+            }
+        }
+    }
+
+    /// Tests CachedSatisfies cache hit vs miss performance
+    func testCachedSatisfiesCacheEfficiency() {
+        let fastSpec = PredicateSpec<EvaluationContext> { $0.counter(for: "value") > 10 }
+        let cachedSpec = CachedSatisfies(using: fastSpec, ttl: 1.0)  // Short TTL
+
+        _ = EvaluationContext(
+            currentDate: Date(),
+            counters: ["value": 15]
+        )
+
+        // Test cache miss performance (first evaluation)
+        let cacheMissStart = CFAbsoluteTimeGetCurrent()
+        _ = cachedSpec.wrappedValue
+        let cacheMissTime = CFAbsoluteTimeGetCurrent() - cacheMissStart
+
+        // Test cache hit performance (subsequent evaluations)
+        let cacheHitStart = CFAbsoluteTimeGetCurrent()
+        for _ in 1...100 {
+            _ = cachedSpec.wrappedValue
+        }
+        let cacheHitTime = (CFAbsoluteTimeGetCurrent() - cacheHitStart) / 100
+
+        // Cache hits should be significantly faster than misses
+        XCTAssertLessThan(
+            cacheHitTime, cacheMissTime * 0.1,
+            "Cache hits should be at least 10x faster than cache misses")
+
+        // Cache hits should be under baseline requirement
+        XCTAssertLessThan(
+            cacheHitTime, PerformanceBaseline.specificationEvaluation * 0.1,
+            "Cache hits should be under 0.1ms")
+    }
+
+    /// Tests CachedSatisfies memory usage and cleanup
+    func testCachedSatisfiesMemoryPerformance() {
+        let spec = PredicateSpec<EvaluationContext> { _ in true }
+
+        // Create many cached specifications to test memory usage
+        var cachedSpecs: [CachedSatisfies<EvaluationContext>] = []
+
+        measure(metrics: [XCTMemoryMetric()]) {
+            for i in 1...100 {
+                let cachedSpec = CachedSatisfies(using: spec, ttl: 60.0, cacheKey: "test_\(i)")
+                cachedSpecs.append(cachedSpec)
+                _ = cachedSpec.wrappedValue
+            }
+        }
+
+        // Test global cache cleanup
+        CachedSatisfies<EvaluationContext>.clearAllCaches()
+        let stats = CachedSatisfies<EvaluationContext>.getGlobalCacheStats()
+        XCTAssertEqual(stats.totalSize, 0, "Cache should be empty after clearAllCaches()")
+    }
 }
 
 /// Performance validation utilities
