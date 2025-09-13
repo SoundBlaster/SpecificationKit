@@ -32,25 +32,17 @@ public struct ObservedMaybe<Context, Result>: DynamicProperty {
         func wire(updates: AnyPublisher<Void, Never>?, evaluate: @escaping () -> Result?) {
             // Compute immediately
             let v = evaluate()
-            if v as Any? is AnyObject {
-                self.value = v
-            } else if v != value { // best-effort for Equatable-less
-                self.value = v
-            }
+            self.value = v
             guard cancellable == nil, let updates else { return }
             cancellable = updates
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] in
                     guard let self else { return }
                     let v2 = evaluate()
-                    if v2 as Any? is AnyObject {
-                        self.value = v2
-                    } else if v2 != self.value { // best-effort
-                        self.value = v2
-                    }
+                    self.value = v2
                 }
+            }
         }
-    }
 
     @ObservedObject private var observer: Observer
     #else
@@ -143,11 +135,7 @@ public struct ObservedMaybe<Context, Result>: DynamicProperty {
         observer.wire(updates: localUpdates, evaluate: { spec.decide(ctxFactory()) })
         #else
         let newValue = specification.decide(contextFactory())
-        if let lhs = newValue as Any?, let rhs = value as Any?, !(lhs is AnyObject) && !(rhs is AnyObject) {
-            value = newValue
-        } else if newValue != value {
-            value = newValue
-        }
+        value = newValue
         #endif
     }
 }
@@ -170,4 +158,3 @@ extension ObservedMaybe where Context == EvaluationContext {
 }
 
 #endif
-
