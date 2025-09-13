@@ -63,3 +63,10 @@ Transform the SpecificationKit v3.0.0 TODO specification into an actionable, dep
 - **Integration Tests**: Complete end-to-end scenarios
 - **Performance Tests**: Regression detection for critical paths
 - **Platform Tests**: Verification on iOS, macOS, watchOS, tvOS
+
+### Development Methodology
+- **Test-Driven Development**: All new features must follow TDD approach
+  - Write failing tests first to define expected behavior
+  - Implement minimal code to make tests pass
+  - Refactor while maintaining test coverage
+  - Each commit should include corresponding tests
