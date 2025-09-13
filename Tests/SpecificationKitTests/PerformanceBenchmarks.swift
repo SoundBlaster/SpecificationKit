@@ -132,22 +132,14 @@ final class PerformanceBenchmarks: XCTestCase {
 
     func testConcurrentContextProviderAccess() {
         let provider = DefaultContextProvider()
-        let operationCount = 100
+        let operationCount = 50  // Reduced count for more consistent timing
 
         measure(metrics: [XCTClockMetric()]) {
-            let group = DispatchGroup()
-
-            // Spawn multiple concurrent operations
-            for i in 1...operationCount {
-                group.enter()
-                DispatchQueue.global(qos: .background).async {
-                    provider.setCounter("concurrent_\(i)", to: i)
-                    _ = provider.getCounter("concurrent_\(i)")
-                    group.leave()
-                }
+            // Use concurrent perform to avoid queue creation overhead and improve consistency
+            DispatchQueue.concurrentPerform(iterations: operationCount) { i in
+                provider.setCounter("concurrent_\(i)", to: i)
+                _ = provider.getCounter("concurrent_\(i)")
             }
-
-            group.wait()
         }
     }
 

@@ -125,6 +125,12 @@ class BenchmarkStorage {
         try? fileManager.createDirectory(at: storageDirectory, withIntermediateDirectories: true)
     }
 
+    /// Initialize with custom directory (for testing)
+    init(storageDirectory: URL) {
+        self.storageDirectory = storageDirectory
+        try? fileManager.createDirectory(at: storageDirectory, withIntermediateDirectories: true)
+    }
+
     /// Store a benchmark result
     func storeBenchmark(_ result: BenchmarkResult) {
         let filename = "\(result.testName)_\(result.timestamp.timeIntervalSince1970).json"
@@ -135,6 +141,12 @@ class BenchmarkStorage {
             try data.write(to: url)
         } catch {
             print("Failed to store benchmark result: \(error)")
+            // Re-throw in test environments to make failures visible
+            #if DEBUG
+                if ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil {
+                    fatalError("Benchmark storage failed in test environment: \(error)")
+                }
+            #endif
         }
     }
 
@@ -374,6 +386,18 @@ class BenchmarkValidation: XCTestCase {
 
     /// Test benchmark storage and retrieval
     func testBenchmarkStorage() {
+        // Create a temporary directory for this test to avoid conflicts
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SpecificationKitBenchmarksTest_\(UUID().uuidString)")
+
+        // Use temporary storage instance
+        let testStorage = BenchmarkStorage(storageDirectory: tempDir)
+
+        // Ensure directory was created successfully
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: tempDir.path),
+            "Temporary directory should be created")
+
         let testResult = BenchmarkResult(
             testName: "TestStorage",
             executionTime: 0.005,
@@ -381,13 +405,18 @@ class BenchmarkValidation: XCTestCase {
             iterations: 100
         )
 
-        storage.storeBenchmark(testResult)
+        testStorage.storeBenchmark(testResult)
 
-        let retrievedResults = storage.loadBenchmarks(for: "TestStorage")
+        let retrievedResults = testStorage.loadBenchmarks(for: "TestStorage")
         XCTAssertGreaterThan(retrievedResults.count, 0, "Should retrieve stored benchmark")
 
         let retrieved = retrievedResults.first!
         XCTAssertEqual(retrieved.testName, testResult.testName)
         XCTAssertEqual(retrieved.executionTime, testResult.executionTime, accuracy: 0.001)
+        XCTAssertEqual(retrieved.memoryUsage, testResult.memoryUsage)
+        XCTAssertEqual(retrieved.iterations, testResult.iterations)
+
+        // Cleanup: Remove temporary directory
+        try? FileManager.default.removeItem(at: tempDir)
     }
 }
