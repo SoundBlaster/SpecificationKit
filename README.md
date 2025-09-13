@@ -352,6 +352,45 @@ final class MyProvider: ContextProviding, ContextUpdatesProviding {
 
 See DemoApp → Observation for a working example.
 
+#### ObservedMaybe (optional, reactive)
+
+Use `@ObservedMaybe` when your decision logic returns an optional result that should update reactively in SwiftUI.
+
+```swift
+import SwiftUI
+import SpecificationKit
+
+struct ObservedMaybeExample: View {
+    // Emits "Flag enabled" when the feature flag is ON; otherwise nil.
+    @ObservedMaybe(provider: DefaultContextProvider.shared,
+                   firstMatch: [
+                       (FeatureFlagSpec(flagKey: "feature_x"), "Flag enabled")
+                   ])
+    private var flagMessage: String?
+
+    // Emits "Count > 0" when counter is positive; otherwise nil.
+    @ObservedMaybe(provider: DefaultContextProvider.shared,
+                   decide: { ctx in
+                       ctx.counter(for: "tap_count") > 0 ? "Count > 0" : nil
+                   })
+    private var countMessage: String?
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text(flagMessage ?? "Flag disabled")
+            Text(countMessage ?? "No taps yet")
+            Button("Tap") { _ = DefaultContextProvider.shared.incrementCounter("tap_count") }
+            Toggle("Feature X", isOn: .init(
+                get: { DefaultContextProvider.shared.getFlag("feature_x") },
+                set: { DefaultContextProvider.shared.setFlag("feature_x", to: $0) }
+            ))
+        }
+    }
+}
+```
+
+The demo app includes a live example under Navigation → Observation that showcases both `@ObservedSatisfies` and `@ObservedMaybe` reacting to provider changes.
+
 ## 🧱 Core Components
 
 ### Specifications
