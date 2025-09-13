@@ -30,19 +30,21 @@ public struct ObservedMaybe<Context, Result>: DynamicProperty {
         @Published var value: Result?
         var cancellable: AnyCancellable?
         func wire(updates: AnyPublisher<Void, Never>?, evaluate: @escaping () -> Result?) {
-            // Compute immediately
-            let v = evaluate()
-            self.value = v
-            guard cancellable == nil, let updates else { return }
-            cancellable = updates
-                .receive(on: DispatchQueue.main)
-                .sink { [weak self] in
-                    guard let self else { return }
-                    let v2 = evaluate()
-                    self.value = v2
+            // Set up once; avoid recomputation on every SwiftUI update() to prevent feedback loops.
+            if cancellable == nil {
+                // Initial evaluation
+                self.value = evaluate()
+                // Subscribe for reactive updates
+                if let updates {
+                    cancellable = updates
+                        .receive(on: DispatchQueue.main)
+                        .sink { [weak self] in
+                            self?.value = evaluate()
+                        }
                 }
             }
         }
+    }
 
     @ObservedObject private var observer: Observer
     #else
