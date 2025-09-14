@@ -118,7 +118,7 @@ Segments are unioned across providers by default. See DocC (CompositeContextProv
 
 - 🧩 **Composable Specifications** - Build complex business rules from simple, reusable components
 - 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies`, `@Decides` (non-optional), `@Maybe` (optional), `@CachedSatisfies` (cached with TTL), and reactive wrappers `@ObservedSatisfies`, `@ObservedDecides`, `@ObservedMaybe` for SwiftUI
-- 🔄 **Context Providers** - Flexible context injection and dependency management, including `DefaultContextProvider`, `EnvironmentContextProvider`, and `CompositeContextProvider` for composition
+- 🔄 **Context Providers** - Flexible context injection and dependency management, including `DefaultContextProvider`, `EnvironmentContextProvider`, `NetworkContextProvider`, and `CompositeContextProvider` for composition
 - 🚀 **Decision Specifications** - Return typed results beyond just boolean values with `DecisionSpec`
 - 🧭 **Date & Flags Specs** - New built-ins: `DateRangeSpec`, `DateComparisonSpec`, `FeatureFlagSpec`, `UserSegmentSpec`, `SubscriptionStatusSpec`
 - ⚙️ **Async Capable** - Evaluate rules asynchronously via `AsyncSpecification`, `AnyAsyncSpecification`, and `Satisfies.evaluateAsync()`
@@ -657,6 +657,35 @@ let spec = MaxCountSpec(counterKey: "test_counter", limit: 10)
 let context = mockProvider.currentContext()
 XCTAssertTrue(spec.isSatisfiedBy(context))
 ```
+
+#### NetworkContextProvider
+Fetch context data from remote endpoints with intelligent caching and retry policies.
+
+```swift
+// Configure network provider
+let config = NetworkContextProvider.Configuration(
+    endpoint: URL(string: "https://api.yourservice.com/context")!,
+    refreshInterval: 300, // 5 minutes
+    retryPolicy: .exponentialBackoff(maxAttempts: 3),
+    fallbackValues: ["feature_enabled": true]
+)
+
+let networkProvider = NetworkContextProvider(configuration: config)
+
+// Use async context fetching
+let context = try await networkProvider.currentContextAsync()
+
+// Works with specifications
+@Satisfies(using: FeatureFlagSpec(flagKey: "remote_feature"))
+var isFeatureEnabled: Bool
+```
+
+**Features:**
+- **Intelligent Caching**: TTL-based caching with thread-safe actor implementation
+- **Retry Policies**: Exponential backoff, fixed delay, or custom retry logic
+- **Offline Support**: Automatic fallback to cached data when network fails
+- **Swift 6 Ready**: Full concurrency support with `@Sendable` conformance
+- **Reactive Updates**: Combine integration for real-time context changes
 
 ## 🎯 Advanced Usage
 
