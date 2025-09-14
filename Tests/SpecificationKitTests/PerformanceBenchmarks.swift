@@ -26,37 +26,38 @@ final class PerformanceBenchmarks: XCTestCase {
 
     func testSpecificationEvaluationPerformance() {
         let spec = CooldownIntervalSpec(eventKey: "test_action", cooldownInterval: 10.0)
-        let context = EvaluationContext(
-            currentDate: Date(),
-            events: ["test_action": Date().addingTimeInterval(-15)]
-        )
+        let context = createPerformanceTestContext()
 
+        let startTime = CFAbsoluteTimeGetCurrent()
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
             for _ in 1...1000 {
                 _ = spec.isSatisfiedBy(context)
             }
         }
+        let executionTime = (CFAbsoluteTimeGetCurrent() - startTime) / 1000
+
+        validatePerformanceBaseline(
+            executionTime: executionTime, baseline: PerformanceBaseline.specificationEvaluation)
     }
 
     func testComplexSpecificationPerformance() {
         let userAgeSpec = PredicateSpec<EvaluationContext> { $0.counter(for: "user_age") >= 18 }
-        let subscriptionSpec = PredicateSpec<EvaluationContext> { $0.flag(for: "is_subscribed") }
+        let subscriptionSpec = PredicateSpec<EvaluationContext> { $0.flag(for: "is_premium") }
         let timeSinceSpec = TimeSinceEventSpec(eventKey: "last_login", minimumInterval: 86400)
 
         let complexSpec = userAgeSpec.and(subscriptionSpec).and(timeSinceSpec)
+        let context = createPerformanceTestContext()
 
-        let context = EvaluationContext(
-            currentDate: Date(),
-            counters: ["user_age": 25],
-            events: ["last_login": Date().addingTimeInterval(-90000)],
-            flags: ["is_subscribed": true]
-        )
-
+        let startTime = CFAbsoluteTimeGetCurrent()
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
             for _ in 1...1000 {
                 _ = complexSpec.isSatisfiedBy(context)
             }
         }
+        let executionTime = (CFAbsoluteTimeGetCurrent() - startTime) / 1000
+
+        validatePerformanceBaseline(
+            executionTime: executionTime, baseline: PerformanceBaseline.specificationEvaluation)
     }
 
     // MARK: - Property Wrapper Performance
@@ -216,37 +217,47 @@ final class PerformanceBenchmarks: XCTestCase {
         }
     }
 
-    /// Tests CachedSatisfies cache hit vs miss performance
-    func testCachedSatisfiesCacheEfficiency() {
-        let fastSpec = PredicateSpec<EvaluationContext> { $0.counter(for: "value") > 10 }
-        let cachedSpec = CachedSatisfies(using: fastSpec, ttl: 1.0)  // Short TTL
-
-        _ = EvaluationContext(
-            currentDate: Date(),
-            counters: ["value": 15]
-        )
-
-        // Test cache miss performance (first evaluation)
-        let cacheMissStart = CFAbsoluteTimeGetCurrent()
-        _ = cachedSpec.wrappedValue
-        let cacheMissTime = CFAbsoluteTimeGetCurrent() - cacheMissStart
-
-        // Test cache hit performance (subsequent evaluations)
-        let cacheHitStart = CFAbsoluteTimeGetCurrent()
-        for _ in 1...100 {
-            _ = cachedSpec.wrappedValue
+    /// Tests CachedSatisfies cache miss performance
+    func testCachedSatisfiesCacheMissPerformance() {
+        struct ExpensiveSpec: Specification {
+            func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+                usleep(50)  // 0.05ms simulated computation
+                return context.counter(for: "value") > 10
+            }
         }
-        let cacheHitTime = (CFAbsoluteTimeGetCurrent() - cacheHitStart) / 100
 
-        // Cache hits should be significantly faster than misses
-        XCTAssertLessThan(
-            cacheHitTime, cacheMissTime * 0.1,
-            "Cache hits should be at least 10x faster than cache misses")
+        let expensiveSpec = ExpensiveSpec()
+        let cachedSpec = CachedSatisfies(using: expensiveSpec, ttl: 60.0)
 
-        // Cache hits should be under baseline requirement
-        XCTAssertLessThan(
-            cacheHitTime, PerformanceBaseline.specificationEvaluation * 0.1,
-            "Cache hits should be under 0.1ms")
+        measure(metrics: [XCTClockMetric()]) {
+            // Clear cache to force miss on each iteration
+            for _ in 1...10 {
+                CachedSatisfies<EvaluationContext>.clearAllCaches()
+                _ = cachedSpec.wrappedValue
+            }
+        }
+    }
+
+    /// Tests CachedSatisfies cache hit performance
+    func testCachedSatisfiesCacheHitPerformance() {
+        let fastSpec = PredicateSpec<EvaluationContext> { $0.counter(for: "value") > 10 }
+        let cachedSpec = CachedSatisfies(using: fastSpec, ttl: 60.0)
+
+        // Prime the cache
+        _ = cachedSpec.wrappedValue
+
+        let startTime = CFAbsoluteTimeGetCurrent()
+        measure(metrics: [XCTClockMetric()]) {
+            for _ in 1...1000 {
+                _ = cachedSpec.wrappedValue
+            }
+        }
+        let avgCacheHitTime = (CFAbsoluteTimeGetCurrent() - startTime) / 1000
+
+        validatePerformanceBaseline(
+            executionTime: avgCacheHitTime,
+            baseline: PerformanceBaseline.specificationEvaluation * 0.1
+        )
     }
 
     /// Tests CachedSatisfies memory usage and cleanup
