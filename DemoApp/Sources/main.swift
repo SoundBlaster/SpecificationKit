@@ -50,6 +50,11 @@ struct AppContentView: View {
                 NavigationLink(destination: ObservationDemoView()) {
                     Label("Observation", systemImage: "eye")
                 }
+                if #available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *) {
+                    NavigationLink(destination: NetworkContextDemoView()) {
+                        Label("Network Context", systemImage: "network")
+                    }
+                }
             }
             .listStyle(SidebarListStyle())
             .navigationTitle("SpecificationKit Demo")

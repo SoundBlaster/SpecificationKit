@@ -1,5 +1,5 @@
-import SwiftUI
 import SpecificationKit
+import SwiftUI
 
 struct AdvancedSpecsDemoView: View {
     private let provider = DefaultContextProvider.shared
@@ -40,7 +40,9 @@ struct AdvancedSpecsDemoView: View {
         case all = "All"
         var id: String { rawValue }
 
-        static func toSpecWindow(_ w: HistoryWindow, n: Int) -> HistoricalSpec<EvaluationContext, Double>.AnalysisWindow {
+        static func toSpecWindow(_ w: HistoryWindow, n: Int)
+            -> HistoricalSpec<EvaluationContext, Double>.AnalysisWindow
+        {
             switch w {
             case .last10: return .lastN(10)
             case .last50: return .lastN(50)
@@ -58,7 +60,9 @@ struct AdvancedSpecsDemoView: View {
         case p99 = "P99"
         var id: String { rawValue }
 
-        static func toSpecAggregation(_ a: HistoryAggregation) -> HistoricalSpec<EvaluationContext, Double>.AggregationMethod {
+        static func toSpecAggregation(_ a: HistoryAggregation)
+            -> HistoricalSpec<EvaluationContext, Double>.AggregationMethod
+        {
             switch a {
             case .median: return .median
             case .p90: return .percentile(90)
@@ -72,11 +76,17 @@ struct AdvancedSpecsDemoView: View {
             Section(header: Text("Setup")) {
                 Slider(value: $metricValue, in: 0...100, step: 1) {
                     Text("metric (userData.metric)")
-                } minimumValueLabel: { Text("0") } maximumValueLabel: { Text("100") }
+                } minimumValueLabel: {
+                    Text("0")
+                } maximumValueLabel: {
+                    Text("100")
+                }
                 Text("metric: \(Int(metricValue))")
 
                 HStack {
-                    Stepper("Context threshold: \(Int(ctxThresholdValue))", value: $ctxThresholdValue, in: 0...100)
+                    Stepper(
+                        "Context threshold: \(Int(ctxThresholdValue))", value: $ctxThresholdValue,
+                        in: 0...100)
                     Spacer()
                     Button("Apply to context") {
                         provider.setUserData("ctx_threshold", to: ctxThresholdValue)
@@ -85,7 +95,11 @@ struct AdvancedSpecsDemoView: View {
             }
 
             // MARK: - ComparativeSpec
-            Section(header: Text("1) ComparativeSpec"), footer: Text("Uses extracting: and helpers like withinTolerance and approximatelyEqual")) {
+            Section(
+                header: Text("1) ComparativeSpec"),
+                footer: Text(
+                    "Uses extracting: and helpers like withinTolerance and approximatelyEqual")
+            ) {
                 let greater = ComparativeSpec<EvaluationContext, Double>(
                     extracting: { $0.userData(for: "metric", as: Double.self) },
                     comparison: .greaterThan(thresholdValue)
@@ -97,18 +111,25 @@ struct AdvancedSpecsDemoView: View {
                 // Approximately equal using a custom comparison range
                 let approxCustom = ComparativeSpec<EvaluationContext, Double>(
                     extracting: { $0.userData(for: "metric", as: Double.self) },
-                    comparison: .between(approxTarget * (1 - approxRelError), approxTarget * (1 + approxRelError))
+                    comparison: .between(
+                        approxTarget * (1 - approxRelError), approxTarget * (1 + approxRelError))
                 )
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Stepper("threshold: \(Int(thresholdValue))", value: $thresholdValue, in: 0...100)
+                        Stepper(
+                            "threshold: \(Int(thresholdValue))", value: $thresholdValue, in: 0...100
+                        )
                         Spacer()
                     }
                     HStack {
-                        Stepper("approx target: \(Int(approxTarget))", value: $approxTarget, in: 0...100)
+                        Stepper(
+                            "approx target: \(Int(approxTarget))", value: $approxTarget, in: 0...100
+                        )
                         Spacer()
-                        Stepper("rel error: \(Int(approxRelError * 100))%", value: $approxRelError, in: 0.01...0.25, step: 0.01)
+                        Stepper(
+                            "rel error: \(Int(approxRelError * 100))%", value: $approxRelError,
+                            in: 0.01...0.25, step: 0.01)
                     }
 
                     let ctx = updatedContext()
@@ -119,10 +140,15 @@ struct AdvancedSpecsDemoView: View {
             }
 
             // MARK: - ThresholdSpec
-            Section(header: Text("2) ThresholdSpec"), footer: Text("Fixed, adaptive, contextual thresholds")) {
+            Section(
+                header: Text("2) ThresholdSpec"),
+                footer: Text("Fixed, adaptive, contextual thresholds")
+            ) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Stepper("fixed threshold: \(Int(thresholdValue))", value: $thresholdValue, in: 0...100)
+                        Stepper(
+                            "fixed threshold: \(Int(thresholdValue))", value: $thresholdValue,
+                            in: 0...100)
                         Spacer()
                     }
                     let ctx = updatedContext()
@@ -144,7 +170,9 @@ struct AdvancedSpecsDemoView: View {
                     // Contextual threshold read from context userData
                     let contextual = ThresholdSpec<EvaluationContext, Double>(
                         extracting: { $0.userData(for: "metric", as: Double.self) },
-                        threshold: .custom { ctx in ctx.userData(for: "ctx_threshold", as: Double.self) ?? 0 },
+                        threshold: .custom { ctx in
+                            ctx.userData(for: "ctx_threshold", as: Double.self) ?? 0
+                        },
                         operator: .greaterThanOrEqual
                     )
                     statusRow("metric ≥ ctx_threshold", ok: contextual.isSatisfiedBy(ctx))
@@ -152,21 +180,40 @@ struct AdvancedSpecsDemoView: View {
             }
 
             // MARK: - WeightedSpec
-            Section(header: Text("3) WeightedSpec"), footer: Text("Probabilistic selection among satisfied candidates")) {
+            Section(
+                header: Text("3) WeightedSpec"),
+                footer: Text("Probabilistic selection among satisfied candidates")
+            ) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Toggle("Flag A", isOn: .init(
-                        get: { flagA },
-                        set: { v in flagA = v; provider.setFlag("weighted_a", to: v) }
-                    ))
-                    Toggle("Flag B", isOn: .init(
-                        get: { flagB },
-                        set: { v in flagB = v; provider.setFlag("weighted_b", to: v) }
-                    ))
+                    Toggle(
+                        "Flag A",
+                        isOn: .init(
+                            get: { flagA },
+                            set: { v in
+                                flagA = v
+                                provider.setFlag("weighted_a", to: v)
+                            }
+                        ))
+                    Toggle(
+                        "Flag B",
+                        isOn: .init(
+                            get: { flagB },
+                            set: { v in
+                                flagB = v
+                                provider.setFlag("weighted_b", to: v)
+                            }
+                        ))
 
                     HStack {
-                        Stepper("wA: \(String(format: "%.2f", weightA))", value: $weightA, in: 0.1...5, step: 0.1)
-                        Stepper("wB: \(String(format: "%.2f", weightB))", value: $weightB, in: 0.1...5, step: 0.1)
-                        Stepper("wC: \(String(format: "%.2f", weightC))", value: $weightC, in: 0.1...5, step: 0.1)
+                        Stepper(
+                            "wA: \(String(format: "%.2f", weightA))", value: $weightA, in: 0.1...5,
+                            step: 0.1)
+                        Stepper(
+                            "wB: \(String(format: "%.2f", weightB))", value: $weightB, in: 0.1...5,
+                            step: 0.1)
+                        Stepper(
+                            "wC: \(String(format: "%.2f", weightC))", value: $weightC, in: 0.1...5,
+                            step: 0.1)
                     }
 
                     HStack {
@@ -175,7 +222,8 @@ struct AdvancedSpecsDemoView: View {
                     }
 
                     HStack {
-                        Stepper("Samples: \(sampleRuns)", value: $sampleRuns, in: 50...2000, step: 50)
+                        Stepper(
+                            "Samples: \(sampleRuns)", value: $sampleRuns, in: 50...2000, step: 50)
                         Button("Run samples") { runSamples() }
                     }
                     Text("A: \(sampleA)  B: \(sampleB)  C: \(sampleC)")
@@ -184,7 +232,10 @@ struct AdvancedSpecsDemoView: View {
             }
 
             // MARK: - HistoricalSpec
-            Section(header: Text("4) HistoricalSpec"), footer: Text("Aggregate time-series data with median/percentile")) {
+            Section(
+                header: Text("4) HistoricalSpec"),
+                footer: Text("Aggregate time-series data with median/percentile")
+            ) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Slider(value: $newDataPoint, in: 0...100, step: 1) {
@@ -275,39 +326,52 @@ struct AdvancedSpecsDemoView: View {
         let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }
         let always = AlwaysTrueSpec<EvaluationContext>()
 
-        let spec = WeightedSpec<EvaluationContext, String>(
-            candidates: [
-                (AnySpecification(a), weightA, "A"),
-                (AnySpecification(b), weightB, "B"),
-                (AnySpecification(always), weightC, "C")
-            ]
-        )
+        do {
+            let spec = try WeightedSpec<EvaluationContext, String>(
+                candidates: [
+                    (AnySpecification(a), weightA, "A"),
+                    (AnySpecification(b), weightB, "B"),
+                    (AnySpecification(always), weightC, "C"),
+                ]
+            )
 
-        let ctx = updatedContext()
-        lastWeightedPick = spec.decide(ctx) ?? "—"
+            let ctx = updatedContext()
+            lastWeightedPick = spec.decide(ctx) ?? "—"
+        } catch {
+            lastWeightedPick = "Error: \(error.localizedDescription)"
+        }
     }
 
     private func runSamples() {
-        sampleA = 0; sampleB = 0; sampleC = 0
+        sampleA = 0
+        sampleB = 0
+        sampleC = 0
         let a = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_a") }
         let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }
         let always = AlwaysTrueSpec<EvaluationContext>()
-        let spec = WeightedSpec<EvaluationContext, String>(
-            candidates: [
-                (AnySpecification(a), weightA, "A"),
-                (AnySpecification(b), weightB, "B"),
-                (AnySpecification(always), weightC, "C")
-            ]
-        )
+        do {
+            let spec = try WeightedSpec<EvaluationContext, String>(
+                candidates: [
+                    (AnySpecification(a), weightA, "A"),
+                    (AnySpecification(b), weightB, "B"),
+                    (AnySpecification(always), weightC, "C"),
+                ]
+            )
 
-        let ctx = updatedContext()
-        for _ in 0..<sampleRuns {
-            switch spec.decide(ctx) {
-            case "A": sampleA += 1
-            case "B": sampleB += 1
-            case "C": sampleC += 1
-            default: break
+            let ctx = updatedContext()
+            for _ in 0..<sampleRuns {
+                switch spec.decide(ctx) {
+                case "A": sampleA += 1
+                case "B": sampleB += 1
+                case "C": sampleC += 1
+                default: break
+                }
             }
+        } catch {
+            // Reset samples to indicate error
+            sampleA = 0
+            sampleB = 0
+            sampleC = 0
         }
     }
 
@@ -329,12 +393,14 @@ final class DemoHistoryProvider: ObservableObject, HistoricalDataProvider {
     private let lock = NSLock()
 
     func record(value: Double) {
-        lock.lock(); defer { lock.unlock() }
+        lock.lock()
+        defer { lock.unlock() }
         data.append((Date(), value))
     }
 
     func clear() {
-        lock.lock(); defer { lock.unlock() }
+        lock.lock()
+        defer { lock.unlock() }
         data.removeAll()
     }
 
@@ -342,7 +408,8 @@ final class DemoHistoryProvider: ObservableObject, HistoricalDataProvider {
         for window: HistoricalSpec<Context, Value>.AnalysisWindow,
         context: Context
     ) -> [(Date, Value)] {
-        lock.lock(); defer { lock.unlock() }
+        lock.lock()
+        defer { lock.unlock() }
         let casted: [(Date, Any)] = data.map { ($0.0, $0.1 as Any) }
         let now = Date()
         let filtered: [(Date, Any)]
@@ -384,7 +451,9 @@ struct MiniLineChart: View {
             ZStack {
                 // Grid lines
                 grid(in: size)
-                    .stroke(Color.secondary.opacity(0.15), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                    .stroke(
+                        Color.secondary.opacity(0.15),
+                        style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
 
                 // Line path
                 if values.count >= 2 {
@@ -436,7 +505,9 @@ struct MiniLineChart: View {
         return size.width / CGFloat(values.count - 1)
     }
 
-    private func yPosition(for value: Double, in size: CGSize, minY: Double, maxY: Double) -> CGFloat {
+    private func yPosition(for value: Double, in size: CGSize, minY: Double, maxY: Double)
+        -> CGFloat
+    {
         let clamped = max(minY, min(value, maxY))
         let t = (clamped - minY) / (maxY - minY)
         return size.height - CGFloat(t) * size.height

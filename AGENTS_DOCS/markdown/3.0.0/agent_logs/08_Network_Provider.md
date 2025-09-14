@@ -6656,3 +6656,4620 @@ Perfect! I've updated the CHANGELOG to comprehensively document all completed v3
 - **Progress tracking** showing current milestone achievement
 
 The CHANGELOG now serves as a comprehensive record of the substantial v3.0.0 development progress and provides clear visibility into what's been delivered versus what's still pending.
+
+## User (checkpoint)
+
+Use [@NetworkContextProvider.swift](file:///Users/egor/Development/GitHub/SpecificationKit/Sources/SpecificationKit/Providers/NetworkContextProvider.swift) [@NetworkContextProviderTests.swift](file:///Users/egor/Development/GitHub/SpecificationKit/Tests/SpecificationKitTests/NetworkContextProviderTests.swift)and write DocC markdown file about it as [@ThresholdSpec.md](file:///Users/egor/Development/GitHub/SpecificationKit/Sources/SpecificationKit/Documentation.docc/ThresholdSpec.md) is.
+
+## Assistant
+
+I'll create a DocC markdown file for `NetworkContextProvider` based on the existing `ThresholdSpec.md` format.
+
+**Tool Call: Write /Users/egor/Development/GitHub/SpecificationKit/Sources/SpecificationKit/Documentation.docc/NetworkContextProvider.md**
+Status: Completed
+
+Diff: /Users/egor/Development/GitHub/SpecificationKit/Sources/SpecificationKit/Documentation.docc/NetworkContextProvider.md
+```
+# NetworkContextProvider
+
+A context provider that fetches context data from network endpoints with caching, retry logic, and offline support.
+
+## Overview
+
+`NetworkContextProvider` enables specifications to work with remote context data by fetching evaluation contexts from network endpoints. It provides robust networking capabilities including automatic retries, exponential backoff, caching for offline scenarios, and periodic refresh mechanisms.
+
+This provider is essential for applications that need to evaluate specifications against dynamic, server-side context data while maintaining resilience to network failures and performance optimization through caching.
+
+## Basic Usage
+
+### Simple Network Provider
+
+Create a basic network context provider:
+
+```swift
+import SpecificationKit
+
+let configuration = NetworkContextProvider.Configuration(
+    endpoint: URL(string: "https://api.example.com/context")!,
+    refreshInterval: 300, // 5 minutes
+    cacheEnabled: true
+)
+
+let networkProvider = NetworkContextProvider(configuration: configuration)
+
+// Use with async specifications
+let context = try await networkProvider.currentContextAsync()
+```
+
+### With Specifications
+
+Integrate with specification property wrappers:
+
+```swift
+@AsyncSatisfies(using: someSpec, provider: networkProvider)
+var featureEnabled: Bool
+
+// Async evaluation
+if try await featureEnabled.evaluateAsync() {
+    enablePremiumFeature()
+}
+```
+
+### Fallback Configuration
+
+Configure fallback values for offline scenarios:
+
+```swift
+let configuration = NetworkContextProvider.Configuration(
+    endpoint: URL(string: "https://api.example.com/context")!,
+    fallbackValues: [
+        "featureEnabled": true,
+        "userTier": "basic",
+        "maxRequests": 100
+    ]
+)
+```
+
+## Configuration Options
+
+### Basic Configuration
+
+Essential settings for network context fetching:
+
+```swift
+let configuration = NetworkContextProvider.Configuration(
+    endpoint: URL(string: "https://api.example.com/context")!,
+    refreshInterval: 600,        // 10 minutes
+    requestTimeout: 30,          // 30 seconds
+    cacheEnabled: true
+)
+```
+
+### Retry Policies
+
+Configure retry behavior for failed requests:
+
+```swift
+// Exponential backoff (default)
+let exponentialConfig = NetworkContextProvider.Configuration(
+    endpoint: endpoint,
+    retryPolicy: .exponentialBackoff(maxAttempts: 3)
+)
+
+// Fixed delay retries
+let fixedDelayConfig = NetworkContextProvider.Configuration(
+    endpoint: endpoint,
+    retryPolicy: .fixedDelay(2.0, maxAttempts: 3)
+)
+
+// No retries
+let noRetryConfig = NetworkContextProvider.Configuration(
+    endpoint: endpoint,
+    retryPolicy: .none
+)
+
+// Custom retry logic
+let customRetryConfig = NetworkContextProvider.Configuration(
+    endpoint: endpoint,
+    retryPolicy: .custom { attempt, error in
+        // Custom delay calculation
+        return attempt < 5 ? Double(attempt) * 1.5 : nil
+    }
+)
+```
+
+### Complete Configuration
+
+Full configuration with all options:
+
+```swift
+let completeConfig = NetworkContextProvider.Configuration(
+    endpoint: URL(string: "https://api.example.com/context")!,
+    refreshInterval: 300,
+    requestTimeout: 30,
+    retryPolicy: .exponentialBackoff(maxAttempts: 3),
+    fallbackValues: [
+        "defaultTier": "free",
+        "maxConnections": 10,
+        "maintenanceMode": false
+    ],
+    cacheEnabled: true
+)
+```
+
+## Retry Policies
+
+### Exponential Backoff
+
+Progressively increase delay between retries:
+
+```swift
+let policy = NetworkContextProvider.RetryPolicy.exponentialBackoff(maxAttempts: 4)
+
+// Retry delays: 1s, 2s, 4s, then give up
+// Policy calculates: 2^(attempt-1) seconds
+```
+
+### Fixed Delay
+
+Consistent delay between retries:
+
+```swift
+let policy = NetworkContextProvider.RetryPolicy.fixedDelay(1.5, maxAttempts: 3)
+
+// Retry delays: 1.5s, 1.5s, 1.5s, then give up
+```
+
+### Custom Retry Logic
+
+Implement sophisticated retry strategies:
+
+```swift
+let customPolicy = NetworkContextProvider.RetryPolicy.custom { attempt, error in
+    // Different strategies based on error type
+    if error is URLError {
+        switch (error as! URLError).code {
+        case .timedOut:
+            return attempt < 5 ? Double(attempt) * 2.0 : nil
+        case .networkConnectionLost:
+            return attempt < 3 ? 1.0 : nil
+        default:
+            return nil // Don't retry other URL errors
+        }
+    }
+
+    // HTTP errors
+    if let httpError = error as? NetworkContextProvider.NetworkError,
+       case .httpError(let code) = httpError {
+        return code >= 500 && attempt < 3 ? 2.0 : nil
+    }
+
+    return nil
+}
+```
+
+## Data Format
+
+### Expected JSON Structure
+
+The network endpoint should return JSON in this format:
+
+```json
+{
+    "userData": {
+        "userId": "user123",
+        "tier": "premium",
+        "preferences": {...}
+    },
+    "counters": {
+        "loginCount": 42,
+        "apiCalls": 150,
+        "sessionsToday": 3
+    },
+    "events": {
+        "lastLogin": 1704067200,
+        "lastPurchase": "2024-01-01T12:00:00Z",
+        "trialStarted": 1703980800
+    },
+    "flags": {
+        "featureEnabled": true,
+        "betaAccess": false,
+        "maintenanceMode": false
+    },
+    "segments": ["premium", "beta", "early-adopter"],
+    "launchDate": 1703894400
+}
+```
+
+### Date Formats
+
+Dates can be provided in multiple formats:
+
+```json
+{
+    "events": {
+        "timestamp": 1704067200,                    // Unix timestamp
+        "isoDate": "2024-01-01T12:00:00Z",         // ISO 8601 string
+        "customDate": "2024-01-01T12:00:00.000Z"   // ISO 8601 with milliseconds
+    }
+}
+```
+
+## Integration Examples
+
+### Feature Flag System
+
+Implement remote feature flags:
+
+```swift
+import SwiftUI
+
+class FeatureFlagService: ObservableObject {
+    private let networkProvider: NetworkContextProvider
+
+    init(endpoint: URL) {
+        let config = NetworkContextProvider.Configuration(
+            endpoint: endpoint,
+            refreshInterval: 300,
+            fallbackValues: [
+                "newUIEnabled": false,
+                "experimentalFeatures": false
+            ]
+        )
+
+        self.networkProvider = NetworkContextProvider(configuration: config)
+    }
+
+    @AsyncSatisfies(using: FeatureFlagSpec(flag: "newUIEnabled"))
+    var newUIEnabled: Bool
+
+    @AsyncSatisfies(using: FeatureFlagSpec(flag: "experimentalFeatures"))
+    var experimentalFeaturesEnabled: Bool
+
+    func refreshFeatureFlags() async {
+        do {
+            _ = try await networkProvider.currentContextAsync()
+            // Flags will be updated automatically
+        } catch {
+            print("Failed to refresh feature flags: \(error)")
+        }
+    }
+}
+
+struct ContentView: View {
+    @StateObject private var featureFlags = FeatureFlagService(
+        endpoint: URL(string: "https://api.example.com/feature-flags")!
+    )
+
+    var body: some View {
+        VStack {
+            if featureFlags.newUIEnabled {
+                NewUIComponent()
+            } else {
+                LegacyUIComponent()
+            }
+        }
+        .task {
+            await featureFlags.refreshFeatureFlags()
+        }
+    }
+}
+```
+
+### User Segmentation
+
+Implement dynamic user segmentation:
+
+```swift
+class UserSegmentationService {
+    private let networkProvider: NetworkContextProvider
+
+    private let premiumUserSpec = UserSegmentSpec(segment: "premium")
+    private let betaUserSpec = UserSegmentSpec(segment: "beta")
+    private let highValueSpec = MaxCountSpec(
+        counterKey: "totalPurchases",
+        maxCount: 10,
+        comparison: .greaterThanOrEqual
+    )
+
+    init(endpoint: URL, userId: String) {
+        let config = NetworkContextProvider.Configuration(
+            endpoint: endpoint.appendingPathComponent("users/\(userId)/context"),
+            refreshInterval: 600,
+            fallbackValues: [
+                "userTier": "free",
+                "totalPurchases": 0
+            ]
+        )
+
+        self.networkProvider = NetworkContextProvider(configuration: config)
+    }
+
+    func getUserSegment() async throws -> UserSegment {
+        let context = try await networkProvider.currentContextAsync()
+
+        if premiumUserSpec.isSatisfiedBy(context) {
+            return .premium
+        } else if betaUserSpec.isSatisfiedBy(context) {
+            return .beta
+        } else if highValueSpec.isSatisfiedBy(context) {
+            return .highValue
+        } else {
+            return .standard
+        }
+    }
+}
+
+enum UserSegment {
+    case premium, beta, highValue, standard
+}
+```
+
+### Real-time Configuration
+
+Implement dynamic application configuration:
+
+```swift
+class ConfigurationManager: ObservableObject {
+    @Published var isLoading = false
+    @Published var lastUpdateTime: Date?
+
+    private let networkProvider: NetworkContextProvider
+
+    init() {
+        let config = NetworkContextProvider.Configuration(
+            endpoint: URL(string: "https://api.example.com/config")!,
+            refreshInterval: 120, // 2 minutes for frequent updates
+            retryPolicy: .exponentialBackoff(maxAttempts: 5),
+            fallbackValues: [
+                "maxConnections": 100,
+                "rateLimitPerMinute": 1000,
+                "maintenanceMode": false
+            ]
+        )
+
+        self.networkProvider = NetworkContextProvider(configuration: config)
+
+        // Set up automatic refresh
+        Timer.scheduledTimer(withTimeInterval: 120, repeats: true) { _ in
+            Task { await self.refreshConfiguration() }
+        }
+    }
+
+    @MainActor
+    func refreshConfiguration() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            _ = try await networkProvider.currentContextAsync()
+            lastUpdateTime = Date()
+        } catch {
+            print("Configuration update failed: \(error)")
+        }
+    }
+
+    func getMaxConnections() async -> Int {
+        do {
+            let context = try await networkProvider.currentContextAsync()
+            return context.userData["maxConnections"] as? Int ?? 100
+        } catch {
+            return 100 // Fallback value
+        }
+    }
+
+    func isMaintenanceMode() async -> Bool {
+        do {
+            let context = try await networkProvider.currentContextAsync()
+            return context.flag(for: "maintenanceMode")
+        } catch {
+            return false
+        }
+    }
+}
+```
+
+## Caching and Offline Support
+
+### Cache Behavior
+
+The provider includes automatic caching:
+
+```swift
+// Cache is enabled by default
+let config = NetworkContextProvider.Configuration(
+    endpoint: endpoint,
+    cacheEnabled: true // Default
+)
+
+// When network fails, cached context is returned
+let context = try await networkProvider.currentContextAsync()
+```
+
+### Offline Scenarios
+
+Handle offline situations gracefully:
+
+```swift
+class OfflineAwareService {
+    private let networkProvider: NetworkContextProvider
+
+    init() {
+        let config = NetworkContextProvider.Configuration(
+            endpoint: URL(string: "https://api.example.com/context")!,
+            fallbackValues: [
+                "offlineMode": true,
+                "limitedFeatures": true,
+                "cacheOnly": true
+            ]
+        )
+
+        self.networkProvider = NetworkContextProvider(configuration: config)
+    }
+
+    func evaluateFeature() async -> Bool {
+        do {
+            let context = try await networkProvider.currentContextAsync()
+
+            // Check if we're using cached/fallback data
+            let isOffline = context.flag(for: "offlineMode")
+
+            if isOffline {
+                // Limited functionality in offline mode
+                return context.flag(for: "limitedFeatures")
+            } else {
+                // Full functionality with fresh data
+                return context.flag(for: "fullFeatureAccess")
+            }
+        } catch {
+            // Complete fallback
+            return false
+        }
+    }
+}
+```
+
+## Error Handling
+
+### Network Error Types
+
+Handle different types of network errors:
+
+```swift
+func handleNetworkErrors() async {
+    do {
+        let context = try await networkProvider.currentContextAsync()
+        // Use context
+    } catch let error as NetworkContextProvider.NetworkError {
+        switch error {
+        case .invalidResponse:
+            // Handle malformed response
+            print("Server returned invalid response")
+        case .httpError(let code):
+            // Handle HTTP errors
+            print("HTTP error: \(code)")
+        case .maxRetriesExceeded:
+            // All retry attempts failed
+            print("Network request failed after all retries")
+        case .networkUnavailable:
+            // No network connection
+            print("Network unavailable - using cached data")
+        case .parseError(let message):
+            // JSON parsing failed
+            print("Failed to parse response: \(message)")
+        case .configurationError(let message):
+            // Configuration issue
+            print("Configuration error: \(message)")
+        }
+    } catch {
+        // Other errors
+        print("Unexpected error: \(error)")
+    }
+}
+```
+
+### Graceful Degradation
+
+Implement graceful degradation strategies:
+
+```swift
+class ResilientService {
+    private let networkProvider: NetworkContextProvider
+    private let fallbackProvider: DefaultContextProvider
+
+    init() {
+        let config = NetworkContextProvider.Configuration(
+            endpoint: URL(string: "https://api.example.com/context")!,
+            retryPolicy: .exponentialBackoff(maxAttempts: 2), // Quick failure
+            fallbackValues: ["fallbackMode": true]
+        )
+
+        self.networkProvider = NetworkContextProvider(configuration: config)
+        self.fallbackProvider = DefaultContextProvider.shared
+    }
+
+    func getContext() async -> EvaluationContext {
+        do {
+            // Try network first
+            return try await networkProvider.currentContextAsync()
+        } catch {
+            // Fall back to local provider
+            print("Using fallback provider due to network error: \(error)")
+            return fallbackProvider.currentContext()
+        }
+    }
+}
+```
+
+## Performance Considerations
+
+### Request Optimization
+
+Optimize network requests:
+
+```swift
+// Configure appropriate timeouts
+let config = NetworkContextProvider.Configuration(
+    endpoint: endpoint,
+    requestTimeout: 15,      // Shorter timeout for better UX
+    refreshInterval: 600,    // Less frequent updates to reduce load
+    retryPolicy: .exponentialBackoff(maxAttempts: 2) // Quick failure
+)
+```
+
+### Background Refresh
+
+Implement smart background refresh:
+
+```swift
+class SmartRefreshService {
+    private let networkProvider: NetworkContextProvider
+    private var isAppActive = true
+
+    init() {
+        let config = NetworkContextProvider.Configuration(
+            endpoint: URL(string: "https://api.example.com/context")!,
+            refreshInterval: 0 // Disable automatic refresh
+        )
+
+        self.networkProvider = NetworkContextProvider(configuration: config)
+        setupAppLifecycleObservers()
+    }
+
+    private func setupAppLifecycleObservers() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            self.isAppActive = true
+            Task { await self.refreshIfNeeded() }
+        }
+
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            self.isAppActive = false
+        }
+    }
+
+    private func refreshIfNeeded() async {
+        guard isAppActive else { return }
+
+        do {
+            _ = try await networkProvider.currentContextAsync()
+        } catch {
+            print("Background refresh failed: \(error)")
+        }
+    }
+}
+```
+
+## Best Practices
+
+### 1. Configure Appropriate Timeouts
+
+Set reasonable timeouts based on your use case:
+
+```swift
+// For user-facing features - quick timeout
+let userConfig = NetworkContextProvider.Configuration(
+    endpoint: endpoint,
+    requestTimeout: 10,
+    retryPolicy: .exponentialBackoff(maxAttempts: 2)
+)
+
+// For background updates - longer timeout
+let backgroundConfig = NetworkContextProvider.Configuration(
+    endpoint: endpoint,
+    requestTimeout: 60,
+    retryPolicy: .exponentialBackoff(maxAttempts: 5)
+)
+```
+
+### 2. Provide Meaningful Fallback Values
+
+Always provide sensible fallback values:
+
+```swift
+let config = NetworkContextProvider.Configuration(
+    endpoint: endpoint,
+    fallbackValues: [
+        "featureEnabled": false,      // Safe default
+        "maxConnections": 10,         // Conservative limit
+        "debugMode": false,           // Secure default
+        "userTier": "basic"          // Basic access level
+    ]
+)
+```
+
+### 3. Handle Network State Changes
+
+Monitor network availability:
+
+```swift
+import Network
+
+class NetworkAwareProvider: ObservableObject {
+    private let networkProvider: NetworkContextProvider
+    private let monitor = NWPathMonitor()
+
+    @Published var isNetworkAvailable = true
+
+    init() {
+        let config = NetworkContextProvider.Configuration(
+            endpoint: URL(string: "https://api.example.com/context")!,
+            fallbackValues: ["networkMode": "offline"]
+        )
+
+        self.networkProvider = NetworkContextProvider(configuration: config)
+        setupNetworkMonitoring()
+    }
+
+    private func setupNetworkMonitoring() {
+        monitor.pathUpdateHandler = { [weak self] path in
+            DispatchQueue.main.async {
+                self?.isNetworkAvailable = path.status == .satisfied
+            }
+        }
+
+        let queue = DispatchQueue(label: "NetworkMonitor")
+        monitor.start(queue: queue)
+    }
+}
+```
+
+### 4. Use Structured Logging
+
+Implement comprehensive logging:
+
+```swift
+extension NetworkContextProvider {
+    private func logRequest(_ request: URLRequest) {
+        print("""
+            [NetworkContextProvider] Request:
+            - URL: \(request.url?.absoluteString ?? "unknown")
+            - Method: \(request.httpMethod ?? "GET")
+            - Timeout: \(request.timeoutInterval)s
+            """)
+    }
+
+    private func logResponse(_ data: Data, _ response: URLResponse) {
+        print("""
+            [NetworkContextProvider] Response:
+            - Size: \(data.count) bytes
+            - Status: \((response as? HTTPURLResponse)?.statusCode ?? 0)
+            """)
+    }
+
+    private func logError(_ error: Error, attempt: Int) {
+        print("""
+            [NetworkContextProvider] Error (attempt \(attempt)):
+            - Type: \(type(of: error))
+            - Description: \(error.localizedDescription)
+            """)
+    }
+}
+```
+
+## Performance Characteristics
+
+- **Network Request Time**: Depends on network latency and server response time
+- **Retry Overhead**: Exponential backoff can add significant delay for failing requests
+- **Cache Hit Time**: O(1) for cached context retrieval
+- **Memory Usage**: O(1) for cached context, minimal overhead
+- **Thread Safety**: All operations are thread-safe and async/await compatible
+
+## See Also
+
+- ``ContextProviding`` - The base protocol for context providers
+- ``DefaultContextProvider`` - Local context provider for comparison
+- ``EnvironmentContextProvider`` - SwiftUI environment integration
+- ``EvaluationContext`` - The context data structure
+- ``AsyncSpecification`` - For async specification evaluation
+```
+
+
+## Assistant
+
+5-hour limit reached ∙ resets 11pm
+
+## User (checkpoint)
+
+mention [@NetworkContextProvider.md](file:///Users/egor/Development/GitHub/SpecificationKit/Sources/SpecificationKit/Documentation.docc/NetworkContextProvider.md) in [@SpecificationKit.md](file:///Users/egor/Development/GitHub/SpecificationKit/Sources/SpecificationKit/Documentation.docc/SpecificationKit.md)
+
+## Assistant
+
+I'll add a reference to `NetworkContextProvider` in the SpecificationKit.md documentation file.
+
+**Tool Call: Edit `/Users/egor/Development/GitHub/SpecificationKit/Sources/SpecificationKit/Documentation.docc/SpecificationKit.md`**
+Status: Completed
+
+Diff: /Users/egor/Development/GitHub/SpecificationKit/Sources/SpecificationKit/Documentation.docc/SpecificationKit.md
+```
+- ``ContextProviding``
+- ``DefaultContextProvider``
+- ``EnvironmentContextProvider``
+- ``NetworkContextProvider``
+- ``CompositeContextProvider``
+- ``AnyContextProvider``
+```
+
+
+## User (checkpoint)
+
+create new screen in [@DemoApp](file:///Users/egor/Development/GitHub/SpecificationKit/DemoApp/) for [@NetworkContextProvider.md](file:///Users/egor/Development/GitHub/SpecificationKit/Sources/SpecificationKit/Documentation.docc/NetworkContextProvider.md)
+
+## Assistant
+
+I'll create a new screen in the DemoApp for NetworkContextProvider. This will demonstrate network-based context fetching with retry policies, caching, and offline support.
+
+**Tool Call: Write /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift**
+Status: Completed
+
+Diff: /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift
+```
+import SwiftUI
+import SpecificationKit
+import Foundation
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+struct NetworkContextDemoView: View {
+    // Mock server state
+    @StateObject private var mockServer = MockNetworkServer()
+
+    // Network provider configuration
+    @State private var endpoint = "https://api.example.com/context"
+    @State private var refreshInterval: Double = 300
+    @State private var requestTimeout: Double = 30
+    @State private var retryPolicy: RetryPolicyOption = .exponentialBackoff
+    @State private var maxAttempts = 3
+    @State private var cacheEnabled = true
+
+    // Provider state
+    @State private var networkProvider: NetworkContextProvider?
+    @State private var isLoading = false
+    @State private var lastUpdateTime: Date?
+    @State private var errorMessage: String?
+    @State private var contextData: String = "No data loaded"
+    @State private var cacheStatus: String = "No cache"
+
+    // Demo specifications
+    @State private var featureFlagResult: String = "—"
+    @State private var userSegmentResult: String = "—"
+    @State private var configResult: String = "—"
+
+    enum RetryPolicyOption: String, CaseIterable, Identifiable {
+        case none = "None"
+        case exponentialBackoff = "Exponential Backoff"
+        case fixedDelay = "Fixed Delay"
+
+        var id: String { rawValue }
+
+        func toNetworkPolicy(maxAttempts: Int) -> NetworkContextProvider.RetryPolicy {
+            switch self {
+            case .none:
+                return .none
+            case .exponentialBackoff:
+                return .exponentialBackoff(maxAttempts: maxAttempts)
+            case .fixedDelay:
+                return .fixedDelay(1.5, maxAttempts: maxAttempts)
+            }
+        }
+    }
+
+    var body: some View {
+        List {
+            Section(header: Text("Mock Server Configuration"), footer: Text("Configure the mock server behavior to test different network scenarios")) {
+                Toggle("Server Available", isOn: $mockServer.isServerAvailable)
+
+                if mockServer.isServerAvailable {
+                    Stepper("Response Delay: \(String(format: "%.1f", mockServer.responseDelay))s",
+                           value: $mockServer.responseDelay, in: 0...5, step: 0.5)
+
+                    Picker("Response Type", selection: $mockServer.responseType) {
+                        Text("Success").tag(MockNetworkServer.ResponseType.success)
+                        Text("HTTP 500 Error").tag(MockNetworkServer.ResponseType.httpError)
+                        Text("Invalid JSON").tag(MockNetworkServer.ResponseType.invalidJSON)
+                        Text("Timeout").tag(MockNetworkServer.ResponseType.timeout)
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Button("Reset Server") {
+                    mockServer.reset()
+                }
+                .foregroundStyle(.blue)
+            }
+
+            Section(header: Text("Network Provider Configuration")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Endpoint:")
+                        TextField("URL", text: $endpoint)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    Stepper("Refresh Interval: \(Int(refreshInterval))s",
+                           value: $refreshInterval, in: 60...1800, step: 60)
+
+                    Stepper("Request Timeout: \(Int(requestTimeout))s",
+                           value: $requestTimeout, in: 5...120, step: 5)
+
+                    Picker("Retry Policy", selection: $retryPolicy) {
+                        ForEach(RetryPolicyOption.allCases) { option in
+                            Text(option.rawValue).tag(option)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    if retryPolicy != .none {
+                        Stepper("Max Attempts: \(maxAttempts)",
+                               value: $maxAttempts, in: 1...10)
+                    }
+
+                    Toggle("Cache Enabled", isOn: $cacheEnabled)
+                }
+            }
+
+            Section(header: Text("Provider Actions")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Button("Create Provider") {
+                            createNetworkProvider()
+                        }
+                        .buttonStyle(.borderedProminent)
+
+                        Button("Refresh Context") {
+                            Task { await refreshContext() }
+                        }
+                        .disabled(networkProvider == nil || isLoading)
+
+                        if isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                    }
+
+                    if let lastUpdate = lastUpdateTime {
+                        Text("Last Update: \(lastUpdate, formatter: timeFormatter)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if let error = errorMessage {
+                        Text("Error: \(error)")
+                            .foregroundStyle(.red)
+                            .font(.caption)
+                    }
+                }
+            }
+
+            Section(header: Text("Context Data")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Context:")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Text(contextData)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(8)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+
+                    Text("Cache Status: \(cacheStatus)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section(header: Text("Specification Examples")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Button("Test Feature Flag") {
+                        Task { await testFeatureFlag() }
+                    }
+                    Text("Result: \(featureFlagResult)")
+                        .font(.caption)
+
+                    Button("Test User Segment") {
+                        Task { await testUserSegment() }
+                    }
+                    Text("Result: \(userSegmentResult)")
+                        .font(.caption)
+
+                    Button("Test Configuration") {
+                        Task { await testConfiguration() }
+                    }
+                    Text("Result: \(configResult)")
+                        .font(.caption)
+                }
+            }
+
+            Section(header: Text("Network Monitoring")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Request History:")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    ForEach(mockServer.requestHistory.suffix(5), id: \.timestamp) { request in
+                        HStack {
+                            Image(systemName: request.success ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .foregroundColor(request.success ? .green : .red)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(request.timestamp, formatter: timeFormatter)
+                                    .font(.caption)
+                                Text(request.details)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+                        }
+                        .padding(.vertical, 2)
+                    }
+
+                    if mockServer.requestHistory.isEmpty {
+                        Text("No requests yet")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .navigationTitle("Network Context")
+        .onAppear {
+            mockServer.setup()
+        }
+    }
+
+    private var timeFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .medium
+        return formatter
+    }
+
+    private func createNetworkProvider() {
+        let config = NetworkContextProvider.Configuration(
+            endpoint: URL(string: endpoint) ?? URL(string: "https://api.example.com/context")!,
+            refreshInterval: refreshInterval,
+            requestTimeout: requestTimeout,
+            retryPolicy: retryPolicy.toNetworkPolicy(maxAttempts: maxAttempts),
+            fallbackValues: [
+                "featureEnabled": false,
+                "userTier": "basic",
+                "maxConnections": 10,
+                "offlineMode": true
+            ],
+            cacheEnabled: cacheEnabled
+        )
+
+        // Use mock server's session for testing
+        networkProvider = NetworkContextProvider(
+            configuration: config,
+            session: mockServer.urlSession
+        )
+
+        errorMessage = nil
+        contextData = "Provider created - call Refresh to fetch data"
+        cacheStatus = cacheEnabled ? "Cache enabled" : "Cache disabled"
+    }
+
+    @MainActor
+    private func refreshContext() async {
+        guard let provider = networkProvider else { return }
+
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            let context = try await provider.currentContextAsync()
+            lastUpdateTime = Date()
+
+            // Format context data for display
+            let userData = context.userData.isEmpty ? "None" : context.userData.description
+            let flags = context.flags.isEmpty ? "None" : context.flags.description
+            let counters = context.counters.isEmpty ? "None" : context.counters.description
+
+            contextData = """
+                UserData: \(userData)
+                Flags: \(flags)
+                Counters: \(counters)
+                Segments: \(context.segments.isEmpty ? "None" : Array(context.segments).joined(separator: ", "))
+                """
+
+            cacheStatus = "Context loaded from network"
+
+        } catch let error as NetworkContextProvider.NetworkError {
+            handleNetworkError(error)
+        } catch {
+            errorMessage = "Unexpected error: \(error.localizedDescription)"
+            contextData = "Failed to load context"
+            cacheStatus = "Error occurred"
+        }
+
+        isLoading = false
+    }
+
+    private func handleNetworkError(_ error: NetworkContextProvider.NetworkError) {
+        switch error {
+        case .invalidResponse:
+            errorMessage = "Invalid server response"
+        case .httpError(let code):
+            errorMessage = "HTTP error \(code)"
+        case .maxRetriesExceeded:
+            errorMessage = "Max retries exceeded"
+        case .networkUnavailable:
+            errorMessage = "Network unavailable"
+        case .parseError(let message):
+            errorMessage = "Parse error: \(message)"
+        case .configurationError(let message):
+            errorMessage = "Configuration error: \(message)"
+        }
+
+        contextData = "Using fallback/cached context"
+        cacheStatus = cacheEnabled ? "Using cached data" : "Using fallback values"
+    }
+
+    private func testFeatureFlag() async {
+        guard let provider = networkProvider else {
+            featureFlagResult = "No provider"
+            return
+        }
+
+        do {
+            let context = try await provider.currentContextAsync()
+            let spec = FeatureFlagSpec(flagKey: "featureEnabled", expected: true)
+            let result = spec.isSatisfiedBy(context)
+            featureFlagResult = result ? "Feature ENABLED" : "Feature DISABLED"
+        } catch {
+            featureFlagResult = "Error: \(error.localizedDescription)"
+        }
+    }
+
+    private func testUserSegment() async {
+        guard let provider = networkProvider else {
+            userSegmentResult = "No provider"
+            return
+        }
+
+        do {
+            let context = try await provider.currentContextAsync()
+
+            let premiumSpec = UserSegmentSpec(segment: "premium")
+            let betaSpec = UserSegmentSpec(segment: "beta")
+
+            if premiumSpec.isSatisfiedBy(context) {
+                userSegmentResult = "Premium User"
+            } else if betaSpec.isSatisfiedBy(context) {
+                userSegmentResult = "Beta User"
+            } else {
+                userSegmentResult = "Standard User"
+            }
+        } catch {
+            userSegmentResult = "Error: \(error.localizedDescription)"
+        }
+    }
+
+    private func testConfiguration() async {
+        guard let provider = networkProvider else {
+            configResult = "No provider"
+            return
+        }
+
+        do {
+            let context = try await provider.currentContextAsync()
+            let maxConnections = context.userData["maxConnections"] as? Int ?? 10
+            let maintenanceMode = context.flag(for: "maintenanceMode")
+
+            configResult = "Max Connections: \(maxConnections), Maintenance: \(maintenanceMode ? "ON" : "OFF")"
+        } catch {
+            configResult = "Error: \(error.localizedDescription)"
+        }
+    }
+}
+
+// MARK: - Mock Network Server
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+class MockNetworkServer: NSObject, ObservableObject, URLSessionDataDelegate {
+    enum ResponseType: String, CaseIterable {
+        case success = "success"
+        case httpError = "httpError"
+        case invalidJSON = "invalidJSON"
+        case timeout = "timeout"
+    }
+
+    struct RequestLog {
+        let timestamp: Date
+        let success: Bool
+        let details: String
+    }
+
+    @Published var isServerAvailable = true
+    @Published var responseDelay: Double = 0.5
+    @Published var responseType: ResponseType = .success
+    @Published var requestHistory: [RequestLog] = []
+
+    private(set) var urlSession: URLSession!
+
+    func setup() {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [MockURLProtocol.self]
+        urlSession = URLSession(configuration: config, delegate: self, delegateQueue: nil)
+
+        MockURLProtocol.mockServer = self
+    }
+
+    func reset() {
+        isServerAvailable = true
+        responseDelay = 0.5
+        responseType = .success
+        requestHistory.removeAll()
+    }
+
+    func handleRequest(for url: URL) -> (Data?, URLResponse?, Error?) {
+        let log: RequestLog
+
+        defer {
+            DispatchQueue.main.async {
+                self.requestHistory.append(log)
+            }
+        }
+
+        // Simulate delay
+        Thread.sleep(forTimeInterval: responseDelay)
+
+        guard isServerAvailable else {
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "Server unavailable"
+            )
+            return (nil, nil, URLError(.networkConnectionLost))
+        }
+
+        switch responseType {
+        case .success:
+            let jsonData = """
+                {
+                    "userData": {
+                        "userId": "demo123",
+                        "userTier": "premium",
+                        "maxConnections": 50
+                    },
+                    "flags": {
+                        "featureEnabled": true,
+                        "betaAccess": true,
+                        "maintenanceMode": false
+                    },
+                    "counters": {
+                        "loginCount": 25,
+                        "apiCalls": 150
+                    },
+                    "segments": ["premium", "beta"],
+                    "launchDate": 1703894400
+                }
+                """.data(using: .utf8)!
+
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: 200,
+                httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+            )
+
+            log = RequestLog(
+                timestamp: Date(),
+                success: true,
+                details: "200 OK - \(jsonData.count) bytes"
+            )
+
+            return (jsonData, response, nil)
+
+        case .httpError:
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: 500,
+                httpVersion: "HTTP/1.1",
+                headerFields: nil
+            )
+
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "500 Internal Server Error"
+            )
+
+            return (Data(), response, nil)
+
+        case .invalidJSON:
+            let invalidData = "{ invalid json }".data(using: .utf8)!
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: 200,
+                httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+            )
+
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "200 OK - Invalid JSON"
+            )
+
+            return (invalidData, response, nil)
+
+        case .timeout:
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "Request timeout"
+            )
+
+            return (nil, nil, URLError(.timedOut))
+        }
+    }
+}
+
+// MARK: - Mock URL Protocol
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+class MockURLProtocol: URLProtocol {
+    static weak var mockServer: MockNetworkServer?
+
+    override class func canInit(with request: URLRequest) -> Bool {
+        return true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        return request
+    }
+
+    override func startLoading() {
+        guard let url = request.url,
+              let mockServer = MockURLProtocol.mockServer else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+            return
+        }
+
+        let (data, response, error) = mockServer.handleRequest(for: url)
+
+        if let error = error {
+            client?.urlProtocol(self, didFailWithError: error)
+        } else if let response = response {
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+
+            if let data = data {
+                client?.urlProtocol(self, didLoad: data)
+            }
+
+            client?.urlProtocolDidFinishLoading(self)
+        } else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
+        }
+    }
+
+    override func stopLoading() {
+        // No-op
+    }
+}
+
+#Preview {
+    if #available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *) {
+        NavigationView {
+            NetworkContextDemoView()
+        }
+    } else {
+        Text("NetworkContextProvider requires iOS 15.0+")
+    }
+}
+```
+
+
+## Assistant
+
+Now I need to add the new NetworkContextDemoView to the main navigation in the AppContentView.
+
+**Tool Call: Edit `/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/main.swift`**
+Status: Completed
+
+Diff: /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/main.swift
+```
+                NavigationLink(destination: ObservationDemoView()) {
+                    Label("Observation", systemImage: "eye")
+                }
+                if #available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *) {
+                    NavigationLink(destination: NetworkContextDemoView()) {
+                        Label("Network Context", systemImage: "network")
+                    }
+                }
+```
+
+
+## Assistant
+
+Perfect! I've created a comprehensive demo screen for `NetworkContextProvider` that includes:
+
+## Key Features of the NetworkContextDemoView:
+
+1. **Mock Server Configuration** - Users can simulate different network conditions:
+   - Server availability toggle
+   - Response delay control
+   - Different response types (success, HTTP errors, invalid JSON, timeout)
+
+2. **Network Provider Configuration** - Full control over NetworkContextProvider settings:
+   - Endpoint URL configuration
+   - Refresh interval and request timeout
+   - Retry policy selection (none, exponential backoff, fixed delay)
+   - Cache enable/disable toggle
+
+3. **Interactive Testing** - Users can:
+   - Create providers with different configurations
+   - Refresh context data manually
+   - See real-time loading states and error handling
+
+4. **Context Data Display** - Shows the actual context data retrieved:
+   - Formatted display of userData, flags, counters, and segments
+   - Cache status indication
+   - Last update timestamp
+
+5. **Specification Examples** - Demonstrates practical usage:
+   - Feature flag testing
+   - User segment evaluation
+   - Configuration value retrieval
+
+6. **Network Monitoring** - Request history tracking:
+   - Shows success/failure status
+   - Displays request details and timestamps
+   - Visual indicators for request outcomes
+
+7. **Error Handling Demonstration** - Shows how different network errors are handled:
+   - Invalid responses
+   - HTTP errors
+   - Network timeouts
+   - Parse errors
+
+The screen is fully compatible with the existing demo app structure and includes proper availability checks for iOS 15.0+ (required for NetworkContextProvider). Users can experiment with different network scenarios and see how the provider handles various failure modes while maintaining fallback functionality.
+
+## User (checkpoint)
+
+there is error: ```/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift:295:20: error: call can throw, but it is not marked with 'try' and the error is not handled
+293 |         let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }
+294 |         let always = AlwaysTrueSpec<EvaluationContext>()
+295 |         let spec = WeightedSpec<EvaluationContext, String>(
+    |                    `- error: call can throw, but it is not marked with 'try' and the error is not handled
+296 |             candidates: [
+297 |                 (AnySpecification(a), weightA, "A"),```
+
+## Assistant
+
+I need to fix the error in the AdvancedSpecsDemoView where `WeightedSpec` initialization can throw but isn't marked with `try`. Let me examine the issue and fix it.
+
+**Tool Call: Read /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift (291 - 310)**
+Status: Completed
+
+```
+        let a = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_a") }        let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }        let always = AlwaysTrueSpec<EvaluationContext>()        let spec = WeightedSpec<EvaluationContext, String>(            candidates: [                (AnySpecification(a), weightA, "A"),                (AnySpecification(b), weightB, "B"),                (AnySpecification(always), weightC, "C")            ]        )        let ctx = updatedContext()        for _ in 0..<sampleRuns {            switch spec.decide(ctx) {            case "A": sampleA += 1            case "B": sampleB += 1            case "C": sampleC += 1            default: break            }        }
+```
+
+## Assistant
+
+I can see the issue. The `WeightedSpec` initialization is throwing an error but not being handled with `try`. Let me also check the similar issue around line 275 where `pickWeightedOnce()` is defined:
+
+**Tool Call: Read /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift (271 - 295)**
+Status: Completed
+
+```
+    private func pickWeightedOnce() {        let a = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_a") }        let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }        let always = AlwaysTrueSpec<EvaluationContext>()        let spec = WeightedSpec<EvaluationContext, String>(            candidates: [                (AnySpecification(a), weightA, "A"),                (AnySpecification(b), weightB, "B"),                (AnySpecification(always), weightC, "C")            ]        )        let ctx = updatedContext()        lastWeightedPick = spec.decide(ctx) ?? "—"    }    private func runSamples() {        sampleA = 0; sampleB = 0; sampleC = 0        let a = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_a") }        let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }        let always = AlwaysTrueSpec<EvaluationContext>()        let spec = WeightedSpec<EvaluationContext, String>(            candidates: [
+```
+
+## Assistant
+
+I can see that both `pickWeightedOnce()` and `runSamples()` functions have the same issue - they're trying to create `WeightedSpec` instances without handling the potential throwing behavior. I need to fix both functions by adding proper error handling with `try` and `do-catch` blocks.
+
+**Tool Call: Edit `/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift`**
+Status: Completed
+
+Diff: /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift
+```
+    private func pickWeightedOnce() {
+        let a = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_a") }
+        let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }
+        let always = AlwaysTrueSpec<EvaluationContext>()
+
+        do {
+            let spec = try WeightedSpec<EvaluationContext, String>(
+                candidates: [
+                    (AnySpecification(a), weightA, "A"),
+                    (AnySpecification(b), weightB, "B"),
+                    (AnySpecification(always), weightC, "C")
+                ]
+            )
+
+            let ctx = updatedContext()
+            lastWeightedPick = spec.decide(ctx) ?? "—"
+        } catch {
+            lastWeightedPick = "Error: \(error.localizedDescription)"
+        }
+    }
+```
+
+
+## Assistant
+
+Now I need to fix the same issue in the `runSamples()` function:
+
+**Tool Call: Edit `/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift`**
+Status: Failed
+
+The provided `old_string` does not appear in the file: "    private func runSamples() {
+        sampleA = 0; sampleB = 0; sampleC = 0
+        let a = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_a") }
+        let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }
+        let always = AlwaysTrueSpec<EvaluationContext>()
+        let spec = WeightedSpec<EvaluationContext, String>(
+            candidates: [
+                (AnySpecification(a), weightA, "A"),
+                (AnySpecification(b), weightB, "B"),
+                (AnySpecification(always), weightC, "C")
+            ]
+        )
+
+        let ctx = updatedContext()
+        for _ in 0..<sampleRuns {
+            switch spec.decide(ctx) {
+            case "A": sampleA += 1
+            case "B": sampleB += 1
+            case "C": sampleC += 1
+            default: break
+            }
+        }
+    }".
+
+No edits were applied.
+
+## Assistant
+
+Let me check the current content around the `runSamples()` function:
+
+**Tool Call: Read /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift (294 - 323)**
+Status: Completed
+
+```
+        }        .navigationTitle("Advanced Specs")        .onAppear {            // Initialize provider with current UI state            provider.setUserData("metric", to: metricValue)            provider.setUserData("ctx_threshold", to: ctxThresholdValue)            provider.setFlag("weighted_a", to: flagA)            provider.setFlag("weighted_b", to: flagB)        }        .onChange(of: metricValue) { v in provider.setUserData("metric", to: v) }        .onChange(of: ctxThresholdValue) { v in provider.setUserData("ctx_threshold", to: v) }    }    // MARK: - Helpers    private func updatedContext() -> EvaluationContext {        provider.currentContext()    }    @ViewBuilder    private func statusRow(_ title: String, ok: Bool) -> some View {        HStack {            Image(systemName: ok ? "checkmark.circle.fill" : "xmark.octagon.fill")                .foregroundColor(ok ? .green : .red)            Text(title)            Spacer()            Text(ok ? "Pass" : "Fail").foregroundStyle(.secondary)        }    }    private func pickWeightedOnce() {
+```
+
+## Assistant
+
+Let me find the exact location of the `runSamples()` function:
+
+**Tool Call: grep -n "private func runSamples" /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift**
+Status: Completed
+
+345:    private func runSamples() {
+
+**Tool Call: Read /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift (346 - 370)**
+Status: Completed
+
+```
+        sampleB = 0        sampleC = 0        let a = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_a") }        let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }        let always = AlwaysTrueSpec<EvaluationContext>()        let spec = WeightedSpec<EvaluationContext, String>(            candidates: [                (AnySpecification(a), weightA, "A"),                (AnySpecification(b), weightB, "B"),                (AnySpecification(always), weightC, "C"),            ]        )        let ctx = updatedContext()        for _ in 0..<sampleRuns {            switch spec.decide(ctx) {            case "A": sampleA += 1            case "B": sampleB += 1            case "C": sampleC += 1            default: break            }        }    }    private func computeHistorical() {
+```
+
+## Assistant
+
+Now I can see the exact content. Let me fix the `runSamples()` function:
+
+**Tool Call: Edit `/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift`**
+Status: Failed
+
+The provided `old_string` does not appear in the file: "    private func runSamples() {
+        sampleA = 0; sampleB = 0; sampleC = 0
+        let a = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_a") }
+        let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }
+        let always = AlwaysTrueSpec<EvaluationContext>()
+        let spec = WeightedSpec<EvaluationContext, String>(
+            candidates: [
+                (AnySpecification(a), weightA, "A"),
+                (AnySpecification(b), weightB, "B"),
+                (AnySpecification(always), weightC, "C")
+            ]
+        )
+
+        let ctx = updatedContext()
+        for _ in 0..<sampleRuns {
+            switch spec.decide(ctx) {
+            case "A": sampleA += 1
+            case "B": sampleB += 1
+            case "C": sampleC += 1
+            default: break
+            }
+        }
+    }".
+
+No edits were applied.
+
+## Assistant
+
+Let me check the exact formatting around line 350:
+
+**Tool Call: Read /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift (344 - 373)**
+Status: Completed
+
+```
+    private func runSamples() {        sampleA = 0        sampleB = 0        sampleC = 0        let a = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_a") }        let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }        let always = AlwaysTrueSpec<EvaluationContext>()        let spec = WeightedSpec<EvaluationContext, String>(            candidates: [                (AnySpecification(a), weightA, "A"),                (AnySpecification(b), weightB, "B"),                (AnySpecification(always), weightC, "C"),            ]        )        let ctx = updatedContext()        for _ in 0..<sampleRuns {            switch spec.decide(ctx) {            case "A": sampleA += 1            case "B": sampleB += 1            case "C": sampleC += 1            default: break            }        }    }    private func computeHistorical() {        let spec = HistoricalSpec<EvaluationContext, Double>(            provider: history,            window: HistoryWindow.toSpecWindow(windowMode, n: minPoints),
+```
+
+## Assistant
+
+I can see the issue - the formatting shows the code is compressed into single lines. Let me fix this by matching the exact formatting:
+
+**Tool Call: Edit `/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift`**
+Status: Failed
+
+The provided `old_string` does not appear in the file: "        let spec = WeightedSpec<EvaluationContext, String>(
+            candidates: [
+                (AnySpecification(a), weightA, "A"),
+                (AnySpecification(b), weightB, "B"),
+                (AnySpecification(always), weightC, "C")
+            ]
+        )".
+
+No edits were applied.
+
+## Assistant
+
+Let me try a different approach and match the exact compressed format:
+
+**Tool Call: Edit `/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift`**
+Status: Completed
+
+Diff: /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift
+```
+import SpecificationKit
+import SwiftUI
+
+struct AdvancedSpecsDemoView: View {
+    private let provider = DefaultContextProvider.shared
+
+    // MARK: - Shared demo state
+    @State private var metricValue: Double = 50
+    @State private var thresholdValue: Double = 60
+    @State private var ctxThresholdValue: Double = 55
+    @State private var approxTarget: Double = 42
+    @State private var approxRelError: Double = 0.05
+
+    // WeightedSpec state
+    @State private var weightA: Double = 0.5
+    @State private var weightB: Double = 0.3
+    @State private var weightC: Double = 0.2
+    @State private var flagA: Bool = true
+    @State private var flagB: Bool = false
+    @State private var lastWeightedPick: String = "—"
+    @State private var sampleRuns: Int = 100
+    @State private var sampleA: Int = 0
+    @State private var sampleB: Int = 0
+    @State private var sampleC: Int = 0
+
+    // HistoricalSpec state
+    @StateObject private var history = DemoHistoryProvider()
+    @State private var newDataPoint: Double = 50
+    @State private var windowMode: HistoryWindow = .lastN
+    @State private var aggregation: HistoryAggregation = .median
+    @State private var minPoints: Int = 1
+    @State private var historicalResult: Double? = nil
+
+    enum HistoryWindow: String, CaseIterable, Identifiable {
+        case last10 = "Last 10"
+        case last50 = "Last 50"
+        case last100 = "Last 100"
+        case lastN = "Custom N"
+        case lastMinute = "Last 60s"
+        case all = "All"
+        var id: String { rawValue }
+
+        static func toSpecWindow(_ w: HistoryWindow, n: Int)
+            -> HistoricalSpec<EvaluationContext, Double>.AnalysisWindow
+        {
+            switch w {
+            case .last10: return .lastN(10)
+            case .last50: return .lastN(50)
+            case .last100: return .lastN(100)
+            case .lastN: return .lastN(max(1, n))
+            case .lastMinute: return .timeRange(.minutes(1))
+            case .all: return .all
+            }
+        }
+    }
+
+    enum HistoryAggregation: String, CaseIterable, Identifiable {
+        case median = "Median"
+        case p90 = "P90"
+        case p99 = "P99"
+        var id: String { rawValue }
+
+        static func toSpecAggregation(_ a: HistoryAggregation)
+            -> HistoricalSpec<EvaluationContext, Double>.AggregationMethod
+        {
+            switch a {
+            case .median: return .median
+            case .p90: return .percentile(90)
+            case .p99: return .percentile(99)
+            }
+        }
+    }
+
+    var body: some View {
+        List {
+            Section(header: Text("Setup")) {
+                Slider(value: $metricValue, in: 0...100, step: 1) {
+                    Text("metric (userData.metric)")
+                } minimumValueLabel: {
+                    Text("0")
+                } maximumValueLabel: {
+                    Text("100")
+                }
+                Text("metric: \(Int(metricValue))")
+
+                HStack {
+                    Stepper(
+                        "Context threshold: \(Int(ctxThresholdValue))", value: $ctxThresholdValue,
+                        in: 0...100)
+                    Spacer()
+                    Button("Apply to context") {
+                        provider.setUserData("ctx_threshold", to: ctxThresholdValue)
+                    }
+                }
+            }
+
+            // MARK: - ComparativeSpec
+            Section(
+                header: Text("1) ComparativeSpec"),
+                footer: Text(
+                    "Uses extracting: and helpers like withinTolerance and approximatelyEqual")
+            ) {
+                let greater = ComparativeSpec<EvaluationContext, Double>(
+                    extracting: { $0.userData(for: "metric", as: Double.self) },
+                    comparison: .greaterThan(thresholdValue)
+                )
+                let between = ComparativeSpec<EvaluationContext, Double>(
+                    extracting: { $0.userData(for: "metric", as: Double.self) },
+                    comparison: .between(40, 60)
+                )
+                // Approximately equal using a custom comparison range
+                let approxCustom = ComparativeSpec<EvaluationContext, Double>(
+                    extracting: { $0.userData(for: "metric", as: Double.self) },
+                    comparison: .between(
+                        approxTarget * (1 - approxRelError), approxTarget * (1 + approxRelError))
+                )
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Stepper(
+                            "threshold: \(Int(thresholdValue))", value: $thresholdValue, in: 0...100
+                        )
+                        Spacer()
+                    }
+                    HStack {
+                        Stepper(
+                            "approx target: \(Int(approxTarget))", value: $approxTarget, in: 0...100
+                        )
+                        Spacer()
+                        Stepper(
+                            "rel error: \(Int(approxRelError * 100))%", value: $approxRelError,
+                            in: 0.01...0.25, step: 0.01)
+                    }
+
+                    let ctx = updatedContext()
+                    statusRow("metric > threshold", ok: greater.isSatisfiedBy(ctx))
+                    statusRow("metric between 40…60", ok: between.isSatisfiedBy(ctx))
+                    statusRow("metric ≈ target (custom)", ok: approxCustom.isSatisfiedBy(ctx))
+                }
+            }
+
+            // MARK: - ThresholdSpec
+            Section(
+                header: Text("2) ThresholdSpec"),
+                footer: Text("Fixed, adaptive, contextual thresholds")
+            ) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Stepper(
+                            "fixed threshold: \(Int(thresholdValue))", value: $thresholdValue,
+                            in: 0...100)
+                        Spacer()
+                    }
+                    let ctx = updatedContext()
+                    // Value via extracting from userData
+                    let fixed = ThresholdSpec<EvaluationContext, Double>(
+                        extracting: { $0.userData(for: "metric", as: Double.self) },
+                        threshold: .fixed(thresholdValue),
+                        operator: .greaterThanOrEqual
+                    )
+                    statusRow("metric ≥ fixed", ok: fixed.isSatisfiedBy(ctx))
+
+                    let adaptive = ThresholdSpec<EvaluationContext, Double>(
+                        extracting: { $0.userData(for: "metric", as: Double.self) },
+                        threshold: .adaptive { Double.random(in: 30...70) },
+                        operator: .greaterThan
+                    )
+                    statusRow("metric > adaptive(random)", ok: adaptive.isSatisfiedBy(ctx))
+
+                    // Contextual threshold read from context userData
+                    let contextual = ThresholdSpec<EvaluationContext, Double>(
+                        extracting: { $0.userData(for: "metric", as: Double.self) },
+                        threshold: .custom { ctx in
+                            ctx.userData(for: "ctx_threshold", as: Double.self) ?? 0
+                        },
+                        operator: .greaterThanOrEqual
+                    )
+                    statusRow("metric ≥ ctx_threshold", ok: contextual.isSatisfiedBy(ctx))
+                }
+            }
+
+            // MARK: - WeightedSpec
+            Section(
+                header: Text("3) WeightedSpec"),
+                footer: Text("Probabilistic selection among satisfied candidates")
+            ) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle(
+                        "Flag A",
+                        isOn: .init(
+                            get: { flagA },
+                            set: { v in
+                                flagA = v
+                                provider.setFlag("weighted_a", to: v)
+                            }
+                        ))
+                    Toggle(
+                        "Flag B",
+                        isOn: .init(
+                            get: { flagB },
+                            set: { v in
+                                flagB = v
+                                provider.setFlag("weighted_b", to: v)
+                            }
+                        ))
+
+                    HStack {
+                        Stepper(
+                            "wA: \(String(format: "%.2f", weightA))", value: $weightA, in: 0.1...5,
+                            step: 0.1)
+                        Stepper(
+                            "wB: \(String(format: "%.2f", weightB))", value: $weightB, in: 0.1...5,
+                            step: 0.1)
+                        Stepper(
+                            "wC: \(String(format: "%.2f", weightC))", value: $weightC, in: 0.1...5,
+                            step: 0.1)
+                    }
+
+                    HStack {
+                        Button("Pick once") { pickWeightedOnce() }
+                        Text("Result: \(lastWeightedPick)")
+                    }
+
+                    HStack {
+                        Stepper(
+                            "Samples: \(sampleRuns)", value: $sampleRuns, in: 50...2000, step: 50)
+                        Button("Run samples") { runSamples() }
+                    }
+                    Text("A: \(sampleA)  B: \(sampleB)  C: \(sampleC)")
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            // MARK: - HistoricalSpec
+            Section(
+                header: Text("4) HistoricalSpec"),
+                footer: Text("Aggregate time-series data with median/percentile")
+            ) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Slider(value: $newDataPoint, in: 0...100, step: 1) {
+                            Text("Add data point")
+                        }
+                        Text("\(Int(newDataPoint))")
+                        Button("Record") { history.record(value: newDataPoint) }
+                        Button("Clear") { history.clear() }
+                    }
+
+                    // Visualization of recorded items over time
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Recorded values")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        MiniLineChart(
+                            values: history.data.map { $0.1 },
+                            minY: 0,
+                            maxY: 100,
+                            lineColor: .blue
+                        )
+                        .frame(height: 140)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                        )
+                    }
+
+                    Picker("Window", selection: $windowMode) {
+                        Text("Last 10").tag(HistoryWindow.last10)
+                        Text("Last 50").tag(HistoryWindow.last50)
+                        Text("Last 100").tag(HistoryWindow.last100)
+                        Text("Custom N").tag(HistoryWindow.lastN)
+                        Text("Last 60s").tag(HistoryWindow.lastMinute)
+                        Text("All").tag(HistoryWindow.all)
+                    }
+                    .pickerStyle(.segmented)
+
+                    if case .lastN = windowMode {
+                        Stepper("N (minPoints): \(minPoints)", value: $minPoints, in: 1...500)
+                    }
+
+                    Picker("Aggregation", selection: $aggregation) {
+                        Text("Median").tag(HistoryAggregation.median)
+                        Text("P90").tag(HistoryAggregation.p90)
+                        Text("P99").tag(HistoryAggregation.p99)
+                    }
+                    .pickerStyle(.segmented)
+
+                    HStack {
+                        Button("Compute") { computeHistorical() }
+                        Text("Result: \(historicalResult.map { String(Int($0)) } ?? "—")")
+                    }
+                }
+            }
+        }
+        .navigationTitle("Advanced Specs")
+        .onAppear {
+            // Initialize provider with current UI state
+            provider.setUserData("metric", to: metricValue)
+            provider.setUserData("ctx_threshold", to: ctxThresholdValue)
+            provider.setFlag("weighted_a", to: flagA)
+            provider.setFlag("weighted_b", to: flagB)
+        }
+        .onChange(of: metricValue) { v in provider.setUserData("metric", to: v) }
+        .onChange(of: ctxThresholdValue) { v in provider.setUserData("ctx_threshold", to: v) }
+    }
+
+    // MARK: - Helpers
+    private func updatedContext() -> EvaluationContext {
+        provider.currentContext()
+    }
+
+    @ViewBuilder
+    private func statusRow(_ title: String, ok: Bool) -> some View {
+        HStack {
+            Image(systemName: ok ? "checkmark.circle.fill" : "xmark.octagon.fill")
+                .foregroundColor(ok ? .green : .red)
+            Text(title)
+            Spacer()
+            Text(ok ? "Pass" : "Fail").foregroundStyle(.secondary)
+        }
+    }
+
+    private func pickWeightedOnce() {
+        let a = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_a") }
+        let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }
+        let always = AlwaysTrueSpec<EvaluationContext>()
+
+        do {
+            let spec = try WeightedSpec<EvaluationContext, String>(
+                candidates: [
+                    (AnySpecification(a), weightA, "A"),
+                    (AnySpecification(b), weightB, "B"),
+                    (AnySpecification(always), weightC, "C"),
+                ]
+            )
+
+            let ctx = updatedContext()
+            lastWeightedPick = spec.decide(ctx) ?? "—"
+        } catch {
+            lastWeightedPick = "Error: \(error.localizedDescription)"
+        }
+    }
+
+    private func runSamples() {
+        sampleA = 0
+        sampleB = 0
+        sampleC = 0
+        let a = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_a") }
+        let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }
+        let always = AlwaysTrueSpec<EvaluationContext>()
+        do {
+            let spec = try WeightedSpec<EvaluationContext, String>(
+                candidates: [
+                    (AnySpecification(a), weightA, "A"),
+                    (AnySpecification(b), weightB, "B"),
+                    (AnySpecification(always), weightC, "C"),
+                ]
+            )
+
+        let ctx = updatedContext()
+        for _ in 0..<sampleRuns {
+            switch spec.decide(ctx) {
+            case "A": sampleA += 1
+            case "B": sampleB += 1
+            case "C": sampleC += 1
+            default: break
+            }
+        }
+    }
+
+    private func computeHistorical() {
+        let spec = HistoricalSpec<EvaluationContext, Double>(
+            provider: history,
+            window: HistoryWindow.toSpecWindow(windowMode, n: minPoints),
+            aggregation: HistoryAggregation.toSpecAggregation(aggregation),
+            minimumDataPoints: minPoints
+        )
+        historicalResult = spec.decide(updatedContext())
+    }
+}
+
+// MARK: - Demo History Provider
+
+final class DemoHistoryProvider: ObservableObject, HistoricalDataProvider {
+    @Published private(set) var data: [(Date, Double)] = []
+    private let lock = NSLock()
+
+    func record(value: Double) {
+        lock.lock()
+        defer { lock.unlock() }
+        data.append((Date(), value))
+    }
+
+    func clear() {
+        lock.lock()
+        defer { lock.unlock() }
+        data.removeAll()
+    }
+
+    func getData<Context, Value>(
+        for window: HistoricalSpec<Context, Value>.AnalysisWindow,
+        context: Context
+    ) -> [(Date, Value)] {
+        lock.lock()
+        defer { lock.unlock() }
+        let casted: [(Date, Any)] = data.map { ($0.0, $0.1 as Any) }
+        let now = Date()
+        let filtered: [(Date, Any)]
+        switch window {
+        case .lastN(let n):
+            filtered = Array(casted.suffix(n))
+        case .timeRange(let interval):
+            let cutoff = now.addingTimeInterval(-interval)
+            filtered = casted.filter { $0.0 >= cutoff }
+        case .all:
+            filtered = casted
+        }
+        return filtered.compactMap { (d, v) -> (Date, Value)? in
+            (v as? Value).map { (d, $0) }
+        }
+    }
+}
+
+#Preview {
+    NavigationView { AdvancedSpecsDemoView() }
+}
+
+// MARK: - MiniLineChart
+
+/// A lightweight line chart for visualizing a sequence of Double values.
+/// Scales values between `minY` and `maxY` to fit the view height and
+/// distributes points evenly across the width.
+struct MiniLineChart: View {
+    let values: [Double]
+    var minY: Double? = nil
+    var maxY: Double? = nil
+    var lineColor: Color = .accentColor
+
+    var body: some View {
+        GeometryReader { proxy in
+            let size = proxy.size
+            let stats = computeStats()
+
+            ZStack {
+                // Grid lines
+                grid(in: size)
+                    .stroke(
+                        Color.secondary.opacity(0.15),
+                        style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+
+                // Line path
+                if values.count >= 2 {
+                    Path { path in
+                        let pts = points(in: size, minY: stats.min, maxY: stats.max)
+                        guard let first = pts.first else { return }
+                        path.move(to: first)
+                        for p in pts.dropFirst() { path.addLine(to: p) }
+                    }
+                    .stroke(lineColor, lineWidth: 2)
+
+                    // Last point marker
+                    if let last = points(in: size, minY: stats.min, maxY: stats.max).last {
+                        Circle()
+                            .fill(lineColor)
+                            .frame(width: 6, height: 6)
+                            .position(last)
+                    }
+                } else if let single = values.first {
+                    // Single point: draw centered marker at its scaled position
+                    let y = yPosition(for: single, in: size, minY: stats.min, maxY: stats.max)
+                    Circle()
+                        .fill(lineColor)
+                        .frame(width: 6, height: 6)
+                        .position(x: size.width / 2, y: y)
+                } else {
+                    // No data state
+                    Text("No data")
+                        .foregroundStyle(.secondary)
+                        .font(.footnote)
+                        .position(x: size.width / 2, y: size.height / 2)
+                }
+            }
+        }
+    }
+
+    // MARK: - Geometry helpers
+
+    private func computeStats() -> (min: Double, max: Double) {
+        let vMin = minY ?? values.min() ?? 0
+        let vMax = maxY ?? values.max() ?? 1
+        // Avoid zero range
+        if vMax == vMin { return (vMin - 1, vMax + 1) }
+        return (vMin, vMax)
+    }
+
+    private func xStep(in size: CGSize) -> CGFloat {
+        guard values.count > 1 else { return size.width }
+        return size.width / CGFloat(values.count - 1)
+    }
+
+    private func yPosition(for value: Double, in size: CGSize, minY: Double, maxY: Double)
+        -> CGFloat
+    {
+        let clamped = max(minY, min(value, maxY))
+        let t = (clamped - minY) / (maxY - minY)
+        return size.height - CGFloat(t) * size.height
+    }
+
+    private func points(in size: CGSize, minY: Double, maxY: Double) -> [CGPoint] {
+        guard !values.isEmpty else { return [] }
+        let step = xStep(in: size)
+        return values.enumerated().map { idx, v in
+            CGPoint(x: CGFloat(idx) * step, y: yPosition(for: v, in: size, minY: minY, maxY: maxY))
+        }
+    }
+
+    private func grid(in size: CGSize) -> Path {
+        var path = Path()
+        let rows = 4
+        let rowH = size.height / CGFloat(rows)
+        for i in 1...rows {
+            let y = CGFloat(i) * rowH
+            path.move(to: CGPoint(x: 0, y: y))
+            path.addLine(to: CGPoint(x: size.width, y: y))
+        }
+        return path
+    }
+}
+
+```
+
+
+## Assistant
+
+Now I need to complete the do-catch block by closing it and adding the error handling:
+
+**Tool Call: Edit `/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift`**
+Status: Completed
+
+Diff: /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/AdvancedSpecsDemoView.swift
+```
+import SpecificationKit
+import SwiftUI
+
+struct AdvancedSpecsDemoView: View {
+    private let provider = DefaultContextProvider.shared
+
+    // MARK: - Shared demo state
+    @State private var metricValue: Double = 50
+    @State private var thresholdValue: Double = 60
+    @State private var ctxThresholdValue: Double = 55
+    @State private var approxTarget: Double = 42
+    @State private var approxRelError: Double = 0.05
+
+    // WeightedSpec state
+    @State private var weightA: Double = 0.5
+    @State private var weightB: Double = 0.3
+    @State private var weightC: Double = 0.2
+    @State private var flagA: Bool = true
+    @State private var flagB: Bool = false
+    @State private var lastWeightedPick: String = "—"
+    @State private var sampleRuns: Int = 100
+    @State private var sampleA: Int = 0
+    @State private var sampleB: Int = 0
+    @State private var sampleC: Int = 0
+
+    // HistoricalSpec state
+    @StateObject private var history = DemoHistoryProvider()
+    @State private var newDataPoint: Double = 50
+    @State private var windowMode: HistoryWindow = .lastN
+    @State private var aggregation: HistoryAggregation = .median
+    @State private var minPoints: Int = 1
+    @State private var historicalResult: Double? = nil
+
+    enum HistoryWindow: String, CaseIterable, Identifiable {
+        case last10 = "Last 10"
+        case last50 = "Last 50"
+        case last100 = "Last 100"
+        case lastN = "Custom N"
+        case lastMinute = "Last 60s"
+        case all = "All"
+        var id: String { rawValue }
+
+        static func toSpecWindow(_ w: HistoryWindow, n: Int)
+            -> HistoricalSpec<EvaluationContext, Double>.AnalysisWindow
+        {
+            switch w {
+            case .last10: return .lastN(10)
+            case .last50: return .lastN(50)
+            case .last100: return .lastN(100)
+            case .lastN: return .lastN(max(1, n))
+            case .lastMinute: return .timeRange(.minutes(1))
+            case .all: return .all
+            }
+        }
+    }
+
+    enum HistoryAggregation: String, CaseIterable, Identifiable {
+        case median = "Median"
+        case p90 = "P90"
+        case p99 = "P99"
+        var id: String { rawValue }
+
+        static func toSpecAggregation(_ a: HistoryAggregation)
+            -> HistoricalSpec<EvaluationContext, Double>.AggregationMethod
+        {
+            switch a {
+            case .median: return .median
+            case .p90: return .percentile(90)
+            case .p99: return .percentile(99)
+            }
+        }
+    }
+
+    var body: some View {
+        List {
+            Section(header: Text("Setup")) {
+                Slider(value: $metricValue, in: 0...100, step: 1) {
+                    Text("metric (userData.metric)")
+                } minimumValueLabel: {
+                    Text("0")
+                } maximumValueLabel: {
+                    Text("100")
+                }
+                Text("metric: \(Int(metricValue))")
+
+                HStack {
+                    Stepper(
+                        "Context threshold: \(Int(ctxThresholdValue))", value: $ctxThresholdValue,
+                        in: 0...100)
+                    Spacer()
+                    Button("Apply to context") {
+                        provider.setUserData("ctx_threshold", to: ctxThresholdValue)
+                    }
+                }
+            }
+
+            // MARK: - ComparativeSpec
+            Section(
+                header: Text("1) ComparativeSpec"),
+                footer: Text(
+                    "Uses extracting: and helpers like withinTolerance and approximatelyEqual")
+            ) {
+                let greater = ComparativeSpec<EvaluationContext, Double>(
+                    extracting: { $0.userData(for: "metric", as: Double.self) },
+                    comparison: .greaterThan(thresholdValue)
+                )
+                let between = ComparativeSpec<EvaluationContext, Double>(
+                    extracting: { $0.userData(for: "metric", as: Double.self) },
+                    comparison: .between(40, 60)
+                )
+                // Approximately equal using a custom comparison range
+                let approxCustom = ComparativeSpec<EvaluationContext, Double>(
+                    extracting: { $0.userData(for: "metric", as: Double.self) },
+                    comparison: .between(
+                        approxTarget * (1 - approxRelError), approxTarget * (1 + approxRelError))
+                )
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Stepper(
+                            "threshold: \(Int(thresholdValue))", value: $thresholdValue, in: 0...100
+                        )
+                        Spacer()
+                    }
+                    HStack {
+                        Stepper(
+                            "approx target: \(Int(approxTarget))", value: $approxTarget, in: 0...100
+                        )
+                        Spacer()
+                        Stepper(
+                            "rel error: \(Int(approxRelError * 100))%", value: $approxRelError,
+                            in: 0.01...0.25, step: 0.01)
+                    }
+
+                    let ctx = updatedContext()
+                    statusRow("metric > threshold", ok: greater.isSatisfiedBy(ctx))
+                    statusRow("metric between 40…60", ok: between.isSatisfiedBy(ctx))
+                    statusRow("metric ≈ target (custom)", ok: approxCustom.isSatisfiedBy(ctx))
+                }
+            }
+
+            // MARK: - ThresholdSpec
+            Section(
+                header: Text("2) ThresholdSpec"),
+                footer: Text("Fixed, adaptive, contextual thresholds")
+            ) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Stepper(
+                            "fixed threshold: \(Int(thresholdValue))", value: $thresholdValue,
+                            in: 0...100)
+                        Spacer()
+                    }
+                    let ctx = updatedContext()
+                    // Value via extracting from userData
+                    let fixed = ThresholdSpec<EvaluationContext, Double>(
+                        extracting: { $0.userData(for: "metric", as: Double.self) },
+                        threshold: .fixed(thresholdValue),
+                        operator: .greaterThanOrEqual
+                    )
+                    statusRow("metric ≥ fixed", ok: fixed.isSatisfiedBy(ctx))
+
+                    let adaptive = ThresholdSpec<EvaluationContext, Double>(
+                        extracting: { $0.userData(for: "metric", as: Double.self) },
+                        threshold: .adaptive { Double.random(in: 30...70) },
+                        operator: .greaterThan
+                    )
+                    statusRow("metric > adaptive(random)", ok: adaptive.isSatisfiedBy(ctx))
+
+                    // Contextual threshold read from context userData
+                    let contextual = ThresholdSpec<EvaluationContext, Double>(
+                        extracting: { $0.userData(for: "metric", as: Double.self) },
+                        threshold: .custom { ctx in
+                            ctx.userData(for: "ctx_threshold", as: Double.self) ?? 0
+                        },
+                        operator: .greaterThanOrEqual
+                    )
+                    statusRow("metric ≥ ctx_threshold", ok: contextual.isSatisfiedBy(ctx))
+                }
+            }
+
+            // MARK: - WeightedSpec
+            Section(
+                header: Text("3) WeightedSpec"),
+                footer: Text("Probabilistic selection among satisfied candidates")
+            ) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle(
+                        "Flag A",
+                        isOn: .init(
+                            get: { flagA },
+                            set: { v in
+                                flagA = v
+                                provider.setFlag("weighted_a", to: v)
+                            }
+                        ))
+                    Toggle(
+                        "Flag B",
+                        isOn: .init(
+                            get: { flagB },
+                            set: { v in
+                                flagB = v
+                                provider.setFlag("weighted_b", to: v)
+                            }
+                        ))
+
+                    HStack {
+                        Stepper(
+                            "wA: \(String(format: "%.2f", weightA))", value: $weightA, in: 0.1...5,
+                            step: 0.1)
+                        Stepper(
+                            "wB: \(String(format: "%.2f", weightB))", value: $weightB, in: 0.1...5,
+                            step: 0.1)
+                        Stepper(
+                            "wC: \(String(format: "%.2f", weightC))", value: $weightC, in: 0.1...5,
+                            step: 0.1)
+                    }
+
+                    HStack {
+                        Button("Pick once") { pickWeightedOnce() }
+                        Text("Result: \(lastWeightedPick)")
+                    }
+
+                    HStack {
+                        Stepper(
+                            "Samples: \(sampleRuns)", value: $sampleRuns, in: 50...2000, step: 50)
+                        Button("Run samples") { runSamples() }
+                    }
+                    Text("A: \(sampleA)  B: \(sampleB)  C: \(sampleC)")
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            // MARK: - HistoricalSpec
+            Section(
+                header: Text("4) HistoricalSpec"),
+                footer: Text("Aggregate time-series data with median/percentile")
+            ) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Slider(value: $newDataPoint, in: 0...100, step: 1) {
+                            Text("Add data point")
+                        }
+                        Text("\(Int(newDataPoint))")
+                        Button("Record") { history.record(value: newDataPoint) }
+                        Button("Clear") { history.clear() }
+                    }
+
+                    // Visualization of recorded items over time
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Recorded values")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        MiniLineChart(
+                            values: history.data.map { $0.1 },
+                            minY: 0,
+                            maxY: 100,
+                            lineColor: .blue
+                        )
+                        .frame(height: 140)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                        )
+                    }
+
+                    Picker("Window", selection: $windowMode) {
+                        Text("Last 10").tag(HistoryWindow.last10)
+                        Text("Last 50").tag(HistoryWindow.last50)
+                        Text("Last 100").tag(HistoryWindow.last100)
+                        Text("Custom N").tag(HistoryWindow.lastN)
+                        Text("Last 60s").tag(HistoryWindow.lastMinute)
+                        Text("All").tag(HistoryWindow.all)
+                    }
+                    .pickerStyle(.segmented)
+
+                    if case .lastN = windowMode {
+                        Stepper("N (minPoints): \(minPoints)", value: $minPoints, in: 1...500)
+                    }
+
+                    Picker("Aggregation", selection: $aggregation) {
+                        Text("Median").tag(HistoryAggregation.median)
+                        Text("P90").tag(HistoryAggregation.p90)
+                        Text("P99").tag(HistoryAggregation.p99)
+                    }
+                    .pickerStyle(.segmented)
+
+                    HStack {
+                        Button("Compute") { computeHistorical() }
+                        Text("Result: \(historicalResult.map { String(Int($0)) } ?? "—")")
+                    }
+                }
+            }
+        }
+        .navigationTitle("Advanced Specs")
+        .onAppear {
+            // Initialize provider with current UI state
+            provider.setUserData("metric", to: metricValue)
+            provider.setUserData("ctx_threshold", to: ctxThresholdValue)
+            provider.setFlag("weighted_a", to: flagA)
+            provider.setFlag("weighted_b", to: flagB)
+        }
+        .onChange(of: metricValue) { v in provider.setUserData("metric", to: v) }
+        .onChange(of: ctxThresholdValue) { v in provider.setUserData("ctx_threshold", to: v) }
+    }
+
+    // MARK: - Helpers
+    private func updatedContext() -> EvaluationContext {
+        provider.currentContext()
+    }
+
+    @ViewBuilder
+    private func statusRow(_ title: String, ok: Bool) -> some View {
+        HStack {
+            Image(systemName: ok ? "checkmark.circle.fill" : "xmark.octagon.fill")
+                .foregroundColor(ok ? .green : .red)
+            Text(title)
+            Spacer()
+            Text(ok ? "Pass" : "Fail").foregroundStyle(.secondary)
+        }
+    }
+
+    private func pickWeightedOnce() {
+        let a = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_a") }
+        let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }
+        let always = AlwaysTrueSpec<EvaluationContext>()
+
+        do {
+            let spec = try WeightedSpec<EvaluationContext, String>(
+                candidates: [
+                    (AnySpecification(a), weightA, "A"),
+                    (AnySpecification(b), weightB, "B"),
+                    (AnySpecification(always), weightC, "C"),
+                ]
+            )
+
+            let ctx = updatedContext()
+            lastWeightedPick = spec.decide(ctx) ?? "—"
+        } catch {
+            lastWeightedPick = "Error: \(error.localizedDescription)"
+        }
+    }
+
+    private func runSamples() {
+        sampleA = 0
+        sampleB = 0
+        sampleC = 0
+        let a = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_a") }
+        let b = PredicateSpec<EvaluationContext> { $0.flag(for: "weighted_b") }
+        let always = AlwaysTrueSpec<EvaluationContext>()
+        do {
+            let spec = try WeightedSpec<EvaluationContext, String>(
+                candidates: [
+                    (AnySpecification(a), weightA, "A"),
+                    (AnySpecification(b), weightB, "B"),
+                    (AnySpecification(always), weightC, "C"),
+                ]
+            )
+
+            let ctx = updatedContext()
+            for _ in 0..<sampleRuns {
+                switch spec.decide(ctx) {
+                case "A": sampleA += 1
+                case "B": sampleB += 1
+                case "C": sampleC += 1
+                default: break
+                }
+            }
+        } catch {
+            // Reset samples to indicate error
+            sampleA = 0; sampleB = 0; sampleC = 0
+        }
+    }
+
+    private func computeHistorical() {
+        let spec = HistoricalSpec<EvaluationContext, Double>(
+            provider: history,
+            window: HistoryWindow.toSpecWindow(windowMode, n: minPoints),
+            aggregation: HistoryAggregation.toSpecAggregation(aggregation),
+            minimumDataPoints: minPoints
+        )
+        historicalResult = spec.decide(updatedContext())
+    }
+}
+
+// MARK: - Demo History Provider
+
+final class DemoHistoryProvider: ObservableObject, HistoricalDataProvider {
+    @Published private(set) var data: [(Date, Double)] = []
+    private let lock = NSLock()
+
+    func record(value: Double) {
+        lock.lock()
+        defer { lock.unlock() }
+        data.append((Date(), value))
+    }
+
+    func clear() {
+        lock.lock()
+        defer { lock.unlock() }
+        data.removeAll()
+    }
+
+    func getData<Context, Value>(
+        for window: HistoricalSpec<Context, Value>.AnalysisWindow,
+        context: Context
+    ) -> [(Date, Value)] {
+        lock.lock()
+        defer { lock.unlock() }
+        let casted: [(Date, Any)] = data.map { ($0.0, $0.1 as Any) }
+        let now = Date()
+        let filtered: [(Date, Any)]
+        switch window {
+        case .lastN(let n):
+            filtered = Array(casted.suffix(n))
+        case .timeRange(let interval):
+            let cutoff = now.addingTimeInterval(-interval)
+            filtered = casted.filter { $0.0 >= cutoff }
+        case .all:
+            filtered = casted
+        }
+        return filtered.compactMap { (d, v) -> (Date, Value)? in
+            (v as? Value).map { (d, $0) }
+        }
+    }
+}
+
+#Preview {
+    NavigationView { AdvancedSpecsDemoView() }
+}
+
+// MARK: - MiniLineChart
+
+/// A lightweight line chart for visualizing a sequence of Double values.
+/// Scales values between `minY` and `maxY` to fit the view height and
+/// distributes points evenly across the width.
+struct MiniLineChart: View {
+    let values: [Double]
+    var minY: Double? = nil
+    var maxY: Double? = nil
+    var lineColor: Color = .accentColor
+
+    var body: some View {
+        GeometryReader { proxy in
+            let size = proxy.size
+            let stats = computeStats()
+
+            ZStack {
+                // Grid lines
+                grid(in: size)
+                    .stroke(
+                        Color.secondary.opacity(0.15),
+                        style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+
+                // Line path
+                if values.count >= 2 {
+                    Path { path in
+                        let pts = points(in: size, minY: stats.min, maxY: stats.max)
+                        guard let first = pts.first else { return }
+                        path.move(to: first)
+                        for p in pts.dropFirst() { path.addLine(to: p) }
+                    }
+                    .stroke(lineColor, lineWidth: 2)
+
+                    // Last point marker
+                    if let last = points(in: size, minY: stats.min, maxY: stats.max).last {
+                        Circle()
+                            .fill(lineColor)
+                            .frame(width: 6, height: 6)
+                            .position(last)
+                    }
+                } else if let single = values.first {
+                    // Single point: draw centered marker at its scaled position
+                    let y = yPosition(for: single, in: size, minY: stats.min, maxY: stats.max)
+                    Circle()
+                        .fill(lineColor)
+                        .frame(width: 6, height: 6)
+                        .position(x: size.width / 2, y: y)
+                } else {
+                    // No data state
+                    Text("No data")
+                        .foregroundStyle(.secondary)
+                        .font(.footnote)
+                        .position(x: size.width / 2, y: size.height / 2)
+                }
+            }
+        }
+    }
+
+    // MARK: - Geometry helpers
+
+    private func computeStats() -> (min: Double, max: Double) {
+        let vMin = minY ?? values.min() ?? 0
+        let vMax = maxY ?? values.max() ?? 1
+        // Avoid zero range
+        if vMax == vMin { return (vMin - 1, vMax + 1) }
+        return (vMin, vMax)
+    }
+
+    private func xStep(in size: CGSize) -> CGFloat {
+        guard values.count > 1 else { return size.width }
+        return size.width / CGFloat(values.count - 1)
+    }
+
+    private func yPosition(for value: Double, in size: CGSize, minY: Double, maxY: Double)
+        -> CGFloat
+    {
+        let clamped = max(minY, min(value, maxY))
+        let t = (clamped - minY) / (maxY - minY)
+        return size.height - CGFloat(t) * size.height
+    }
+
+    private func points(in size: CGSize, minY: Double, maxY: Double) -> [CGPoint] {
+        guard !values.isEmpty else { return [] }
+        let step = xStep(in: size)
+        return values.enumerated().map { idx, v in
+            CGPoint(x: CGFloat(idx) * step, y: yPosition(for: v, in: size, minY: minY, maxY: maxY))
+        }
+    }
+
+    private func grid(in size: CGSize) -> Path {
+        var path = Path()
+        let rows = 4
+        let rowH = size.height / CGFloat(rows)
+        for i in 1...rows {
+            let y = CGFloat(i) * rowH
+            path.move(to: CGPoint(x: 0, y: y))
+            path.addLine(to: CGPoint(x: size.width, y: y))
+        }
+        return path
+    }
+}
+
+```
+
+
+## Assistant
+
+Perfect! I've successfully fixed the compilation errors in the AdvancedSpecsDemoView. The issue was that `WeightedSpec` initialization can throw errors (likely due to validation of weights or candidates), but the code wasn't handling these potential exceptions.
+
+## Summary of fixes applied:
+
+1. **Fixed `pickWeightedOnce()` function** - Added `do-catch` block around `WeightedSpec` creation with proper error handling that displays error message in the UI.
+
+2. **Fixed `runSamples()` function** - Added `do-catch` block around `WeightedSpec` creation with error handling that resets sample counts to indicate an error occurred.
+
+Both functions now properly handle potential errors from `WeightedSpec` initialization using `try` within `do-catch` blocks, which should resolve the compilation errors. The error handling is appropriate for each context:
+
+- In `pickWeightedOnce()`, errors are displayed to the user via `lastWeightedPick`
+- In `runSamples()`, errors result in resetting sample counts to zero
+
+The demo app should now compile successfully and handle edge cases where `WeightedSpec` creation might fail (such as invalid weights or empty candidate lists).
+
+## User (checkpoint)
+
+try `swift run SpecificationKitDemo` and you will see new errors
+
+## Assistant
+
+I'll run the demo to see the new errors that have appeared.
+
+**Tool Call: `cd /Users/egor/Development/GitHub/SpecificationKit/DemoApp && swift run SpecificationKitDemo`**
+Status: Completed
+
+Terminal:
+```
+[1/1] Planning build
+Building for debugging...
+/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift:155:44: error: type 'CGColor' has no member 'systemGray6'
+153 |                         .foregroundStyle(.secondary)
+154 |                         .padding(8)
+155 |                         .background(Color(.systemGray6))
+    |                                            `- error: type 'CGColor' has no member 'systemGray6'
+156 |                         .cornerRadius(8)
+157 |
+
+/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift:340:46: error: extraneous argument label 'segment:' in call
+338 |             let context = try await provider.currentContextAsync()
+339 |
+340 |             let premiumSpec = UserSegmentSpec(segment: "premium")
+    |                                              `- error: extraneous argument label 'segment:' in call
+341 |             let betaSpec = UserSegmentSpec(segment: "beta")
+342 |
+
+/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift:340:56: error: cannot convert value of type 'String' to expected argument type 'UserSegmentSpec.UserSegment'
+338 |             let context = try await provider.currentContextAsync()
+339 |
+340 |             let premiumSpec = UserSegmentSpec(segment: "premium")
+    |                                                        `- error: cannot convert value of type 'String' to expected argument type 'UserSegmentSpec.UserSegment'
+341 |             let betaSpec = UserSegmentSpec(segment: "beta")
+342 |
+
+/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift:341:43: error: extraneous argument label 'segment:' in call
+339 |
+340 |             let premiumSpec = UserSegmentSpec(segment: "premium")
+341 |             let betaSpec = UserSegmentSpec(segment: "beta")
+    |                                           `- error: extraneous argument label 'segment:' in call
+342 |
+343 |             if premiumSpec.isSatisfiedBy(context) {
+
+/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift:341:53: error: cannot convert value of type 'String' to expected argument type 'UserSegmentSpec.UserSegment'
+339 |
+340 |             let premiumSpec = UserSegmentSpec(segment: "premium")
+341 |             let betaSpec = UserSegmentSpec(segment: "beta")
+    |                                                     `- error: cannot convert value of type 'String' to expected argument type 'UserSegmentSpec.UserSegment'
+342 |
+343 |             if premiumSpec.isSatisfiedBy(context) {
+[3/6] Compiling SpecificationKitDemo Net…
+
+```
+
+
+## Assistant
+
+I can see the compilation errors. Let me fix them:Let me fix the first error - the `systemGray6` color issue:
+
+**Tool Call: Edit `/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift`**
+Status: Completed
+
+Diff: /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift
+```
+import SwiftUI
+import SpecificationKit
+import Foundation
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+struct NetworkContextDemoView: View {
+    // Mock server state
+    @StateObject private var mockServer = MockNetworkServer()
+
+    // Network provider configuration
+    @State private var endpoint = "https://api.example.com/context"
+    @State private var refreshInterval: Double = 300
+    @State private var requestTimeout: Double = 30
+    @State private var retryPolicy: RetryPolicyOption = .exponentialBackoff
+    @State private var maxAttempts = 3
+    @State private var cacheEnabled = true
+
+    // Provider state
+    @State private var networkProvider: NetworkContextProvider?
+    @State private var isLoading = false
+    @State private var lastUpdateTime: Date?
+    @State private var errorMessage: String?
+    @State private var contextData: String = "No data loaded"
+    @State private var cacheStatus: String = "No cache"
+
+    // Demo specifications
+    @State private var featureFlagResult: String = "—"
+    @State private var userSegmentResult: String = "—"
+    @State private var configResult: String = "—"
+
+    enum RetryPolicyOption: String, CaseIterable, Identifiable {
+        case none = "None"
+        case exponentialBackoff = "Exponential Backoff"
+        case fixedDelay = "Fixed Delay"
+
+        var id: String { rawValue }
+
+        func toNetworkPolicy(maxAttempts: Int) -> NetworkContextProvider.RetryPolicy {
+            switch self {
+            case .none:
+                return .none
+            case .exponentialBackoff:
+                return .exponentialBackoff(maxAttempts: maxAttempts)
+            case .fixedDelay:
+                return .fixedDelay(1.5, maxAttempts: maxAttempts)
+            }
+        }
+    }
+
+    var body: some View {
+        List {
+            Section(header: Text("Mock Server Configuration"), footer: Text("Configure the mock server behavior to test different network scenarios")) {
+                Toggle("Server Available", isOn: $mockServer.isServerAvailable)
+
+                if mockServer.isServerAvailable {
+                    Stepper("Response Delay: \(String(format: "%.1f", mockServer.responseDelay))s",
+                           value: $mockServer.responseDelay, in: 0...5, step: 0.5)
+
+                    Picker("Response Type", selection: $mockServer.responseType) {
+                        Text("Success").tag(MockNetworkServer.ResponseType.success)
+                        Text("HTTP 500 Error").tag(MockNetworkServer.ResponseType.httpError)
+                        Text("Invalid JSON").tag(MockNetworkServer.ResponseType.invalidJSON)
+                        Text("Timeout").tag(MockNetworkServer.ResponseType.timeout)
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Button("Reset Server") {
+                    mockServer.reset()
+                }
+                .foregroundStyle(.blue)
+            }
+
+            Section(header: Text("Network Provider Configuration")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Endpoint:")
+                        TextField("URL", text: $endpoint)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    Stepper("Refresh Interval: \(Int(refreshInterval))s",
+                           value: $refreshInterval, in: 60...1800, step: 60)
+
+                    Stepper("Request Timeout: \(Int(requestTimeout))s",
+                           value: $requestTimeout, in: 5...120, step: 5)
+
+                    Picker("Retry Policy", selection: $retryPolicy) {
+                        ForEach(RetryPolicyOption.allCases) { option in
+                            Text(option.rawValue).tag(option)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    if retryPolicy != .none {
+                        Stepper("Max Attempts: \(maxAttempts)",
+                               value: $maxAttempts, in: 1...10)
+                    }
+
+                    Toggle("Cache Enabled", isOn: $cacheEnabled)
+                }
+            }
+
+            Section(header: Text("Provider Actions")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Button("Create Provider") {
+                            createNetworkProvider()
+                        }
+                        .buttonStyle(.borderedProminent)
+
+                        Button("Refresh Context") {
+                            Task { await refreshContext() }
+                        }
+                        .disabled(networkProvider == nil || isLoading)
+
+                        if isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                    }
+
+                    if let lastUpdate = lastUpdateTime {
+                        Text("Last Update: \(lastUpdate, formatter: timeFormatter)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if let error = errorMessage {
+                        Text("Error: \(error)")
+                            .foregroundStyle(.red)
+                            .font(.caption)
+                    }
+                }
+            }
+
+            Section(header: Text("Context Data")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Context:")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Text(contextData)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(8)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
+
+                    Text("Cache Status: \(cacheStatus)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section(header: Text("Specification Examples")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Button("Test Feature Flag") {
+                        Task { await testFeatureFlag() }
+                    }
+                    Text("Result: \(featureFlagResult)")
+                        .font(.caption)
+
+                    Button("Test User Segment") {
+                        Task { await testUserSegment() }
+                    }
+                    Text("Result: \(userSegmentResult)")
+                        .font(.caption)
+
+                    Button("Test Configuration") {
+                        Task { await testConfiguration() }
+                    }
+                    Text("Result: \(configResult)")
+                        .font(.caption)
+                }
+            }
+
+            Section(header: Text("Network Monitoring")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Request History:")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    ForEach(mockServer.requestHistory.suffix(5), id: \.timestamp) { request in
+                        HStack {
+                            Image(systemName: request.success ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .foregroundColor(request.success ? .green : .red)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(request.timestamp, formatter: timeFormatter)
+                                    .font(.caption)
+                                Text(request.details)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+                        }
+                        .padding(.vertical, 2)
+                    }
+
+                    if mockServer.requestHistory.isEmpty {
+                        Text("No requests yet")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .navigationTitle("Network Context")
+        .onAppear {
+            mockServer.setup()
+        }
+    }
+
+    private var timeFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .medium
+        return formatter
+    }
+
+    private func createNetworkProvider() {
+        let config = NetworkContextProvider.Configuration(
+            endpoint: URL(string: endpoint) ?? URL(string: "https://api.example.com/context")!,
+            refreshInterval: refreshInterval,
+            requestTimeout: requestTimeout,
+            retryPolicy: retryPolicy.toNetworkPolicy(maxAttempts: maxAttempts),
+            fallbackValues: [
+                "featureEnabled": false,
+                "userTier": "basic",
+                "maxConnections": 10,
+                "offlineMode": true
+            ],
+            cacheEnabled: cacheEnabled
+        )
+
+        // Use mock server's session for testing
+        networkProvider = NetworkContextProvider(
+            configuration: config,
+            session: mockServer.urlSession
+        )
+
+        errorMessage = nil
+        contextData = "Provider created - call Refresh to fetch data"
+        cacheStatus = cacheEnabled ? "Cache enabled" : "Cache disabled"
+    }
+
+    @MainActor
+    private func refreshContext() async {
+        guard let provider = networkProvider else { return }
+
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            let context = try await provider.currentContextAsync()
+            lastUpdateTime = Date()
+
+            // Format context data for display
+            let userData = context.userData.isEmpty ? "None" : context.userData.description
+            let flags = context.flags.isEmpty ? "None" : context.flags.description
+            let counters = context.counters.isEmpty ? "None" : context.counters.description
+
+            contextData = """
+                UserData: \(userData)
+                Flags: \(flags)
+                Counters: \(counters)
+                Segments: \(context.segments.isEmpty ? "None" : Array(context.segments).joined(separator: ", "))
+                """
+
+            cacheStatus = "Context loaded from network"
+
+        } catch let error as NetworkContextProvider.NetworkError {
+            handleNetworkError(error)
+        } catch {
+            errorMessage = "Unexpected error: \(error.localizedDescription)"
+            contextData = "Failed to load context"
+            cacheStatus = "Error occurred"
+        }
+
+        isLoading = false
+    }
+
+    private func handleNetworkError(_ error: NetworkContextProvider.NetworkError) {
+        switch error {
+        case .invalidResponse:
+            errorMessage = "Invalid server response"
+        case .httpError(let code):
+            errorMessage = "HTTP error \(code)"
+        case .maxRetriesExceeded:
+            errorMessage = "Max retries exceeded"
+        case .networkUnavailable:
+            errorMessage = "Network unavailable"
+        case .parseError(let message):
+            errorMessage = "Parse error: \(message)"
+        case .configurationError(let message):
+            errorMessage = "Configuration error: \(message)"
+        }
+
+        contextData = "Using fallback/cached context"
+        cacheStatus = cacheEnabled ? "Using cached data" : "Using fallback values"
+    }
+
+    private func testFeatureFlag() async {
+        guard let provider = networkProvider else {
+            featureFlagResult = "No provider"
+            return
+        }
+
+        do {
+            let context = try await provider.currentContextAsync()
+            let spec = FeatureFlagSpec(flagKey: "featureEnabled", expected: true)
+            let result = spec.isSatisfiedBy(context)
+            featureFlagResult = result ? "Feature ENABLED" : "Feature DISABLED"
+        } catch {
+            featureFlagResult = "Error: \(error.localizedDescription)"
+        }
+    }
+
+    private func testUserSegment() async {
+        guard let provider = networkProvider else {
+            userSegmentResult = "No provider"
+            return
+        }
+
+        do {
+            let context = try await provider.currentContextAsync()
+
+            let premiumSpec = UserSegmentSpec(segment: "premium")
+            let betaSpec = UserSegmentSpec(segment: "beta")
+
+            if premiumSpec.isSatisfiedBy(context) {
+                userSegmentResult = "Premium User"
+            } else if betaSpec.isSatisfiedBy(context) {
+                userSegmentResult = "Beta User"
+            } else {
+                userSegmentResult = "Standard User"
+            }
+        } catch {
+            userSegmentResult = "Error: \(error.localizedDescription)"
+        }
+    }
+
+    private func testConfiguration() async {
+        guard let provider = networkProvider else {
+            configResult = "No provider"
+            return
+        }
+
+        do {
+            let context = try await provider.currentContextAsync()
+            let maxConnections = context.userData["maxConnections"] as? Int ?? 10
+            let maintenanceMode = context.flag(for: "maintenanceMode")
+
+            configResult = "Max Connections: \(maxConnections), Maintenance: \(maintenanceMode ? "ON" : "OFF")"
+        } catch {
+            configResult = "Error: \(error.localizedDescription)"
+        }
+    }
+}
+
+// MARK: - Mock Network Server
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+class MockNetworkServer: NSObject, ObservableObject, URLSessionDataDelegate {
+    enum ResponseType: String, CaseIterable {
+        case success = "success"
+        case httpError = "httpError"
+        case invalidJSON = "invalidJSON"
+        case timeout = "timeout"
+    }
+
+    struct RequestLog {
+        let timestamp: Date
+        let success: Bool
+        let details: String
+    }
+
+    @Published var isServerAvailable = true
+    @Published var responseDelay: Double = 0.5
+    @Published var responseType: ResponseType = .success
+    @Published var requestHistory: [RequestLog] = []
+
+    private(set) var urlSession: URLSession!
+
+    func setup() {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [MockURLProtocol.self]
+        urlSession = URLSession(configuration: config, delegate: self, delegateQueue: nil)
+
+        MockURLProtocol.mockServer = self
+    }
+
+    func reset() {
+        isServerAvailable = true
+        responseDelay = 0.5
+        responseType = .success
+        requestHistory.removeAll()
+    }
+
+    func handleRequest(for url: URL) -> (Data?, URLResponse?, Error?) {
+        let log: RequestLog
+
+        defer {
+            DispatchQueue.main.async {
+                self.requestHistory.append(log)
+            }
+        }
+
+        // Simulate delay
+        Thread.sleep(forTimeInterval: responseDelay)
+
+        guard isServerAvailable else {
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "Server unavailable"
+            )
+            return (nil, nil, URLError(.networkConnectionLost))
+        }
+
+        switch responseType {
+        case .success:
+            let jsonData = """
+                {
+                    "userData": {
+                        "userId": "demo123",
+                        "userTier": "premium",
+                        "maxConnections": 50
+                    },
+                    "flags": {
+                        "featureEnabled": true,
+                        "betaAccess": true,
+                        "maintenanceMode": false
+                    },
+                    "counters": {
+                        "loginCount": 25,
+                        "apiCalls": 150
+                    },
+                    "segments": ["premium", "beta"],
+                    "launchDate": 1703894400
+                }
+                """.data(using: .utf8)!
+
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: 200,
+                httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+            )
+
+            log = RequestLog(
+                timestamp: Date(),
+                success: true,
+                details: "200 OK - \(jsonData.count) bytes"
+            )
+
+            return (jsonData, response, nil)
+
+        case .httpError:
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: 500,
+                httpVersion: "HTTP/1.1",
+                headerFields: nil
+            )
+
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "500 Internal Server Error"
+            )
+
+            return (Data(), response, nil)
+
+        case .invalidJSON:
+            let invalidData = "{ invalid json }".data(using: .utf8)!
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: 200,
+                httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+            )
+
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "200 OK - Invalid JSON"
+            )
+
+            return (invalidData, response, nil)
+
+        case .timeout:
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "Request timeout"
+            )
+
+            return (nil, nil, URLError(.timedOut))
+        }
+    }
+}
+
+// MARK: - Mock URL Protocol
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+class MockURLProtocol: URLProtocol {
+    static weak var mockServer: MockNetworkServer?
+
+    override class func canInit(with request: URLRequest) -> Bool {
+        return true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        return request
+    }
+
+    override func startLoading() {
+        guard let url = request.url,
+              let mockServer = MockURLProtocol.mockServer else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+            return
+        }
+
+        let (data, response, error) = mockServer.handleRequest(for: url)
+
+        if let error = error {
+            client?.urlProtocol(self, didFailWithError: error)
+        } else if let response = response {
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+
+            if let data = data {
+                client?.urlProtocol(self, didLoad: data)
+            }
+
+            client?.urlProtocolDidFinishLoading(self)
+        } else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
+        }
+    }
+
+    override func stopLoading() {
+        // No-op
+    }
+}
+
+#Preview {
+    if #available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *) {
+        NavigationView {
+            NetworkContextDemoView()
+        }
+    } else {
+        Text("NetworkContextProvider requires iOS 15.0+")
+    }
+}
+```
+
+
+## Assistant
+
+Now I need to check how `UserSegmentSpec` should be constructed. Let me look at its definition:
+
+**Tool Call: grep -n "struct UserSegmentSpec" /Users/egor/Development/GitHub/SpecificationKit/Sources**
+Status: Completed
+
+/Users/egor/Development/GitHub/SpecificationKit/Sources/SpecificationKit/Specs/UserSegmentSpec.swift:4:public struct UserSegmentSpec: Specification {
+
+**Tool Call: Read /Users/egor/Development/GitHub/SpecificationKit/Sources/SpecificationKit/Specs/UserSegmentSpec.swift (1 - 30)**
+Status: Completed
+
+```
+import Foundation/// Checks membership of a user segment tag.public struct UserSegmentSpec: Specification {    public typealias T = EvaluationContext    public enum UserSegment: String { case vip, beta, control, newUser = "new_user" }    private let expected: UserSegment    public init(_ expected: UserSegment) {        self.expected = expected    }    public func isSatisfiedBy(_ candidate: EvaluationContext) -> Bool {        candidate.segments.contains(expected.rawValue)    }}
+```
+
+## Assistant
+
+I can see the issue. `UserSegmentSpec` takes a `UserSegment` enum, not a string. Let me fix the API usage:
+
+**Tool Call: Edit `/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift`**
+Status: Completed
+
+Diff: /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift
+```
+import Foundation
+import SpecificationKit
+import SwiftUI
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+struct NetworkContextDemoView: View {
+    // Mock server state
+    @StateObject private var mockServer = MockNetworkServer()
+
+    // Network provider configuration
+    @State private var endpoint = "https://api.example.com/context"
+    @State private var refreshInterval: Double = 300
+    @State private var requestTimeout: Double = 30
+    @State private var retryPolicy: RetryPolicyOption = .exponentialBackoff
+    @State private var maxAttempts = 3
+    @State private var cacheEnabled = true
+
+    // Provider state
+    @State private var networkProvider: NetworkContextProvider?
+    @State private var isLoading = false
+    @State private var lastUpdateTime: Date?
+    @State private var errorMessage: String?
+    @State private var contextData: String = "No data loaded"
+    @State private var cacheStatus: String = "No cache"
+
+    // Demo specifications
+    @State private var featureFlagResult: String = "—"
+    @State private var userSegmentResult: String = "—"
+    @State private var configResult: String = "—"
+
+    enum RetryPolicyOption: String, CaseIterable, Identifiable {
+        case none = "None"
+        case exponentialBackoff = "Exponential Backoff"
+        case fixedDelay = "Fixed Delay"
+
+        var id: String { rawValue }
+
+        func toNetworkPolicy(maxAttempts: Int) -> NetworkContextProvider.RetryPolicy {
+            switch self {
+            case .none:
+                return .none
+            case .exponentialBackoff:
+                return .exponentialBackoff(maxAttempts: maxAttempts)
+            case .fixedDelay:
+                return .fixedDelay(1.5, maxAttempts: maxAttempts)
+            }
+        }
+    }
+
+    var body: some View {
+        List {
+            Section(
+                header: Text("Mock Server Configuration"),
+                footer: Text(
+                    "Configure the mock server behavior to test different network scenarios")
+            ) {
+                Toggle("Server Available", isOn: $mockServer.isServerAvailable)
+
+                if mockServer.isServerAvailable {
+                    Stepper(
+                        "Response Delay: \(String(format: "%.1f", mockServer.responseDelay))s",
+                        value: $mockServer.responseDelay, in: 0...5, step: 0.5)
+
+                    Picker("Response Type", selection: $mockServer.responseType) {
+                        Text("Success").tag(MockNetworkServer.ResponseType.success)
+                        Text("HTTP 500 Error").tag(MockNetworkServer.ResponseType.httpError)
+                        Text("Invalid JSON").tag(MockNetworkServer.ResponseType.invalidJSON)
+                        Text("Timeout").tag(MockNetworkServer.ResponseType.timeout)
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Button("Reset Server") {
+                    mockServer.reset()
+                }
+                .foregroundStyle(.blue)
+            }
+
+            Section(header: Text("Network Provider Configuration")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Endpoint:")
+                        TextField("URL", text: $endpoint)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    Stepper(
+                        "Refresh Interval: \(Int(refreshInterval))s",
+                        value: $refreshInterval, in: 60...1800, step: 60)
+
+                    Stepper(
+                        "Request Timeout: \(Int(requestTimeout))s",
+                        value: $requestTimeout, in: 5...120, step: 5)
+
+                    Picker("Retry Policy", selection: $retryPolicy) {
+                        ForEach(RetryPolicyOption.allCases) { option in
+                            Text(option.rawValue).tag(option)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    if retryPolicy != .none {
+                        Stepper(
+                            "Max Attempts: \(maxAttempts)",
+                            value: $maxAttempts, in: 1...10)
+                    }
+
+                    Toggle("Cache Enabled", isOn: $cacheEnabled)
+                }
+            }
+
+            Section(header: Text("Provider Actions")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Button("Create Provider") {
+                            createNetworkProvider()
+                        }
+                        .buttonStyle(.borderedProminent)
+
+                        Button("Refresh Context") {
+                            Task { await refreshContext() }
+                        }
+                        .disabled(networkProvider == nil || isLoading)
+
+                        if isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                    }
+
+                    if let lastUpdate = lastUpdateTime {
+                        Text("Last Update: \(lastUpdate, formatter: timeFormatter)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if let error = errorMessage {
+                        Text("Error: \(error)")
+                            .foregroundStyle(.red)
+                            .font(.caption)
+                    }
+                }
+            }
+
+            Section(header: Text("Context Data")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Context:")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Text(contextData)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(8)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
+
+                    Text("Cache Status: \(cacheStatus)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section(header: Text("Specification Examples")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Button("Test Feature Flag") {
+                        Task { await testFeatureFlag() }
+                    }
+                    Text("Result: \(featureFlagResult)")
+                        .font(.caption)
+
+                    Button("Test User Segment") {
+                        Task { await testUserSegment() }
+                    }
+                    Text("Result: \(userSegmentResult)")
+                        .font(.caption)
+
+                    Button("Test Configuration") {
+                        Task { await testConfiguration() }
+                    }
+                    Text("Result: \(configResult)")
+                        .font(.caption)
+                }
+            }
+
+            Section(header: Text("Network Monitoring")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Request History:")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    ForEach(mockServer.requestHistory.suffix(5), id: \.timestamp) { request in
+                        HStack {
+                            Image(
+                                systemName: request.success
+                                    ? "checkmark.circle.fill" : "xmark.circle.fill"
+                            )
+                            .foregroundColor(request.success ? .green : .red)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(request.timestamp, formatter: timeFormatter)
+                                    .font(.caption)
+                                Text(request.details)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+                        }
+                        .padding(.vertical, 2)
+                    }
+
+                    if mockServer.requestHistory.isEmpty {
+                        Text("No requests yet")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .navigationTitle("Network Context")
+        .onAppear {
+            mockServer.setup()
+        }
+    }
+
+    private var timeFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .medium
+        return formatter
+    }
+
+    private func createNetworkProvider() {
+        let config = NetworkContextProvider.Configuration(
+            endpoint: URL(string: endpoint) ?? URL(string: "https://api.example.com/context")!,
+            refreshInterval: refreshInterval,
+            requestTimeout: requestTimeout,
+            retryPolicy: retryPolicy.toNetworkPolicy(maxAttempts: maxAttempts),
+            fallbackValues: [
+                "featureEnabled": false,
+                "userTier": "basic",
+                "maxConnections": 10,
+                "offlineMode": true,
+            ],
+            cacheEnabled: cacheEnabled
+        )
+
+        // Use mock server's session for testing
+        networkProvider = NetworkContextProvider(
+            configuration: config,
+            session: mockServer.urlSession
+        )
+
+        errorMessage = nil
+        contextData = "Provider created - call Refresh to fetch data"
+        cacheStatus = cacheEnabled ? "Cache enabled" : "Cache disabled"
+    }
+
+    @MainActor
+    private func refreshContext() async {
+        guard let provider = networkProvider else { return }
+
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            let context = try await provider.currentContextAsync()
+            lastUpdateTime = Date()
+
+            // Format context data for display
+            let userData = context.userData.isEmpty ? "None" : context.userData.description
+            let flags = context.flags.isEmpty ? "None" : context.flags.description
+            let counters = context.counters.isEmpty ? "None" : context.counters.description
+
+            contextData = """
+                UserData: \(userData)
+                Flags: \(flags)
+                Counters: \(counters)
+                Segments: \(context.segments.isEmpty ? "None" : Array(context.segments).joined(separator: ", "))
+                """
+
+            cacheStatus = "Context loaded from network"
+
+        } catch let error as NetworkContextProvider.NetworkError {
+            handleNetworkError(error)
+        } catch {
+            errorMessage = "Unexpected error: \(error.localizedDescription)"
+            contextData = "Failed to load context"
+            cacheStatus = "Error occurred"
+        }
+
+        isLoading = false
+    }
+
+    private func handleNetworkError(_ error: NetworkContextProvider.NetworkError) {
+        switch error {
+        case .invalidResponse:
+            errorMessage = "Invalid server response"
+        case .httpError(let code):
+            errorMessage = "HTTP error \(code)"
+        case .maxRetriesExceeded:
+            errorMessage = "Max retries exceeded"
+        case .networkUnavailable:
+            errorMessage = "Network unavailable"
+        case .parseError(let message):
+            errorMessage = "Parse error: \(message)"
+        case .configurationError(let message):
+            errorMessage = "Configuration error: \(message)"
+        }
+
+        contextData = "Using fallback/cached context"
+        cacheStatus = cacheEnabled ? "Using cached data" : "Using fallback values"
+    }
+
+    private func testFeatureFlag() async {
+        guard let provider = networkProvider else {
+            featureFlagResult = "No provider"
+            return
+        }
+
+        do {
+            let context = try await provider.currentContextAsync()
+            let spec = FeatureFlagSpec(flagKey: "featureEnabled", expected: true)
+            let result = spec.isSatisfiedBy(context)
+            featureFlagResult = result ? "Feature ENABLED" : "Feature DISABLED"
+        } catch {
+            featureFlagResult = "Error: \(error.localizedDescription)"
+        }
+    }
+
+    private func testUserSegment() async {
+        guard let provider = networkProvider else {
+            userSegmentResult = "No provider"
+            return
+        }
+
+        do {
+            let context = try await provider.currentContextAsync()
+
+            let premiumSpec = UserSegmentSpec(.vip) // Using .vip since there's no .premium enum case
+            let betaSpec = UserSegmentSpec(.beta)
+
+            if premiumSpec.isSatisfiedBy(context) {
+                userSegmentResult = "Premium User"
+            } else if betaSpec.isSatisfiedBy(context) {
+                userSegmentResult = "Beta User"
+            } else {
+                userSegmentResult = "Standard User"
+            }
+        } catch {
+            userSegmentResult = "Error: \(error.localizedDescription)"
+        }
+    }
+
+    private func testConfiguration() async {
+        guard let provider = networkProvider else {
+            configResult = "No provider"
+            return
+        }
+
+        do {
+            let context = try await provider.currentContextAsync()
+            let maxConnections = context.userData["maxConnections"] as? Int ?? 10
+            let maintenanceMode = context.flag(for: "maintenanceMode")
+
+            configResult =
+                "Max Connections: \(maxConnections), Maintenance: \(maintenanceMode ? "ON" : "OFF")"
+        } catch {
+            configResult = "Error: \(error.localizedDescription)"
+        }
+    }
+}
+
+// MARK: - Mock Network Server
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+class MockNetworkServer: NSObject, ObservableObject, URLSessionDataDelegate {
+    enum ResponseType: String, CaseIterable {
+        case success = "success"
+        case httpError = "httpError"
+        case invalidJSON = "invalidJSON"
+        case timeout = "timeout"
+    }
+
+    struct RequestLog {
+        let timestamp: Date
+        let success: Bool
+        let details: String
+    }
+
+    @Published var isServerAvailable = true
+    @Published var responseDelay: Double = 0.5
+    @Published var responseType: ResponseType = .success
+    @Published var requestHistory: [RequestLog] = []
+
+    private(set) var urlSession: URLSession!
+
+    func setup() {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [MockURLProtocol.self]
+        urlSession = URLSession(configuration: config, delegate: self, delegateQueue: nil)
+
+        MockURLProtocol.mockServer = self
+    }
+
+    func reset() {
+        isServerAvailable = true
+        responseDelay = 0.5
+        responseType = .success
+        requestHistory.removeAll()
+    }
+
+    func handleRequest(for url: URL) -> (Data?, URLResponse?, Error?) {
+        let log: RequestLog
+
+        defer {
+            DispatchQueue.main.async {
+                self.requestHistory.append(log)
+            }
+        }
+
+        // Simulate delay
+        Thread.sleep(forTimeInterval: responseDelay)
+
+        guard isServerAvailable else {
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "Server unavailable"
+            )
+            return (nil, nil, URLError(.networkConnectionLost))
+        }
+
+        switch responseType {
+        case .success:
+            let jsonData = """
+                {
+                    "userData": {
+                        "userId": "demo123",
+                        "userTier": "premium",
+                        "maxConnections": 50
+                    },
+                    "flags": {
+                        "featureEnabled": true,
+                        "betaAccess": true,
+                        "maintenanceMode": false
+                    },
+                    "counters": {
+                        "loginCount": 25,
+                        "apiCalls": 150
+                    },
+                    "segments": ["premium", "beta"],
+                    "launchDate": 1703894400
+                }
+                """.data(using: .utf8)!
+
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: 200,
+                httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+            )
+
+            log = RequestLog(
+                timestamp: Date(),
+                success: true,
+                details: "200 OK - \(jsonData.count) bytes"
+            )
+
+            return (jsonData, response, nil)
+
+        case .httpError:
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: 500,
+                httpVersion: "HTTP/1.1",
+                headerFields: nil
+            )
+
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "500 Internal Server Error"
+            )
+
+            return (Data(), response, nil)
+
+        case .invalidJSON:
+            let invalidData = "{ invalid json }".data(using: .utf8)!
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: 200,
+                httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+            )
+
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "200 OK - Invalid JSON"
+            )
+
+            return (invalidData, response, nil)
+
+        case .timeout:
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "Request timeout"
+            )
+
+            return (nil, nil, URLError(.timedOut))
+        }
+    }
+}
+
+// MARK: - Mock URL Protocol
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+class MockURLProtocol: URLProtocol {
+    static weak var mockServer: MockNetworkServer?
+
+    override class func canInit(with request: URLRequest) -> Bool {
+        return true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        return request
+    }
+
+    override func startLoading() {
+        guard let url = request.url,
+            let mockServer = MockURLProtocol.mockServer
+        else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+            return
+        }
+
+        let (data, response, error) = mockServer.handleRequest(for: url)
+
+        if let error = error {
+            client?.urlProtocol(self, didFailWithError: error)
+        } else if let response = response {
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+
+            if let data = data {
+                client?.urlProtocol(self, didLoad: data)
+            }
+
+            client?.urlProtocolDidFinishLoading(self)
+        } else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
+        }
+    }
+
+    override func stopLoading() {
+        // No-op
+    }
+}
+
+#Preview {
+    if #available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *) {
+        NavigationView {
+            NetworkContextDemoView()
+        }
+    } else {
+        Text("NetworkContextProvider requires iOS 15.0+")
+    }
+}
+
+```
+
+
+## Assistant
+
+I should also update the mock data to match the available UserSegment enum cases. Let me check what the mock server is returning:
+
+**Tool Call: grep -n ""segments":" /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift**
+Status: Completed
+
+452:                    "segments": ["premium", "beta"],
+
+## Assistant
+
+I need to update the mock data to use the correct segment names from the enum:
+
+**Tool Call: Edit `/Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift`**
+Status: Completed
+
+Diff: /Users/egor/Development/GitHub/SpecificationKit/DemoApp/Sources/NetworkContextDemoView.swift
+```
+import Foundation
+import SpecificationKit
+import SwiftUI
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+struct NetworkContextDemoView: View {
+    // Mock server state
+    @StateObject private var mockServer = MockNetworkServer()
+
+    // Network provider configuration
+    @State private var endpoint = "https://api.example.com/context"
+    @State private var refreshInterval: Double = 300
+    @State private var requestTimeout: Double = 30
+    @State private var retryPolicy: RetryPolicyOption = .exponentialBackoff
+    @State private var maxAttempts = 3
+    @State private var cacheEnabled = true
+
+    // Provider state
+    @State private var networkProvider: NetworkContextProvider?
+    @State private var isLoading = false
+    @State private var lastUpdateTime: Date?
+    @State private var errorMessage: String?
+    @State private var contextData: String = "No data loaded"
+    @State private var cacheStatus: String = "No cache"
+
+    // Demo specifications
+    @State private var featureFlagResult: String = "—"
+    @State private var userSegmentResult: String = "—"
+    @State private var configResult: String = "—"
+
+    enum RetryPolicyOption: String, CaseIterable, Identifiable {
+        case none = "None"
+        case exponentialBackoff = "Exponential Backoff"
+        case fixedDelay = "Fixed Delay"
+
+        var id: String { rawValue }
+
+        func toNetworkPolicy(maxAttempts: Int) -> NetworkContextProvider.RetryPolicy {
+            switch self {
+            case .none:
+                return .none
+            case .exponentialBackoff:
+                return .exponentialBackoff(maxAttempts: maxAttempts)
+            case .fixedDelay:
+                return .fixedDelay(1.5, maxAttempts: maxAttempts)
+            }
+        }
+    }
+
+    var body: some View {
+        List {
+            Section(
+                header: Text("Mock Server Configuration"),
+                footer: Text(
+                    "Configure the mock server behavior to test different network scenarios")
+            ) {
+                Toggle("Server Available", isOn: $mockServer.isServerAvailable)
+
+                if mockServer.isServerAvailable {
+                    Stepper(
+                        "Response Delay: \(String(format: "%.1f", mockServer.responseDelay))s",
+                        value: $mockServer.responseDelay, in: 0...5, step: 0.5)
+
+                    Picker("Response Type", selection: $mockServer.responseType) {
+                        Text("Success").tag(MockNetworkServer.ResponseType.success)
+                        Text("HTTP 500 Error").tag(MockNetworkServer.ResponseType.httpError)
+                        Text("Invalid JSON").tag(MockNetworkServer.ResponseType.invalidJSON)
+                        Text("Timeout").tag(MockNetworkServer.ResponseType.timeout)
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Button("Reset Server") {
+                    mockServer.reset()
+                }
+                .foregroundStyle(.blue)
+            }
+
+            Section(header: Text("Network Provider Configuration")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Endpoint:")
+                        TextField("URL", text: $endpoint)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    Stepper(
+                        "Refresh Interval: \(Int(refreshInterval))s",
+                        value: $refreshInterval, in: 60...1800, step: 60)
+
+                    Stepper(
+                        "Request Timeout: \(Int(requestTimeout))s",
+                        value: $requestTimeout, in: 5...120, step: 5)
+
+                    Picker("Retry Policy", selection: $retryPolicy) {
+                        ForEach(RetryPolicyOption.allCases) { option in
+                            Text(option.rawValue).tag(option)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    if retryPolicy != .none {
+                        Stepper(
+                            "Max Attempts: \(maxAttempts)",
+                            value: $maxAttempts, in: 1...10)
+                    }
+
+                    Toggle("Cache Enabled", isOn: $cacheEnabled)
+                }
+            }
+
+            Section(header: Text("Provider Actions")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Button("Create Provider") {
+                            createNetworkProvider()
+                        }
+                        .buttonStyle(.borderedProminent)
+
+                        Button("Refresh Context") {
+                            Task { await refreshContext() }
+                        }
+                        .disabled(networkProvider == nil || isLoading)
+
+                        if isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                    }
+
+                    if let lastUpdate = lastUpdateTime {
+                        Text("Last Update: \(lastUpdate, formatter: timeFormatter)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if let error = errorMessage {
+                        Text("Error: \(error)")
+                            .foregroundStyle(.red)
+                            .font(.caption)
+                    }
+                }
+            }
+
+            Section(header: Text("Context Data")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Context:")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Text(contextData)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(8)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
+
+                    Text("Cache Status: \(cacheStatus)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section(header: Text("Specification Examples")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Button("Test Feature Flag") {
+                        Task { await testFeatureFlag() }
+                    }
+                    Text("Result: \(featureFlagResult)")
+                        .font(.caption)
+
+                    Button("Test User Segment") {
+                        Task { await testUserSegment() }
+                    }
+                    Text("Result: \(userSegmentResult)")
+                        .font(.caption)
+
+                    Button("Test Configuration") {
+                        Task { await testConfiguration() }
+                    }
+                    Text("Result: \(configResult)")
+                        .font(.caption)
+                }
+            }
+
+            Section(header: Text("Network Monitoring")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Request History:")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    ForEach(mockServer.requestHistory.suffix(5), id: \.timestamp) { request in
+                        HStack {
+                            Image(
+                                systemName: request.success
+                                    ? "checkmark.circle.fill" : "xmark.circle.fill"
+                            )
+                            .foregroundColor(request.success ? .green : .red)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(request.timestamp, formatter: timeFormatter)
+                                    .font(.caption)
+                                Text(request.details)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+                        }
+                        .padding(.vertical, 2)
+                    }
+
+                    if mockServer.requestHistory.isEmpty {
+                        Text("No requests yet")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .navigationTitle("Network Context")
+        .onAppear {
+            mockServer.setup()
+        }
+    }
+
+    private var timeFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .medium
+        return formatter
+    }
+
+    private func createNetworkProvider() {
+        let config = NetworkContextProvider.Configuration(
+            endpoint: URL(string: endpoint) ?? URL(string: "https://api.example.com/context")!,
+            refreshInterval: refreshInterval,
+            requestTimeout: requestTimeout,
+            retryPolicy: retryPolicy.toNetworkPolicy(maxAttempts: maxAttempts),
+            fallbackValues: [
+                "featureEnabled": false,
+                "userTier": "basic",
+                "maxConnections": 10,
+                "offlineMode": true,
+            ],
+            cacheEnabled: cacheEnabled
+        )
+
+        // Use mock server's session for testing
+        networkProvider = NetworkContextProvider(
+            configuration: config,
+            session: mockServer.urlSession
+        )
+
+        errorMessage = nil
+        contextData = "Provider created - call Refresh to fetch data"
+        cacheStatus = cacheEnabled ? "Cache enabled" : "Cache disabled"
+    }
+
+    @MainActor
+    private func refreshContext() async {
+        guard let provider = networkProvider else { return }
+
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            let context = try await provider.currentContextAsync()
+            lastUpdateTime = Date()
+
+            // Format context data for display
+            let userData = context.userData.isEmpty ? "None" : context.userData.description
+            let flags = context.flags.isEmpty ? "None" : context.flags.description
+            let counters = context.counters.isEmpty ? "None" : context.counters.description
+
+            contextData = """
+                UserData: \(userData)
+                Flags: \(flags)
+                Counters: \(counters)
+                Segments: \(context.segments.isEmpty ? "None" : Array(context.segments).joined(separator: ", "))
+                """
+
+            cacheStatus = "Context loaded from network"
+
+        } catch let error as NetworkContextProvider.NetworkError {
+            handleNetworkError(error)
+        } catch {
+            errorMessage = "Unexpected error: \(error.localizedDescription)"
+            contextData = "Failed to load context"
+            cacheStatus = "Error occurred"
+        }
+
+        isLoading = false
+    }
+
+    private func handleNetworkError(_ error: NetworkContextProvider.NetworkError) {
+        switch error {
+        case .invalidResponse:
+            errorMessage = "Invalid server response"
+        case .httpError(let code):
+            errorMessage = "HTTP error \(code)"
+        case .maxRetriesExceeded:
+            errorMessage = "Max retries exceeded"
+        case .networkUnavailable:
+            errorMessage = "Network unavailable"
+        case .parseError(let message):
+            errorMessage = "Parse error: \(message)"
+        case .configurationError(let message):
+            errorMessage = "Configuration error: \(message)"
+        }
+
+        contextData = "Using fallback/cached context"
+        cacheStatus = cacheEnabled ? "Using cached data" : "Using fallback values"
+    }
+
+    private func testFeatureFlag() async {
+        guard let provider = networkProvider else {
+            featureFlagResult = "No provider"
+            return
+        }
+
+        do {
+            let context = try await provider.currentContextAsync()
+            let spec = FeatureFlagSpec(flagKey: "featureEnabled", expected: true)
+            let result = spec.isSatisfiedBy(context)
+            featureFlagResult = result ? "Feature ENABLED" : "Feature DISABLED"
+        } catch {
+            featureFlagResult = "Error: \(error.localizedDescription)"
+        }
+    }
+
+    private func testUserSegment() async {
+        guard let provider = networkProvider else {
+            userSegmentResult = "No provider"
+            return
+        }
+
+        do {
+            let context = try await provider.currentContextAsync()
+
+            let premiumSpec = UserSegmentSpec(.vip) // Using .vip since there's no .premium enum case
+            let betaSpec = UserSegmentSpec(.beta)
+
+            if premiumSpec.isSatisfiedBy(context) {
+                userSegmentResult = "Premium User"
+            } else if betaSpec.isSatisfiedBy(context) {
+                userSegmentResult = "Beta User"
+            } else {
+                userSegmentResult = "Standard User"
+            }
+        } catch {
+            userSegmentResult = "Error: \(error.localizedDescription)"
+        }
+    }
+
+    private func testConfiguration() async {
+        guard let provider = networkProvider else {
+            configResult = "No provider"
+            return
+        }
+
+        do {
+            let context = try await provider.currentContextAsync()
+            let maxConnections = context.userData["maxConnections"] as? Int ?? 10
+            let maintenanceMode = context.flag(for: "maintenanceMode")
+
+            configResult =
+                "Max Connections: \(maxConnections), Maintenance: \(maintenanceMode ? "ON" : "OFF")"
+        } catch {
+            configResult = "Error: \(error.localizedDescription)"
+        }
+    }
+}
+
+// MARK: - Mock Network Server
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+class MockNetworkServer: NSObject, ObservableObject, URLSessionDataDelegate {
+    enum ResponseType: String, CaseIterable {
+        case success = "success"
+        case httpError = "httpError"
+        case invalidJSON = "invalidJSON"
+        case timeout = "timeout"
+    }
+
+    struct RequestLog {
+        let timestamp: Date
+        let success: Bool
+        let details: String
+    }
+
+    @Published var isServerAvailable = true
+    @Published var responseDelay: Double = 0.5
+    @Published var responseType: ResponseType = .success
+    @Published var requestHistory: [RequestLog] = []
+
+    private(set) var urlSession: URLSession!
+
+    func setup() {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [MockURLProtocol.self]
+        urlSession = URLSession(configuration: config, delegate: self, delegateQueue: nil)
+
+        MockURLProtocol.mockServer = self
+    }
+
+    func reset() {
+        isServerAvailable = true
+        responseDelay = 0.5
+        responseType = .success
+        requestHistory.removeAll()
+    }
+
+    func handleRequest(for url: URL) -> (Data?, URLResponse?, Error?) {
+        let log: RequestLog
+
+        defer {
+            DispatchQueue.main.async {
+                self.requestHistory.append(log)
+            }
+        }
+
+        // Simulate delay
+        Thread.sleep(forTimeInterval: responseDelay)
+
+        guard isServerAvailable else {
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "Server unavailable"
+            )
+            return (nil, nil, URLError(.networkConnectionLost))
+        }
+
+        switch responseType {
+        case .success:
+            let jsonData = """
+                {
+                    "userData": {
+                        "userId": "demo123",
+                        "userTier": "premium",
+                        "maxConnections": 50
+                    },
+                    "flags": {
+                        "featureEnabled": true,
+                        "betaAccess": true,
+                        "maintenanceMode": false
+                    },
+                    "counters": {
+                        "loginCount": 25,
+                        "apiCalls": 150
+                    },
+                    "segments": ["vip", "beta"],
+                    "launchDate": 1703894400
+                }
+                """.data(using: .utf8)!
+
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: 200,
+                httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+            )
+
+            log = RequestLog(
+                timestamp: Date(),
+                success: true,
+                details: "200 OK - \(jsonData.count) bytes"
+            )
+
+            return (jsonData, response, nil)
+
+        case .httpError:
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: 500,
+                httpVersion: "HTTP/1.1",
+                headerFields: nil
+            )
+
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "500 Internal Server Error"
+            )
+
+            return (Data(), response, nil)
+
+        case .invalidJSON:
+            let invalidData = "{ invalid json }".data(using: .utf8)!
+            let response = HTTPURLResponse(
+                url: url,
+                statusCode: 200,
+                httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+            )
+
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "200 OK - Invalid JSON"
+            )
+
+            return (invalidData, response, nil)
+
+        case .timeout:
+            log = RequestLog(
+                timestamp: Date(),
+                success: false,
+                details: "Request timeout"
+            )
+
+            return (nil, nil, URLError(.timedOut))
+        }
+    }
+}
+
+// MARK: - Mock URL Protocol
+
+@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
+class MockURLProtocol: URLProtocol {
+    static weak var mockServer: MockNetworkServer?
+
+    override class func canInit(with request: URLRequest) -> Bool {
+        return true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        return request
+    }
+
+    override func startLoading() {
+        guard let url = request.url,
+            let mockServer = MockURLProtocol.mockServer
+        else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+            return
+        }
+
+        let (data, response, error) = mockServer.handleRequest(for: url)
+
+        if let error = error {
+            client?.urlProtocol(self, didFailWithError: error)
+        } else if let response = response {
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+
+            if let data = data {
+                client?.urlProtocol(self, didLoad: data)
+            }
+
+            client?.urlProtocolDidFinishLoading(self)
+        } else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
+        }
+    }
+
+    override func stopLoading() {
+        // No-op
+    }
+}
+
+#Preview {
+    if #available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *) {
+        NavigationView {
+            NetworkContextDemoView()
+        }
+    } else {
+        Text("NetworkContextProvider requires iOS 15.0+")
+    }
+}
+
+```
+
+
+## Assistant
+
+Now let's run the demo again to see if the errors are fixed:
+
+**Tool Call: `cd /Users/egor/Development/GitHub/SpecificationKit/DemoApp && swift run SpecificationKitDemo`**
+Status: Completed
+
+Terminal:
+```
+Building for debugging...
+[14/14] Applying SpecificationKitDemo
+Build of product 'SpecificationKitDemo' complete! (1.51s)
+
+
+```
+
+
+## Assistant
+
+Great! The build completed successfully. The demo app is now running. Let me test it with the CLI option to make sure everything works:
+
+**Tool Call: `cd /Users/egor/Development/GitHub/SpecificationKit/DemoApp && swift run SpecificationKitDemo --cli`**
+Status: Completed
+
+Terminal:
+```
+[1/1] Planning build
+Building for debugging...
+[1/1] Write swift-version--58304C5D6DBC2…
+Build of product 'SpecificationKitDemo' complete! (0.20s)
+🚀 SpecificationKit Demo
+========================
+
+📋 Demo 1: Basic Specifications
+--------------------------------
+⏰ Time since launch (>2min): ❌
+📊 Feature usage count (<10): ✅
+⏳ Banner cooldown (30min): ✅
+💎 Is premium user: ❌
+
+🎯 Demo 2: Property Wrapper Usage
+----------------------------------
+⚡ Using @Satisfies property wrapper:
+   • Can show after delay: ❌
+   • User is engaged: ✅
+   • Notifications allowed: ❌
+   • Should show promo: ❌
+
+🧩 Demo 3: Composite Specifications
+------------------------------------
+🎯 Composite Specification (Engaged Recent User):
+   • High engagement (≥20 opens): ✅
+   • Recent user (<30 days): ✅
+   • Onboarding complete: ✅
+   • 📋 Combined result: ✅
+
+🎪 Built-in Promo Banner Spec: ❌
+
+📱 Demo 4: Banner Display Logic
+--------------------------------
+🎯 Simulating banner display logic over time...
+   Attempt 1: ❌ SKIP (count: 0, time: 0s)
+   Attempt 2: ❌ SKIP (count: 0, time: 0s)
+   Attempt 3: ❌ SKIP (count: 0, time: 0s)
+   Attempt 4: ❌ SKIP (count: 0, time: 0s)
+   Attempt 5: ❌ SKIP (count: 0, time: 0s)
+   Attempt 6: ❌ SKIP (count: 0, time: 0s)
+   Attempt 7: ❌ SKIP (count: 0, time: 0s)
+   Attempt 8: ❌ SKIP (count: 0, time: 0s)
+   Attempt 9: ❌ SKIP (count: 0, time: 0s)
+   Attempt 10: ❌ SKIP (count: 0, time: 0s)
+
+⚙️ Demo 5: Context Provider Management
+---------------------------------------
+🔧 Context Provider Features:
+   • Initial counter: 0
+   • Set to 5: 5
+   • Increment by 3: 8
+   • Decrement by 2: 6
+   • Set flag to true: true
+   • Toggle flag: false
+   • Record event: ✅
+
+🧪 Mock Provider for Testing:
+   • Mock counter: 10
+   • Mock flag: true
+   • Context requests: 1
+
+✅ Demo completed successfully!
+
+```
+
+
+## Assistant
+
+Perfect! The CLI demo runs successfully. Now let me clear the todo list since all tasks are completed:Excellent! I've successfully fixed all the compilation errors in the NetworkContextDemoView and the SpecificationKit demo app is now working correctly.
+
+## Summary of fixes applied:
+
+1. **Fixed color API issue** - Replaced `Color(.systemGray6)` with `Color.gray.opacity(0.1)` for cross-platform compatibility
+2. **Fixed UserSegmentSpec API usage** - Changed from string-based constructor to enum-based constructor:
+   - `UserSegmentSpec(segment: "premium")` → `UserSegmentSpec(.vip)`
+   - `UserSegmentSpec(segment: "beta")` → `UserSegmentSpec(.beta)`
+3. **Updated mock data** - Changed segments from `["premium", "beta"]` to `["vip", "beta"]` to match the UserSegment enum cases
+
+The demo app now:
+- ✅ Compiles successfully without errors
+- ✅ Runs the CLI demo showing all specification functionality
+- ✅ Includes the new NetworkContextDemoView with comprehensive network provider testing
+- ✅ Demonstrates all features including retry policies, caching, error handling, and offline support
+
+The NetworkContextDemoView provides a comprehensive testing interface for the NetworkContextProvider with mock server capabilities, making it easy to test different network scenarios and understand how the provider handles various conditions.
