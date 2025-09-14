@@ -46,50 +46,84 @@ struct CompositeDemoView: View {
                 .pickerStyle(.segmented)
             }
 
-            Section(header: Text("DefaultContextProvider (shared)"), footer: Text("Keys used: flag/promo, counter/launch_count, userData/k.")) {
-                Toggle("flag/promo", isOn: .init(
-                    get: { defFlag },
-                    set: { v in defFlag = v; defaults.setFlag("promo", to: v) }
-                ))
-                Stepper("counter/launch_count: \(defCount)", value: .init(
-                    get: { defCount },
-                    set: { v in defCount = v; defaults.setCounter("launch_count", to: v) }
-                ), in: 0...20)
-                HStack {
-                    Text("userData/k (string)")
-                    Spacer()
-                    TextField("v1", text: .init(
-                        get: { defUserK },
-                        set: { v in defUserK = v; defaults.setUserData("k", to: v) }
-                    ))
-                    .multilineTextAlignment(.trailing)
-                    .textFieldStyle(.roundedBorder)
-                }
-                Button("Reset Default Provider") {
-                    defaults.clearAll()
-                    syncFromDefaults()
-                }
-                .buttonStyle(.bordered)
-            }
+            Section(header: Text("Providers")) {
+                HStack(alignment: .top, spacing: 16) {
+                    // DefaultContextProvider pane
+                    VStack(alignment: .leading, spacing: 10) {
+                        Label("DefaultContextProvider (shared)", systemImage: "shippingbox")
 
-            Section(header: Text("EnvironmentContextProvider (local)"), footer: Text("Keys used: flag/promo, counter/launch_count, userData/k.")) {
-                Toggle("flag/promo", isOn: $envFlag)
-                    .onChange(of: envFlag) { v in env.flags["promo"] = v }
-                Stepper("counter/launch_count: \(envCount)", value: $envCount, in: 0...20)
-                    .onChange(of: envCount) { v in env.counters["launch_count"] = v }
-                HStack {
-                    Text("userData/k (string)")
-                    Spacer()
-                    TextField("v2", text: $envUserK)
-                        .multilineTextAlignment(.trailing)
-                        .textFieldStyle(.roundedBorder)
-                        .onChange(of: envUserK) { v in env.userData["k"] = v }
+                        Toggle("flag/promo", isOn: .init(
+                            get: { defFlag },
+                            set: { v in defFlag = v; defaults.setFlag("promo", to: v) }
+                        ))
+                        Stepper("counter/launch_count: \(defCount)", value: .init(
+                            get: { defCount },
+                            set: { v in defCount = v; defaults.setCounter("launch_count", to: v) }
+                        ), in: 0...20)
+                        HStack {
+                            Text("userData/k (string)")
+                            Spacer()
+                            TextField("v1", text: .init(
+                                get: { defUserK },
+                                set: { v in defUserK = v; defaults.setUserData("k", to: v) }
+                            ))
+                            .multilineTextAlignment(.trailing)
+                            .textFieldStyle(.roundedBorder)
+                        }
+                        HStack {
+                            Spacer()
+                            Button("Reset Default") {
+                                defaults.clearAll()
+                                syncFromDefaults()
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                        Text("Keys: flag/promo, counter/launch_count, userData/k.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                    )
+
+                    // EnvironmentContextProvider pane
+                    VStack(alignment: .leading, spacing: 10) {
+                        Label("EnvironmentContextProvider (local)", systemImage: "globe")
+
+                        Toggle("flag/promo", isOn: $envFlag)
+                            .onChange(of: envFlag) { v in env.flags["promo"] = v }
+                        Stepper("counter/launch_count: \(envCount)", value: $envCount, in: 0...20)
+                            .onChange(of: envCount) { v in env.counters["launch_count"] = v }
+                        HStack {
+                            Text("userData/k (string)")
+                            Spacer()
+                            TextField("v2", text: $envUserK)
+                                .multilineTextAlignment(.trailing)
+                                .textFieldStyle(.roundedBorder)
+                                .onChange(of: envUserK) { v in env.userData["k"] = v }
+                        }
+                        HStack {
+                            Spacer()
+                            Button("Reset Environment") {
+                                env.flags.removeAll(); env.counters.removeAll(); env.userData.removeAll();
+                                envFlag = false; envCount = 0; envUserK = ""
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                        Text("Keys: flag/promo, counter/launch_count, userData/k.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                    )
                 }
-                Button("Reset Environment Provider") {
-                    env.flags.removeAll(); env.counters.removeAll(); env.userData.removeAll();
-                    envFlag = false; envCount = 0; envUserK = ""
-                }
-                .buttonStyle(.bordered)
             }
 
             Section(header: Text("Merged Context (\(strategy.title))")) {
