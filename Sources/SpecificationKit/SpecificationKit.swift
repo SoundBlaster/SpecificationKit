@@ -40,3 +40,22 @@ public macro AutoContext() =
         module: "SpecificationKitMacros",
         type: "AutoContextMacro"
     )
+
+/// Creates a Satisfies property wrapper with automatic spec instantiation from parameters.
+/// Enables declarative syntax: `#SatisfiesSpec(using: CooldownIntervalSpec.self, eventKey: "action", cooldownInterval: 10)`
+/// instead of manual construction: `Satisfies(using: CooldownIntervalSpec(eventKey: "action", cooldownInterval: 10))`
+///
+/// - Parameters:
+///   - using: The specification type to instantiate (e.g., `CooldownIntervalSpec.self`)
+///   - Additional parameters are passed to the specification's initializer
+///
+/// Example usage:
+/// ```swift
+/// @#SatisfiesSpec(using: CooldownIntervalSpec.self, eventKey: "action", cooldownInterval: 10)
+/// var canPerformAction: Bool
+/// ```
+@freestanding(expression)
+public macro SatisfiesSpec(
+    using: Any.Type,
+    _ parameters: Any...
+) = #externalMacro(module: "SpecificationKitMacros", type: "SatisfiesMacro")
