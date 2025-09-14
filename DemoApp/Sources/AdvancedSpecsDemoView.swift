@@ -195,6 +195,25 @@ struct AdvancedSpecsDemoView: View {
                         Button("Clear") { history.clear() }
                     }
 
+                    // Visualization of recorded items over time
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Recorded values")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        MiniLineChart(
+                            values: history.data.map { $0.1 },
+                            minY: 0,
+                            maxY: 100,
+                            lineColor: .blue
+                        )
+                        .frame(height: 140)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                        )
+                    }
+
                     Picker("Window", selection: $windowMode) {
                         Text("Last 10").tag(HistoryWindow.last10)
                         Text("Last 50").tag(HistoryWindow.last50)
@@ -344,4 +363,102 @@ final class DemoHistoryProvider: ObservableObject, HistoricalDataProvider {
 
 #Preview {
     NavigationView { AdvancedSpecsDemoView() }
+}
+
+// MARK: - MiniLineChart
+
+/// A lightweight line chart for visualizing a sequence of Double values.
+/// Scales values between `minY` and `maxY` to fit the view height and
+/// distributes points evenly across the width.
+struct MiniLineChart: View {
+    let values: [Double]
+    var minY: Double? = nil
+    var maxY: Double? = nil
+    var lineColor: Color = .accentColor
+
+    var body: some View {
+        GeometryReader { proxy in
+            let size = proxy.size
+            let stats = computeStats()
+
+            ZStack {
+                // Grid lines
+                grid(in: size)
+                    .stroke(Color.secondary.opacity(0.15), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+
+                // Line path
+                if values.count >= 2 {
+                    Path { path in
+                        let pts = points(in: size, minY: stats.min, maxY: stats.max)
+                        guard let first = pts.first else { return }
+                        path.move(to: first)
+                        for p in pts.dropFirst() { path.addLine(to: p) }
+                    }
+                    .stroke(lineColor, lineWidth: 2)
+
+                    // Last point marker
+                    if let last = points(in: size, minY: stats.min, maxY: stats.max).last {
+                        Circle()
+                            .fill(lineColor)
+                            .frame(width: 6, height: 6)
+                            .position(last)
+                    }
+                } else if let single = values.first {
+                    // Single point: draw centered marker at its scaled position
+                    let y = yPosition(for: single, in: size, minY: stats.min, maxY: stats.max)
+                    Circle()
+                        .fill(lineColor)
+                        .frame(width: 6, height: 6)
+                        .position(x: size.width / 2, y: y)
+                } else {
+                    // No data state
+                    Text("No data")
+                        .foregroundStyle(.secondary)
+                        .font(.footnote)
+                        .position(x: size.width / 2, y: size.height / 2)
+                }
+            }
+        }
+    }
+
+    // MARK: - Geometry helpers
+
+    private func computeStats() -> (min: Double, max: Double) {
+        let vMin = minY ?? values.min() ?? 0
+        let vMax = maxY ?? values.max() ?? 1
+        // Avoid zero range
+        if vMax == vMin { return (vMin - 1, vMax + 1) }
+        return (vMin, vMax)
+    }
+
+    private func xStep(in size: CGSize) -> CGFloat {
+        guard values.count > 1 else { return size.width }
+        return size.width / CGFloat(values.count - 1)
+    }
+
+    private func yPosition(for value: Double, in size: CGSize, minY: Double, maxY: Double) -> CGFloat {
+        let clamped = max(minY, min(value, maxY))
+        let t = (clamped - minY) / (maxY - minY)
+        return size.height - CGFloat(t) * size.height
+    }
+
+    private func points(in size: CGSize, minY: Double, maxY: Double) -> [CGPoint] {
+        guard !values.isEmpty else { return [] }
+        let step = xStep(in: size)
+        return values.enumerated().map { idx, v in
+            CGPoint(x: CGFloat(idx) * step, y: yPosition(for: v, in: size, minY: minY, maxY: maxY))
+        }
+    }
+
+    private func grid(in size: CGSize) -> Path {
+        var path = Path()
+        let rows = 4
+        let rowH = size.height / CGFloat(rows)
+        for i in 1...rows {
+            let y = CGFloat(i) * rowH
+            path.move(to: CGPoint(x: 0, y: y))
+            path.addLine(to: CGPoint(x: size.width, y: y))
+        }
+        return path
+    }
 }
