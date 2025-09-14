@@ -14,8 +14,8 @@
 - [ ] Macro development enhancements
 - [ ] Context provider foundation
 
-### Phase 1: Core Enhancements (Week 2-4) - 2/5 ⏳
-- [ ] @ObservedDecides implementation
+### Phase 1: Core Enhancements (Week 2-4) - 3/5 ⏳
+- [x] @ObservedDecides implementation
 - [x] @ObservedMaybe implementation  
 - [x] @CachedSatisfies with TTL
 - [ ] @ConditionalSatisfies
@@ -64,4 +64,4 @@
 - [ ] Platform-specific integrations
 - [ ] Comprehensive documentation
 
-## 📈 Overall Progress: 2/28 phases (7.1%)
+## 📈 Overall Progress: 3/28 phases (10.7%)
