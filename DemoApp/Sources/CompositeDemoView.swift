@@ -29,6 +29,16 @@ struct CompositeDemoView: View {
         let ctx = composite.currentContext()
 
         return List {
+            Section(header: Text("What This Shows")) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("This screen composes two providers — Default (shared) and Environment (local) — into a single EvaluationContext using CompositeContextProvider.")
+                    Text("Order matters: with Prefer Last, later providers override conflicting keys; with Prefer First, earlier values are preserved.")
+                    Text("Segments are unioned across providers. Launch date follows the chosen strategy's precedence.")
+                    Text("Edit values below in each provider to see how the merged context resolves conflicts in real time.")
+                }
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            }
             Section(header: Text("Merge Strategy")) {
                 Picker("Strategy", selection: $strategy) {
                     ForEach(Strategy.allCases) { s in Text(s.title).tag(s) }
@@ -36,7 +46,7 @@ struct CompositeDemoView: View {
                 .pickerStyle(.segmented)
             }
 
-            Section(header: Text("DefaultContextProvider (shared)")) {
+            Section(header: Text("DefaultContextProvider (shared)"), footer: Text("Keys used: flag/promo, counter/launch_count, userData/k.")) {
                 Toggle("flag/promo", isOn: .init(
                     get: { defFlag },
                     set: { v in defFlag = v; defaults.setFlag("promo", to: v) }
@@ -62,7 +72,7 @@ struct CompositeDemoView: View {
                 .buttonStyle(.bordered)
             }
 
-            Section(header: Text("EnvironmentContextProvider (local)")) {
+            Section(header: Text("EnvironmentContextProvider (local)"), footer: Text("Keys used: flag/promo, counter/launch_count, userData/k.")) {
                 Toggle("flag/promo", isOn: $envFlag)
                     .onChange(of: envFlag) { v in env.flags["promo"] = v }
                 Stepper("counter/launch_count: \(envCount)", value: $envCount, in: 0...20)
