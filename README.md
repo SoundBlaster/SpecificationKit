@@ -91,7 +91,7 @@ DemoApp includes an “Observation” screen showcasing live updates for flags, 
 ## ✨ Features
 
 - 🧩 **Composable Specifications** - Build complex business rules from simple, reusable components
-- 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies`, `@Decides` (non-optional), `@Maybe` (optional), and `@CachedSatisfies` (cached with TTL)
+- 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies`, `@Decides` (non-optional), `@Maybe` (optional), `@CachedSatisfies` (cached with TTL), and reactive wrappers `@ObservedSatisfies`, `@ObservedDecides`, `@ObservedMaybe` for SwiftUI
 - 🔄 **Context Providers** - Flexible context injection and dependency management
 - 🚀 **Decision Specifications** - Return typed results beyond just boolean values with `DecisionSpec`
 - 🧭 **Date & Flags Specs** - New built-ins: `DateRangeSpec`, `DateComparisonSpec`, `FeatureFlagSpec`, `UserSegmentSpec`, `SubscriptionStatusSpec`
@@ -447,6 +447,64 @@ struct ObservedMaybeExample: View {
 ```
 
 The demo app includes a live example under Navigation → Observation that showcases both `@ObservedSatisfies` and `@ObservedMaybe` reacting to provider changes.
+
+#### ObservedDecides (reactive with fallback)
+
+Use `@ObservedDecides` when your decision logic needs to return typed results that should update reactively in SwiftUI. Unlike `@ObservedMaybe`, this always returns a non-optional result with fallback support.
+
+```swift
+import SwiftUI
+import SpecificationKit
+
+struct AdaptiveContentView: View {
+    @ObservedDecides([
+        (PremiumUserSpec(), "premium_layout"),
+        (TabletDeviceSpec(), "tablet_layout"),
+        (CompactSizeSpec(), "mobile_layout")
+    ], or: "default_layout")
+    var layoutType: String
+    
+    var body: some View {
+        Group {
+            switch layoutType {
+            case "premium_layout": PremiumContentView()
+            case "tablet_layout": TabletContentView()
+            case "mobile_layout": MobileContentView()
+            default: DefaultContentView()
+            }
+        }
+        .onReceive($layoutType.publisher) { newLayout in
+            // React to layout changes
+            analyticsService.trackLayoutChange(newLayout)
+        }
+    }
+}
+
+// Example with enum result types
+enum UserTier: String, Equatable {
+    case premium = "premium"
+    case standard = "standard"
+    case basic = "basic"
+}
+
+struct TierView: View {
+    @ObservedDecides([
+        (ActiveSubscriptionSpec(tier: .premium), UserTier.premium),
+        (ActiveSubscriptionSpec(tier: .standard), UserTier.standard)
+    ], or: .basic)
+    var currentTier: UserTier
+    
+    var body: some View {
+        VStack {
+            Text("Current Plan: \(currentTier.rawValue.capitalized)")
+                .font(.headline)
+            
+            FeatureListView(tier: currentTier)
+        }
+        .animation(.easeInOut, value: currentTier)
+    }
+}
+```
 
 ## 🧱 Core Components
 
@@ -863,7 +921,7 @@ SpecificationKit follows a clean, layered architecture:
 ├─────────────────────────────────────────┤
 │ Property Wrapper Layer                  │
 │ (@Satisfies, @Decides, @Maybe,          │
-│  @CachedSatisfies)                      │
+│  @CachedSatisfies, @ObservedDecides)    │
 ├─────────────────────────────────────────┤
 │ Definitions Layer                       │
 │ (CompositeSpec, FirstMatchSpec)         │
@@ -1028,7 +1086,7 @@ Tests the core evaluation performance of different specification types:
 
 - **Simple Specifications**: `PredicateSpec`, `MaxCountSpec`, `TimeSinceEventSpec`
 - **Composite Specifications**: Complex `.and()` and `.or()` chains
-- **Property Wrapper Overhead**: `@Satisfies`, `@Decides`, `@Maybe`, `@CachedSatisfies` evaluation costs
+- **Property Wrapper Overhead**: `@Satisfies`, `@Decides`, `@Maybe`, `@CachedSatisfies`, `@ObservedDecides` evaluation costs
 - **Context Provider Impact**: Evaluation with different provider implementations
 
 Typical performance baseline: **< 0.1ms per evaluation** for simple specifications.
