@@ -92,12 +92,11 @@ let perf = HistoricalSpec(
 @Maybe(using: perf) var medianPerf: Double?
 ```
 
-Comparative (range with tolerance):
+Comparative (range check):
 ```swift
 let tempOK = ComparativeSpec(
     keyPath: \.currentTemperature,
-    comparison: .between(18.0, 24.0),
-    tolerance: 0.1
+    comparison: .between(18.0, 24.0)
 )
 @Satisfies(using: tempOK) var isComfortable: Bool
 ```
