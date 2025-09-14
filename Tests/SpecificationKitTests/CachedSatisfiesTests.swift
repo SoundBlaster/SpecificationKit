@@ -54,6 +54,7 @@ final class CachedSatisfiesTests: XCTestCase {
         CountingSpec.reset()
         ExpensiveSpec.reset()
         CachedSatisfies<EvaluationContext>.clearAllCaches()
+        DefaultContextProvider.shared.resetCounter("testCounter")
     }
 
     override func tearDown() {
