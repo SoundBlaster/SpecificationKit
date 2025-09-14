@@ -26,7 +26,7 @@ final class WeightedSpecTests: XCTestCase {
 
         // Act & Assert
         XCTAssertNoThrow {
-            let _ = WeightedSpec<TestContext, String>(candidates: [
+            let _ = try WeightedSpec<TestContext, String>(candidates: [
                 (AnySpecification(spec1), 0.7, "A"),
                 (AnySpecification(spec2), 0.3, "B"),
             ])
@@ -35,9 +35,7 @@ final class WeightedSpecTests: XCTestCase {
 
     func testWeightedSpec_initWithEmptyCandidates_fails() {
         // Act & Assert
-        XCTAssertThrows {
-            let _ = WeightedSpec<TestContext, String>(candidates: [])
-        }
+        XCTAssertThrowsError(try WeightedSpec<TestContext, String>(candidates: []))
     }
 
     func testWeightedSpec_initWithZeroWeight_fails() {
@@ -45,11 +43,10 @@ final class WeightedSpecTests: XCTestCase {
         let spec = PredicateSpec<TestContext> { $0.flag }
 
         // Act & Assert
-        XCTAssertThrows {
-            let _ = WeightedSpec<TestContext, String>(candidates: [
+        XCTAssertThrowsError(
+            try WeightedSpec<TestContext, String>(candidates: [
                 (AnySpecification(spec), 0.0, "A")
-            ])
-        }
+            ]))
     }
 
     func testWeightedSpec_initWithNegativeWeight_fails() {
@@ -57,11 +54,10 @@ final class WeightedSpecTests: XCTestCase {
         let spec = PredicateSpec<TestContext> { $0.flag }
 
         // Act & Assert
-        XCTAssertThrows {
-            let _ = WeightedSpec<TestContext, String>(candidates: [
+        XCTAssertThrowsError(
+            try WeightedSpec<TestContext, String>(candidates: [
                 (AnySpecification(spec), -0.5, "A")
-            ])
-        }
+            ]))
     }
 
     // MARK: - Decision Logic Tests
@@ -71,7 +67,7 @@ final class WeightedSpecTests: XCTestCase {
         let spec1 = PredicateSpec<TestContext> { $0.flag }
         let spec2 = PredicateSpec<TestContext> { $0.value > 10 }
 
-        let weightedSpec = WeightedSpec<TestContext, String>(candidates: [
+        let weightedSpec = try! WeightedSpec<TestContext, String>(candidates: [
             (AnySpecification(spec1), 0.7, "A"),
             (AnySpecification(spec2), 0.3, "B"),
         ])
@@ -91,7 +87,7 @@ final class WeightedSpecTests: XCTestCase {
         let spec2 = PredicateSpec<TestContext> { $0.value > 10 }
 
         let generator = FixedRandomGenerator(value: 0.5)
-        let weightedSpec = WeightedSpec<TestContext, String>(
+        let weightedSpec = try! WeightedSpec<TestContext, String>(
             candidates: [
                 (AnySpecification(spec1), 0.7, "A"),
                 (AnySpecification(spec2), 0.3, "B"),
@@ -115,7 +111,7 @@ final class WeightedSpecTests: XCTestCase {
         let spec1 = AlwaysTrueSpec<TestContext>()
         let spec2 = AlwaysTrueSpec<TestContext>()
 
-        let weightedSpec = WeightedSpec<TestContext, String>(candidates: [
+        let weightedSpec = try! WeightedSpec<TestContext, String>(candidates: [
             (AnySpecification(spec1), 0.7, "A"),
             (AnySpecification(spec2), 0.3, "B"),
         ])
@@ -134,7 +130,7 @@ final class WeightedSpecTests: XCTestCase {
         let spec1 = AlwaysTrueSpec<TestContext>()
         let spec2 = AlwaysTrueSpec<TestContext>()
 
-        let weightedSpec = WeightedSpec<TestContext, Double>(candidates: [
+        let weightedSpec = try! WeightedSpec<TestContext, Double>(candidates: [
             (AnySpecification(spec1), 0.6, 10.0),
             (AnySpecification(spec2), 0.4, 20.0),
         ])
@@ -151,7 +147,7 @@ final class WeightedSpecTests: XCTestCase {
         let spec1 = AlwaysTrueSpec<TestContext>()
         let spec2 = AlwaysTrueSpec<TestContext>()
 
-        let weightedSpec = WeightedSpec<TestContext, Double>(candidates: [
+        let weightedSpec = try! WeightedSpec<TestContext, Double>(candidates: [
             (AnySpecification(spec1), 0.5, 10.0),
             (AnySpecification(spec2), 0.5, 20.0),
         ])
@@ -172,7 +168,7 @@ final class WeightedSpecTests: XCTestCase {
         let spec2 = AlwaysTrueSpec<TestContext>()
 
         let generator = SystemRandomNumberGenerator()
-        let weightedSpec = WeightedSpec<TestContext, String>(
+        let weightedSpec = try! WeightedSpec<TestContext, String>(
             candidates: [
                 (AnySpecification(spec1), 0.7, "A"),
                 (AnySpecification(spec2), 0.3, "B"),
@@ -238,9 +234,9 @@ final class WeightedSpecTests: XCTestCase {
         let builder = WeightedSpec<TestContext, String>.builder()
 
         // Act & Assert
-        XCTAssertThrows {
+        XCTAssertThrowsError(
             try builder.add(AlwaysTrueSpec<TestContext>(), weight: 0, result: "TEST")
-        }
+        )
     }
 
     // MARK: - Fallback Tests
@@ -250,7 +246,7 @@ final class WeightedSpecTests: XCTestCase {
         let spec1 = PredicateSpec<TestContext> { $0.flag }
         let spec2 = PredicateSpec<TestContext> { $0.value > 10 }
 
-        let weightedSpec = WeightedSpec<TestContext, String>.withFallback(
+        let weightedSpec = try! WeightedSpec<TestContext, String>.withFallback(
             [
                 (AnySpecification(spec1), 0.7, "A"),
                 (AnySpecification(spec2), 0.3, "B"),
@@ -274,7 +270,7 @@ final class WeightedSpecTests: XCTestCase {
 
         // Note: This would normally fail precondition, but we can test normalized weights behavior
         // in a different way by testing the probabilityDistribution with very small weights
-        let weightedSpec = WeightedSpec<TestContext, String>(candidates: [
+        let weightedSpec = try! WeightedSpec<TestContext, String>(candidates: [
             (AnySpecification(spec), 0.001, "A"),
             (AnySpecification(spec), 0.001, "B"),
         ])
@@ -311,19 +307,23 @@ extension XCTestCase {
         XCTAssertThrowsError(try expression(), message(), file: file, line: line)
     }
 
-    public func _XCTAssertNoThrow<T>(_ expression: @autoclosure () throws -> T,
-                                    _ message: String = "",
-                                    file: StaticString = #file,
-                                    line: UInt = #line,
-                                    also validateResult: (T) -> Void) {
-        func executeAndAssignResult(_ expression: @autoclosure () throws -> T, to: inout T?) rethrows {
+    public func _XCTAssertNoThrow<T>(
+        _ expression: @autoclosure () throws -> T,
+        _ message: String = "",
+        file: StaticString = #file,
+        line: UInt = #line,
+        also validateResult: (T) -> Void
+    ) {
+        func executeAndAssignResult(_ expression: @autoclosure () throws -> T, to: inout T?)
+            rethrows
+        {
             to = try expression()
         }
         var result: T?
-        XCTAssertNoThrow(try executeAndAssignResult(expression(), to: &result), message, file: file, line: line)
+        XCTAssertNoThrow(
+            try executeAndAssignResult(expression(), to: &result), message, file: file, line: line)
         if let r = result {
             validateResult(r)
         }
     }
 }
-

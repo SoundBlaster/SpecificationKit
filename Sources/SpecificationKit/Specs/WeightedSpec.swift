@@ -48,13 +48,17 @@ public struct WeightedSpec<Context, Result>: DecisionSpec {
 
     /// Creates a new WeightedSpec with the given candidates
     /// - Parameter candidates: Array of specification-weight-result tuples
-    /// - Precondition: At least one candidate must be provided with positive weight
-    public init(candidates: [Candidate]) {
-        precondition(!candidates.isEmpty, "WeightedSpec requires at least one candidate")
-        precondition(
-            candidates.allSatisfy { $0.weight > 0 && $0.weight.isFinite },
-            "All weights must be positive finite numbers"
-        )
+    /// - Throws: `WeightedSpecError` when candidates are invalid
+    public init(candidates: [Candidate]) throws {
+        guard !candidates.isEmpty else {
+            throw WeightedSpecError.emptyCandidates
+        }
+
+        for candidate in candidates {
+            guard candidate.weight.isFinite, candidate.weight > 0 else {
+                throw WeightedSpecError.invalidWeight(candidate.weight)
+            }
+        }
 
         self.candidates = candidates
         self.randomInRange = { range in Double.random(in: range) }
@@ -68,12 +72,16 @@ public struct WeightedSpec<Context, Result>: DecisionSpec {
     public init<G: RandomNumberGenerator>(
         candidates: [Candidate],
         using generator: G
-    ) {
-        precondition(!candidates.isEmpty, "WeightedSpec requires at least one candidate")
-        precondition(
-            candidates.allSatisfy { $0.weight > 0 && $0.weight.isFinite },
-            "All weights must be positive finite numbers"
-        )
+    ) throws {
+        guard !candidates.isEmpty else {
+            throw WeightedSpecError.emptyCandidates
+        }
+
+        for candidate in candidates {
+            guard candidate.weight.isFinite, candidate.weight > 0 else {
+                throw WeightedSpecError.invalidWeight(candidate.weight)
+            }
+        }
 
         self.candidates = candidates
         var g = generator
@@ -82,8 +90,9 @@ public struct WeightedSpec<Context, Result>: DecisionSpec {
 
     /// Creates a new WeightedSpec with typed specifications
     /// - Parameter candidates: Array of specification-weight-result tuples
-    public init<S: Specification>(_ candidates: [(S, Double, Result)]) where S.T == Context {
-        self.init(candidates: candidates.map { (AnySpecification($0.0), $0.1, $0.2) })
+    /// - Throws: `WeightedSpecError` when candidates are invalid
+    public init<S: Specification>(_ candidates: [(S, Double, Result)]) throws where S.T == Context {
+        try self.init(candidates: candidates.map { (AnySpecification($0.0), $0.1, $0.2) })
     }
 
     /// Creates a new WeightedSpec with typed specifications and a custom random generator
@@ -94,8 +103,8 @@ public struct WeightedSpec<Context, Result>: DecisionSpec {
     public init<S: Specification, G: RandomNumberGenerator>(
         _ candidates: [(S, Double, Result)],
         using generator: G
-    ) where S.T == Context {
-        self.init(
+    ) throws where S.T == Context {
+        try self.init(
             candidates: candidates.map { (AnySpecification($0.0), $0.1, $0.2) },
             using: generator
         )
@@ -197,13 +206,13 @@ extension WeightedSpec {
     public static func withFallback(
         _ candidates: [Candidate],
         fallback: Result
-    ) -> WeightedSpec<Context, Result> {
+    ) throws -> WeightedSpec<Context, Result> {
         let fallbackCandidate: Candidate = (
             specification: AnySpecification(AlwaysTrueSpec<Context>()),
             weight: 1.0,
             result: fallback
         )
-        return WeightedSpec(candidates: candidates + [fallbackCandidate])
+        return try WeightedSpec(candidates: candidates + [fallbackCandidate])
     }
 
     /// Creates a WeightedSpec with typed specifications and fallback
@@ -214,7 +223,7 @@ extension WeightedSpec {
     public static func withFallback<S: Specification>(
         _ candidates: [(S, Double, Result)],
         fallback: Result
-    ) -> WeightedSpec<Context, Result> where S.T == Context {
+    ) throws -> WeightedSpec<Context, Result> where S.T == Context {
         let typedCandidates = candidates.map {
             (AnySpecification($0.0), $0.1, $0.2)
         }
@@ -223,7 +232,7 @@ extension WeightedSpec {
             weight: 1.0,
             result: fallback
         )
-        return WeightedSpec(candidates: typedCandidates + [fallbackCandidate])
+        return try WeightedSpec(candidates: typedCandidates + [fallbackCandidate])
     }
 }
 
@@ -303,8 +312,9 @@ extension WeightedSpec {
 
         /// Builds a WeightedSpec with the configured candidates
         /// - Returns: A new WeightedSpec
-        public func build() -> WeightedSpec<C, R> {
-            return WeightedSpec<C, R>(
+        /// - Throws: `WeightedSpecError` when candidates are invalid
+        public func build() throws -> WeightedSpec<C, R> {
+            return try WeightedSpec<C, R>(
                 candidates: candidates.map { (specification: $0.0, weight: $0.1, result: $0.2) }
             )
         }
@@ -312,8 +322,10 @@ extension WeightedSpec {
         /// Builds a WeightedSpec with a custom RNG for deterministic behavior
         /// - Parameter generator: The RNG to use
         /// - Returns: A new WeightedSpec using the provided RNG
-        public func build<G: RandomNumberGenerator>(using generator: G) -> WeightedSpec<C, R> {
-            return WeightedSpec<C, R>(
+        /// - Throws: `WeightedSpecError` when candidates are invalid
+        public func build<G: RandomNumberGenerator>(using generator: G) throws -> WeightedSpec<C, R>
+        {
+            return try WeightedSpec<C, R>(
                 candidates: candidates.map { (specification: $0.0, weight: $0.1, result: $0.2) },
                 using: generator
             )
