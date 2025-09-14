@@ -90,7 +90,7 @@ final class WeightedSpecTests: XCTestCase {
         let spec1 = PredicateSpec<TestContext> { $0.flag }
         let spec2 = PredicateSpec<TestContext> { $0.value > 10 }
 
-        var generator = FixedRandomGenerator(value: 0.5)
+        let generator = FixedRandomGenerator(value: 0.5)
         let weightedSpec = WeightedSpec<TestContext, String>(
             candidates: [
                 (AnySpecification(spec1), 0.7, "A"),
@@ -171,7 +171,7 @@ final class WeightedSpecTests: XCTestCase {
         let spec1 = AlwaysTrueSpec<TestContext>()
         let spec2 = AlwaysTrueSpec<TestContext>()
 
-        var generator = SystemRandomNumberGenerator()
+        let generator = SystemRandomNumberGenerator()
         let weightedSpec = WeightedSpec<TestContext, String>(
             candidates: [
                 (AnySpecification(spec1), 0.7, "A"),
@@ -206,12 +206,22 @@ final class WeightedSpecTests: XCTestCase {
 
     func testWeightedSpec_builder_createsCorrectSpec() {
         // Arrange
-        let builder = WeightedSpec<TestContext, String>.builder()
-            .add(PredicateSpec<TestContext> { $0.flag }, weight: 0.6, result: "FLAG")
-            .add(PredicateSpec<TestContext> { $0.value > 5 }, weight: 0.4, result: "VALUE")
-            .fallback("DEFAULT")
+        var spec: WeightedSpec<TestContext, String>?
+        _XCTAssertNoThrow(
+            try WeightedSpec<TestContext, String>.builder()
+                .add(PredicateSpec<TestContext> { $0.flag }, weight: 0.6, result: "FLAG")
+                .add(PredicateSpec<TestContext> { $0.value > 5 }, weight: 0.4, result: "VALUE")
+                .fallback("DEFAULT")
+                .build()
+        ) { built in
+            spec = built
+        }
 
-        let spec = builder.build()
+        // Ensure spec was built before proceeding
+        guard let spec else {
+            XCTFail("Builder failed to produce spec")
+            return
+        }
 
         // Act & Assert
         let contextFlagOnly = TestContext(value: 0, flag: true)
@@ -229,7 +239,7 @@ final class WeightedSpecTests: XCTestCase {
 
         // Act & Assert
         XCTAssertThrows {
-            builder.add(AlwaysTrueSpec<TestContext>(), weight: 0, result: "TEST")
+            try builder.add(AlwaysTrueSpec<TestContext>(), weight: 0, result: "TEST")
         }
     }
 
@@ -300,4 +310,20 @@ extension XCTestCase {
     ) {
         XCTAssertThrowsError(try expression(), message(), file: file, line: line)
     }
+
+    public func _XCTAssertNoThrow<T>(_ expression: @autoclosure () throws -> T,
+                                    _ message: String = "",
+                                    file: StaticString = #file,
+                                    line: UInt = #line,
+                                    also validateResult: (T) -> Void) {
+        func executeAndAssignResult(_ expression: @autoclosure () throws -> T, to: inout T?) rethrows {
+            to = try expression()
+        }
+        var result: T?
+        XCTAssertNoThrow(try executeAndAssignResult(expression(), to: &result), message, file: file, line: line)
+        if let r = result {
+            validateResult(r)
+        }
+    }
 }
+

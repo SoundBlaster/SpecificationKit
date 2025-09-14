@@ -43,6 +43,9 @@ public struct WeightedSpec<Context, Result>: DecisionSpec {
     /// The candidate specifications with their weights and results
     private let candidates: [Candidate]
 
+    /// Random double generator used for weighted selection (injectable for tests)
+    private let randomInRange: (ClosedRange<Double>) -> Double
+
     /// Creates a new WeightedSpec with the given candidates
     /// - Parameter candidates: Array of specification-weight-result tuples
     /// - Precondition: At least one candidate must be provided with positive weight
@@ -54,14 +57,48 @@ public struct WeightedSpec<Context, Result>: DecisionSpec {
         )
 
         self.candidates = candidates
+        self.randomInRange = { range in Double.random(in: range) }
+    }
+
+    /// Creates a new WeightedSpec with the given candidates and a custom random generator
+    /// - Parameters:
+    ///   - candidates: Array of specification-weight-result tuples
+    ///   - generator: A random number generator to use for selections (useful for deterministic tests)
+    /// - Throws: `WeightedSpecError` when candidates are invalid
+    public init<G: RandomNumberGenerator>(
+        candidates: [Candidate],
+        using generator: G
+    ) {
+        precondition(!candidates.isEmpty, "WeightedSpec requires at least one candidate")
+        precondition(
+            candidates.allSatisfy { $0.weight > 0 && $0.weight.isFinite },
+            "All weights must be positive finite numbers"
+        )
+
+        self.candidates = candidates
+        var g = generator
+        self.randomInRange = { range in Double.random(in: range, using: &g) }
     }
 
     /// Creates a new WeightedSpec with typed specifications
     /// - Parameter candidates: Array of specification-weight-result tuples
     public init<S: Specification>(_ candidates: [(S, Double, Result)]) where S.T == Context {
-        self.candidates = candidates.map {
-            (AnySpecification($0.0), $0.1, $0.2)
-        }
+        self.init(candidates: candidates.map { (AnySpecification($0.0), $0.1, $0.2) })
+    }
+
+    /// Creates a new WeightedSpec with typed specifications and a custom random generator
+    /// - Parameters:
+    ///   - candidates: Array of specification-weight-result tuples
+    ///   - generator: A random number generator to use for selections
+    /// - Throws: `WeightedSpecError` when candidates are invalid
+    public init<S: Specification, G: RandomNumberGenerator>(
+        _ candidates: [(S, Double, Result)],
+        using generator: G
+    ) where S.T == Context {
+        self.init(
+            candidates: candidates.map { (AnySpecification($0.0), $0.1, $0.2) },
+            using: generator
+        )
     }
 
     /// Evaluates the weighted specification selection
@@ -90,12 +127,12 @@ public struct WeightedSpec<Context, Result>: DecisionSpec {
             return candidates.randomElement()?.result
         }
 
-        let randomValue = Double.random(in: 0..<totalWeight)
+        let randomValue = randomInRange(0...totalWeight)
 
         var cumulativeWeight: Double = 0
         for candidate in candidates {
             cumulativeWeight += candidate.weight
-            if randomValue < cumulativeWeight {
+            if randomValue <= cumulativeWeight {
                 return candidate.result
             }
         }
@@ -207,5 +244,85 @@ public enum WeightedSpecError: Error, LocalizedError {
         case .invalidConfiguration(let message):
             return "Invalid configuration: \(message)"
         }
+    }
+}
+
+// MARK: - WeightedSpec+Builder
+
+extension WeightedSpec {
+
+    /// A builder for creating WeightedSpec instances using a fluent interface
+    public class Builder<C, R> {
+        private var candidates: [(AnySpecification<C>, Double, R)] = []
+
+        /// Creates a new builder
+        public init() {}
+
+        /// Adds a specification-weight-result triple to the builder
+        /// - Parameters:
+        ///   - specification: The specification to evaluate
+        ///   - weight: The selection weight (must be > 0 and finite)
+        ///   - result: The result to return if the specification is satisfied
+        /// - Returns: The builder for method chaining
+        @discardableResult
+        public func add<S: Specification>(
+            _ specification: S,
+            weight: Double,
+            result: R
+        ) throws -> Builder where S.T == C {
+            guard weight.isFinite, weight > 0 else { throw WeightedSpecError.invalidWeight(weight) }
+            candidates.append((AnySpecification(specification), weight, result))
+            return self
+        }
+
+        /// Adds a predicate-weight-result triple to the builder
+        /// - Parameters:
+        ///   - predicate: The predicate to evaluate
+        ///   - weight: The selection weight (must be > 0 and finite)
+        ///   - result: The result to return if the predicate is satisfied
+        /// - Returns: The builder for method chaining
+        @discardableResult
+        public func add(
+            _ predicate: @escaping (C) -> Bool,
+            weight: Double,
+            result: R
+        ) throws -> Builder {
+            guard weight.isFinite, weight > 0 else { throw WeightedSpecError.invalidWeight(weight) }
+            candidates.append((AnySpecification(predicate), weight, result))
+            return self
+        }
+
+        /// Adds a fallback result that is always eligible
+        /// - Parameter fallback: The fallback result to use when no other spec matches
+        /// - Returns: The builder for method chaining
+        @discardableResult
+        public func fallback(_ fallback: R) -> Builder {
+            candidates.append((AnySpecification(AlwaysTrueSpec<C>()), 1.0, fallback))
+            return self
+        }
+
+        /// Builds a WeightedSpec with the configured candidates
+        /// - Returns: A new WeightedSpec
+        public func build() -> WeightedSpec<C, R> {
+            return WeightedSpec<C, R>(
+                candidates: candidates.map { (specification: $0.0, weight: $0.1, result: $0.2) }
+            )
+        }
+
+        /// Builds a WeightedSpec with a custom RNG for deterministic behavior
+        /// - Parameter generator: The RNG to use
+        /// - Returns: A new WeightedSpec using the provided RNG
+        public func build<G: RandomNumberGenerator>(using generator: G) -> WeightedSpec<C, R> {
+            return WeightedSpec<C, R>(
+                candidates: candidates.map { (specification: $0.0, weight: $0.1, result: $0.2) },
+                using: generator
+            )
+        }
+    }
+
+    /// Creates a new builder for constructing a WeightedSpec
+    /// - Returns: A builder for method chaining
+    public static func builder() -> Builder<Context, Result> {
+        Builder<Context, Result>()
     }
 }
