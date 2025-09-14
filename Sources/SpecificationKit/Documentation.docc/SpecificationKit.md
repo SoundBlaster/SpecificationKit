@@ -8,6 +8,7 @@ with first-class support for SwiftUI, property wrappers, macros, and async/await
 
 - Composable specifications using `.and()`, `.or()`, and `.not()`
 - Declarative property wrappers: `@Satisfies`, `@Decides`, `@Maybe`, `@ObservedSatisfies`, `@ObservedMaybe`
+- Advanced specifications: `WeightedSpec` (probability-based), `HistoricalSpec` (time-series), `ComparativeSpec` (relative comparisons), `ThresholdSpec` (dynamic thresholds)
 - Macros: `@specs` for composite specs and `@AutoContext` for automatic provider injection
 - Context providers for dependency injection and testing (Default/Environment/Mock)
 - Async support and type-safe generics throughout
@@ -78,6 +79,13 @@ var discountType: String
 - ``FeatureFlagSpec``
 - ``UserSegmentSpec``
 - ``SubscriptionStatusSpec``
+
+### Advanced Specs
+
+- <doc:WeightedSpec>
+- <doc:HistoricalSpec>
+- <doc:ComparativeSpec>
+- <doc:ThresholdSpec>
 
 ### Macros
 
