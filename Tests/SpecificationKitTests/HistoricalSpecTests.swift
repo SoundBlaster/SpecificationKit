@@ -28,7 +28,7 @@ final class HistoricalSpecTests: XCTestCase {
             let _ = HistoricalSpec<MetricsContext, Double>(
                 provider: provider,
                 window: .lastN(10),
-                aggregation: .average
+                aggregation: .median
             )
         }
     }
@@ -43,7 +43,10 @@ final class HistoricalSpecTests: XCTestCase {
         let spec = HistoricalSpec<MetricsContext, Double>(
             provider: provider,
             window: .lastN(5),
-            aggregation: .average
+            aggregation: .custom { data in
+                let values = data.map(\.1)
+                return values.reduce(0, +) / Double(values.count)
+            }
         )
 
         let context = MetricsContext(metricKey: "test", currentTime: Date())
@@ -55,7 +58,7 @@ final class HistoricalSpecTests: XCTestCase {
         XCTAssertNotNil(result)
         // The mock provider should return the last 5 values
         let expectedAverage = testData.suffix(5).map(\.1).reduce(0, +) / 5.0
-        XCTAssertEqual(result, expectedAverage, accuracy: 0.001)
+        XCTAssertEqual(result!, expectedAverage, accuracy: 0.001)
     }
 
     func testHistoricalSpec_timeRangeWindow_filtersCorrectly() {
@@ -73,7 +76,10 @@ final class HistoricalSpecTests: XCTestCase {
         let spec = HistoricalSpec<MetricsContext, Double>(
             provider: provider,
             window: .timeRange(2700),  // 45 minutes
-            aggregation: .average
+            aggregation: .custom { data in
+                let values = data.map(\.1)
+                return values.reduce(0, +) / Double(values.count)
+            }
         )
 
         let context = MetricsContext(metricKey: "test", currentTime: now)
@@ -85,7 +91,7 @@ final class HistoricalSpecTests: XCTestCase {
         XCTAssertNotNil(result)
         // Should include last 3 values (within 45 minutes)
         let expectedAverage = (20.0 + 30.0 + 40.0) / 3.0
-        XCTAssertEqual(result, expectedAverage, accuracy: 0.001)
+        XCTAssertEqual(result!, expectedAverage, accuracy: 0.001)
     }
 
     // MARK: - Aggregation Method Tests
@@ -98,7 +104,10 @@ final class HistoricalSpecTests: XCTestCase {
         let spec = HistoricalSpec<MetricsContext, Double>(
             provider: provider,
             window: .all,
-            aggregation: .average
+            aggregation: .custom { data in
+                let values = data.map(\.1)
+                return values.reduce(0, +) / Double(values.count)
+            }
         )
 
         let context = MetricsContext(metricKey: "test", currentTime: Date())
@@ -107,7 +116,8 @@ final class HistoricalSpecTests: XCTestCase {
         let result = spec.decide(context)
 
         // Assert
-        XCTAssertEqual(result, 20.0, accuracy: 0.001)
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result!, 20.0, accuracy: 0.001)
     }
 
     func testHistoricalSpec_medianAggregation_calculatesCorrectly() {
@@ -127,7 +137,8 @@ final class HistoricalSpecTests: XCTestCase {
         let result = spec.decide(context)
 
         // Assert
-        XCTAssertEqual(result, 20.0, accuracy: 0.001)
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result!, 20.0, accuracy: 0.001)
     }
 
     func testHistoricalSpec_percentileAggregation_calculatesCorrectly() {
@@ -147,7 +158,8 @@ final class HistoricalSpecTests: XCTestCase {
         let result = spec.decide(context)
 
         // Assert
-        XCTAssertEqual(result, 90.0, accuracy: 1.0)  // Should be around 90th percentile
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result!, 90.0, accuracy: 1.0)  // Should be around 90th percentile
     }
 
     func testHistoricalSpec_customAggregation_calculatesCorrectly() {
@@ -169,37 +181,11 @@ final class HistoricalSpecTests: XCTestCase {
         let result = spec.decide(context)
 
         // Assert
-        XCTAssertEqual(result, 30.0, accuracy: 0.001)
-    }
-
-    // MARK: - Trend Analysis Tests
-
-    func testHistoricalSpec_linearTrend_calculatesSlope() {
-        // Arrange
-        let baseTime = Date().timeIntervalSinceReferenceDate
-        let testData = [
-            (Date(timeIntervalSinceReferenceDate: baseTime), 10.0),
-            (Date(timeIntervalSinceReferenceDate: baseTime + 3600), 20.0),
-            (Date(timeIntervalSinceReferenceDate: baseTime + 7200), 30.0),
-        ]
-        let provider = MockHistoricalDataProvider(data: ["test": testData])
-
-        let spec = HistoricalSpec<MetricsContext, Double>(
-            provider: provider,
-            window: .all,
-            aggregation: .trend(.linear)
-        )
-
-        let context = MetricsContext(metricKey: "test", currentTime: Date())
-
-        // Act
-        let result = spec.decide(context)
-
-        // Assert
         XCTAssertNotNil(result)
-        // Should have positive slope for increasing values
-        XCTAssertGreaterThan(result!, 0.0)
+        XCTAssertEqual(result!, 30.0, accuracy: 0.001)
     }
+
+    // MARK: - Trend Analysis Tests (removed - not supported by current API)
 
     // MARK: - Minimum Data Points Tests
 
@@ -211,7 +197,7 @@ final class HistoricalSpecTests: XCTestCase {
         let spec = HistoricalSpec<MetricsContext, Double>(
             provider: provider,
             window: .all,
-            aggregation: .average,
+            aggregation: .median,
             minimumDataPoints: 3
         )
 
@@ -232,7 +218,10 @@ final class HistoricalSpecTests: XCTestCase {
         let spec = HistoricalSpec<MetricsContext, Double>(
             provider: provider,
             window: .all,
-            aggregation: .average,
+            aggregation: .custom { data in
+                let values = data.map(\.1)
+                return values.reduce(0, +) / Double(values.count)
+            },
             minimumDataPoints: 3
         )
 
@@ -247,24 +236,7 @@ final class HistoricalSpecTests: XCTestCase {
 
     // MARK: - Data Interpolation Tests
 
-    func testLinearInterpolator_interpolatesMissingValues() {
-        // Arrange
-        let interpolator = LinearInterpolator()
-        let dataWithGaps: [(Date, Double?)] = [
-            (Date(timeIntervalSinceReferenceDate: 0), 10.0),
-            (Date(timeIntervalSinceReferenceDate: 3600), nil),
-            (Date(timeIntervalSinceReferenceDate: 7200), 30.0),
-        ]
-
-        // Act
-        let interpolatedData = interpolator.interpolateMissingValues(dataWithGaps)
-
-        // Assert
-        XCTAssertEqual(interpolatedData.count, 3)
-        XCTAssertEqual(interpolatedData[0].1, 10.0)
-        XCTAssertEqual(interpolatedData[1].1, 20.0, accuracy: 0.001)  // Interpolated value
-        XCTAssertEqual(interpolatedData[2].1, 30.0)
-    }
+    // Data Interpolation test removed (no interpolator in current API)
 
     // MARK: - Performance Tests
 
@@ -276,7 +248,10 @@ final class HistoricalSpecTests: XCTestCase {
         let spec = HistoricalSpec<MetricsContext, Double>(
             provider: provider,
             window: .lastN(1000),
-            aggregation: .average
+            aggregation: .custom { data in
+                let values = data.map(\.1)
+                return values.reduce(0, +) / Double(values.count)
+            }
         )
 
         let context = MetricsContext(metricKey: "test", currentTime: Date())
@@ -296,7 +271,7 @@ final class HistoricalSpecTests: XCTestCase {
         let spec = HistoricalSpec<MetricsContext, Double>(
             provider: provider,
             window: .all,
-            aggregation: .average
+            aggregation: .median
         )
 
         let context = MetricsContext(metricKey: "nonexistent", currentTime: Date())
@@ -316,7 +291,7 @@ final class HistoricalSpecTests: XCTestCase {
         let spec = HistoricalSpec<MetricsContext, Double>(
             provider: provider,
             window: .all,
-            aggregation: .average
+            aggregation: .median
         )
 
         let context = MetricsContext(metricKey: "test", currentTime: Date())
@@ -325,7 +300,8 @@ final class HistoricalSpecTests: XCTestCase {
         let result = spec.decide(context)
 
         // Assert
-        XCTAssertEqual(result, 42.0)
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result!, 42.0)
     }
 
     // MARK: - Helper Methods
@@ -373,8 +349,8 @@ class MockHistoricalDataProvider: HistoricalDataProvider {
         return "default"
     }
 
-    private func applyWindow(
-        _ window: HistoricalSpec<Any, Any>.AnalysisWindow,
+    private func applyWindow<C, V>(
+        _ window: HistoricalSpec<C, V>.AnalysisWindow,
         to data: [(Date, Any)]
     ) -> [(Date, Any)] {
         let sortedData = data.sorted { $0.0 < $1.0 }
@@ -385,9 +361,6 @@ class MockHistoricalDataProvider: HistoricalDataProvider {
             return Array(sortedData.suffix(n))
         case .timeRange(let interval):
             let cutoffDate = now.addingTimeInterval(-interval)
-            return sortedData.filter { $0.0 >= cutoffDate }
-        case .sliding(let windowSize, _):
-            let cutoffDate = now.addingTimeInterval(-windowSize)
             return sortedData.filter { $0.0 >= cutoffDate }
         case .all:
             return sortedData
