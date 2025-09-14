@@ -54,6 +54,64 @@ var isEligibleForPromo: Bool
 var discountType: String
 ```
 
+## Advanced Specs Overview (v3.0.0)
+
+The v3.0.0 release adds four advanced, production-ready specification types designed for probabilistic selection, time-series analysis, relative comparisons, and dynamic thresholds. See their dedicated pages for full guides and APIs.
+
+- <doc:WeightedSpec>: probability-based selection among candidates; ideal for A/B testing, rollouts, and load balancing.
+- <doc:HistoricalSpec>: time-series aggregation over windows; ideal for trends, percentiles, and adaptive decisions.
+- <doc:ComparativeSpec>: relative comparisons vs. baselines/ranges; ideal for validation and monitoring.
+- <doc:ThresholdSpec>: static/adaptive/contextual thresholds; ideal for alerts and feature gating.
+
+### When To Use Which
+
+- Weighted: choose 1 of N outcomes by probability; compute expected value/variance for numeric results.
+- Historical: summarize past values over a window (median, percentile, trend) to guide current decisions.
+- Comparative: check current value against a fixed/range/custom rule with optional tolerance.
+- Threshold: evaluate against dynamic thresholds derived from context or functions.
+
+### Quick Examples
+
+Weighted (A/B/C split):
+```swift
+let abTest = WeightedSpec([
+    (FeatureFlagSpec(flag: "variant_a"), 0.5, "A"),
+    (FeatureFlagSpec(flag: "variant_b"), 0.3, "B"),
+    (FeatureFlagSpec(flag: "control"), 0.2, "C")
+])
+@Maybe(using: abTest) var variant: String?
+```
+
+Historical (median of last 30):
+```swift
+let perf = HistoricalSpec(
+    provider: MetricsHistoryProvider(),
+    window: .lastN(30),
+    aggregation: .median
+)
+@Maybe(using: perf) var medianPerf: Double?
+```
+
+Comparative (range with tolerance):
+```swift
+let tempOK = ComparativeSpec(
+    keyPath: \.currentTemperature,
+    comparison: .between(18.0, 24.0),
+    tolerance: 0.1
+)
+@Satisfies(using: tempOK) var isComfortable: Bool
+```
+
+Threshold (adaptive baseline):
+```swift
+let alert = ThresholdSpec(
+    keyPath: \.responseTime,
+    threshold: .adaptive { getCurrentBaseline() },
+    operator: .greaterThan
+)
+@Satisfies(using: alert) var shouldAlert: Bool
+```
+
 ## Topics
 
 ### Reactive Wrappers
