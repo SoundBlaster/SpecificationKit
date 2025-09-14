@@ -1229,6 +1229,52 @@ Successfully completed all Phase 1 tasks from the v3.0.0 roadmap:
 - ✅ @ObservedDecides implementation (reactive decisions)
 - ✅ @ObservedMaybe implementation (reactive optional decisions)
 - ✅ @CachedSatisfies with TTL (cached evaluation with expiration)
+
+### Phase 2 Advanced Features Complete ✅
+Successfully implemented all advanced specification types for complex decision-making scenarios:
+
+#### WeightedSpec - Probability-Based Selection ✅
+Enables weighted random selection among specifications for A/B testing and feature rollouts:
+```swift
+let abTestSpec = WeightedSpec([
+    (FeatureFlagSpec(flag: "variant_a"), 0.5, "variant_a"),
+    (FeatureFlagSpec(flag: "variant_b"), 0.3, "variant_b"), 
+    (FeatureFlagSpec(flag: "control"), 0.2, "control")
+])
+
+@Maybe(using: abTestSpec)
+var experimentVariant: String?
+```
+
+#### HistoricalSpec - Time-Series Analysis ✅
+Analyzes historical data patterns for adaptive decision making:
+```swift
+let performanceSpec = HistoricalSpec(
+    provider: MetricsHistoryProvider(),
+    window: .lastN(30),
+    aggregation: .median
+)
+```
+
+#### ComparativeSpec - Relative Comparisons ✅  
+Performs comparisons against baselines, thresholds, and statistical measures:
+```swift
+let performanceSpec = ComparativeSpec(
+    keyPath: \.currentValue,
+    comparison: .greaterThan(10.0),
+    tolerance: 0.5
+)
+```
+
+#### ThresholdSpec - Dynamic Threshold Evaluation ✅
+Evaluates values against static, adaptive, or contextual thresholds:
+```swift
+let alertSpec = ThresholdSpec(
+    keyPath: \.responseTime,
+    threshold: .adaptive { getCurrentBaseline() },
+    operator: .greaterThan
+)
+```
 - ✅ @ConditionalSatisfies (runtime specification selection)
 - ✅ AnySpecification optimization (performance improvements)
 
