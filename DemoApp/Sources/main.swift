@@ -32,6 +32,9 @@ struct AppContentView: View {
                 NavigationLink(destination: MainDemoView()) {
                     Label("Overview", systemImage: "rectangle.grid.1x2")
                 }
+                NavigationLink(destination: AdvancedSpecsDemoView()) {
+                    Label("Advanced Specs", systemImage: "slider.horizontal.3")
+                }
                 NavigationLink(destination: DecisionsDemoView()) {
                     Label("Decisions", systemImage: "switch.2")
                 }
