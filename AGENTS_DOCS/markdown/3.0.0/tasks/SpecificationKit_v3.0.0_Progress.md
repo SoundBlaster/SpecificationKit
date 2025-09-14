@@ -14,12 +14,12 @@
 - [ ] Macro development enhancements
 - [ ] Context provider foundation
 
-### Phase 1: Core Enhancements (Week 2-4) - 3/5 ⏳
+### Phase 1: Core Enhancements (Week 2-4) - 5/5 ✅
 - [x] @ObservedDecides implementation
 - [x] @ObservedMaybe implementation  
 - [x] @CachedSatisfies with TTL
-- [ ] @ConditionalSatisfies
-- [ ] AnySpecification optimization
+- [x] @ConditionalSatisfies
+- [x] AnySpecification optimization
 
 ### Phase 2: Advanced Features (Week 3-5) - 0/4 ✗
 - [ ] WeightedSpec implementation

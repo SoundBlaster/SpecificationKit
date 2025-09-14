@@ -168,6 +168,21 @@ public struct AlwaysTrueSpec<T>: Specification {
     }
 }
 
+/// A specification that is never satisfied.
+/// Useful for testing and as a placeholder in certain scenarios.
+public struct AlwaysFalseSpec<T>: Specification {
+
+    /// Creates a new AlwaysFalseSpec
+    public init() {}
+
+    /// Always returns false for any candidate
+    /// - Parameter candidate: The candidate to evaluate
+    /// - Returns: Always false
+    public func isSatisfiedBy(_ candidate: T) -> Bool {
+        return false
+    }
+}
+
 // MARK: - FirstMatchSpec+Builder
 
 extension FirstMatchSpec {
