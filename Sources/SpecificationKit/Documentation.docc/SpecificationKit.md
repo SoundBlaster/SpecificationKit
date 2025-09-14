@@ -125,6 +125,9 @@ let alert = ThresholdSpec(
 - ``FirstMatchSpec``
 - ``ContextProviding``
 - ``DefaultContextProvider``
+- ``EnvironmentContextProvider``
+- ``CompositeContextProvider``
+- ``AnyContextProvider``
 
 ### Built-in Specs
 

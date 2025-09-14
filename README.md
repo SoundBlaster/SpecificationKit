@@ -86,13 +86,39 @@ struct GateView: View {
 }
 ```
 
-DemoApp includes an “Observation” screen showcasing live updates for flags, counters, and cooldowns.
+DemoApp includes:
+- “Observation” screen showcasing live updates for flags, counters, and cooldowns
+- “Context Composition” screen demonstrating `CompositeContextProvider` strategies
+
+### Context Composition
+
+Combine multiple providers into a single `EvaluationContext` source using `CompositeContextProvider`.
+
+```swift
+let defaults = DefaultContextProvider.shared
+let env = EnvironmentContextProvider()
+
+// Order matters. With `.preferLast`, later providers override conflicting keys.
+let provider = CompositeContextProvider(
+    providers: [defaults, env],
+    strategy: .preferLast
+)
+
+let context = provider.currentContext()
+```
+
+Strategies:
+- `.preferLast`: later providers override earlier ones on conflicts.
+- `.preferFirst`: earlier providers win; later fill missing keys.
+- `.custom { [EvaluationContext] in ... }`: supply a custom merger.
+
+Segments are unioned across providers by default. See DocC (CompositeContextProvider) for more examples.
 
 ## ✨ Features
 
 - 🧩 **Composable Specifications** - Build complex business rules from simple, reusable components
 - 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies`, `@Decides` (non-optional), `@Maybe` (optional), `@CachedSatisfies` (cached with TTL), and reactive wrappers `@ObservedSatisfies`, `@ObservedDecides`, `@ObservedMaybe` for SwiftUI
-- 🔄 **Context Providers** - Flexible context injection and dependency management
+- 🔄 **Context Providers** - Flexible context injection and dependency management, including `DefaultContextProvider`, `EnvironmentContextProvider`, and `CompositeContextProvider` for composition
 - 🚀 **Decision Specifications** - Return typed results beyond just boolean values with `DecisionSpec`
 - 🧭 **Date & Flags Specs** - New built-ins: `DateRangeSpec`, `DateComparisonSpec`, `FeatureFlagSpec`, `UserSegmentSpec`, `SubscriptionStatusSpec`
 - ⚙️ **Async Capable** - Evaluate rules asynchronously via `AsyncSpecification`, `AnyAsyncSpecification`, and `Satisfies.evaluateAsync()`

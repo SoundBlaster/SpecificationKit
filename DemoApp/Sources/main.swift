@@ -44,6 +44,9 @@ struct AppContentView: View {
                 NavigationLink(destination: EnvironmentDemoView()) {
                     Label("Environment Context", systemImage: "globe")
                 }
+                NavigationLink(destination: CompositeDemoView()) {
+                    Label("Context Composition", systemImage: "square.stack.3d.up")
+                }
                 NavigationLink(destination: ObservationDemoView()) {
                     Label("Observation", systemImage: "eye")
                 }
