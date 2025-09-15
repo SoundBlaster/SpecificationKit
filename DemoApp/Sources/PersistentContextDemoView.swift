@@ -59,11 +59,21 @@ struct PersistentContextDemoView: View {
                         Spacer()
                     }
 
-                    Button("Create Provider") {
-                        createProvider()
+                    HStack {
+                        Button("Create Provider") {
+                            createProvider()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(persistentProvider != nil)
+
+                        if persistentProvider != nil {
+                            Button("Reset Provider") {
+                                resetProvider()
+                            }
+                            .buttonStyle(.bordered)
+                            .foregroundStyle(.red)
+                        }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(persistentProvider != nil)
 
                     if persistentProvider != nil {
                         Text("✅ Provider created successfully")
@@ -521,6 +531,34 @@ struct PersistentContextDemoView: View {
 
         await provider.removeExpiredData()
         await loadContext()
+    }
+
+    private func resetProvider() {
+        // Clear the provider instance
+        persistentProvider = nil
+
+        // Reset UI state
+        errorMessage = nil
+        lastUpdateTime = nil
+        contextData = "No data loaded"
+
+        // Reset specification results
+        counterSpecResult = "—"
+        flagSpecResult = "—"
+        eventSpecResult = "—"
+        compositeSpecResult = "—"
+
+        // Reset demo data to defaults
+        counterKey = "demo_counter"
+        counterValue = 0
+        flagKey = "demo_flag"
+        flagValue = false
+        userDataKey = "demo_data"
+        userDataValue = "Hello World"
+        eventKey = "demo_event"
+        segmentValue = "premium"
+        expirationMinutes = 60
+        useExpiration = false
     }
 }
 
