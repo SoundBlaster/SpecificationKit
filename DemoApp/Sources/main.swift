@@ -55,6 +55,11 @@ struct AppContentView: View {
                         Label("Network Context", systemImage: "network")
                     }
                 }
+                if #available(macOS 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, *) {
+                    NavigationLink(destination: PersistentContextDemoView()) {
+                        Label("Persistent Context", systemImage: "externaldrive")
+                    }
+                }
             }
             .listStyle(SidebarListStyle())
             .navigationTitle("SpecificationKit Demo")
