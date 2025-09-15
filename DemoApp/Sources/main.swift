@@ -60,6 +60,11 @@ struct AppContentView: View {
                         Label("Persistent Context", systemImage: "externaldrive")
                     }
                 }
+                if #available(iOS 14.0, macOS 11.0, watchOS 7.0, tvOS 14.0, *) {
+                    NavigationLink(destination: PlatformContextDemoView()) {
+                        Label("Platform Context", systemImage: "iphone")
+                    }
+                }
             }
             .listStyle(SidebarListStyle())
             .navigationTitle("SpecificationKit Demo")
