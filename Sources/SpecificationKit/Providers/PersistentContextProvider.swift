@@ -14,7 +14,7 @@ import Foundation
 
 /// A context provider that persists data using Core Data with async/await support
 @available(macOS 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, *)
-public final class PersistentContextProvider: ContextProviding {
+public final class PersistentContextProvider: ContextProviding, @unchecked Sendable {
 
     // MARK: - Configuration
 
@@ -590,7 +590,19 @@ public final class PersistentContextProvider: ContextProviding {
 
     private func deserializeValue(_ data: Data, type: String) throws -> Any {
         do {
-            return try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) ?? NSNull()
+            // Use the modern secure unarchiving API
+            let allowedClasses: [AnyClass] = [
+                NSString.self, NSNumber.self, NSDate.self, NSData.self,
+                NSArray.self, NSDictionary.self, NSSet.self, NSNull.self,
+            ]
+            let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+            unarchiver.requiresSecureCoding = false
+            let result = try unarchiver.decodeTopLevelObject(
+                of: allowedClasses,
+                forKey: NSKeyedArchiveRootObjectKey
+            )
+            unarchiver.finishDecoding()
+            return result ?? NSNull()
         } catch {
             throw PersistenceError.deserializationFailed(error.localizedDescription)
         }
