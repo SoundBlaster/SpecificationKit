@@ -127,6 +127,7 @@ let alert = ThresholdSpec(
 - ``DefaultContextProvider``
 - ``EnvironmentContextProvider``
 - ``NetworkContextProvider``
+- <doc:PersistentContextProvider>
 - ``CompositeContextProvider``
 - ``AnyContextProvider``
 
