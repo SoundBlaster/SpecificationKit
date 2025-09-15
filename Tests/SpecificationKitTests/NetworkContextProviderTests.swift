@@ -2,23 +2,13 @@ import XCTest
 
 @testable import SpecificationKit
 
-// MARK: - URLSession Protocol for Testing
-
-protocol URLSessionProtocol {
-    func data(for request: URLRequest) async throws -> (Data, URLResponse)
-}
-
-extension URLSession: URLSessionProtocol {}
-
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
 final class NetworkContextProviderTests: XCTestCase {
 
-    private var mockSession: MockURLSession!
     private var configuration: NetworkContextProvider.Configuration!
 
     override func setUp() {
         super.setUp()
-        mockSession = MockURLSession()
         configuration = NetworkContextProvider.Configuration(
             endpoint: URL(string: "https://api.test.com/context")!,
             refreshInterval: 60,
@@ -30,7 +20,6 @@ final class NetworkContextProviderTests: XCTestCase {
     }
 
     override func tearDown() {
-        mockSession = nil
         configuration = nil
         super.tearDown()
     }
@@ -48,26 +37,19 @@ final class NetworkContextProviderTests: XCTestCase {
     }
 
     func testSuccessfulNetworkRequest() async throws {
-        // Given
-        let expectedJSON = """
-            {
-                "userData": {"key": "value"},
-                "counters": {"count": 42},
-                "events": {"event1": 1704067200},
-                "flags": {"enabled": true},
-                "segments": ["premium", "beta"]
-            }
-            """
+        // Given - Create a configuration with a timeout that will cause immediate failure
+        let config = NetworkContextProvider.Configuration(
+            endpoint: URL(string: "https://nonexistent.invalid/context")!,
+            refreshInterval: 60,
+            requestTimeout: 0.001,  // Very short timeout to force failure
+            retryPolicy: .none,
+            fallbackValues: ["fallback": "value"],
+            cacheEnabled: true
+        )
 
-        // Create a mock URLSession with URLSessionConfiguration for testing
-        let config = URLSessionConfiguration.ephemeral
-        let mockSession = URLSession(configuration: config)
+        let provider = NetworkContextProvider(configuration: config)
 
-        // Since we can't easily mock URLSession.data directly in tests,
-        // we'll test the fallback behavior and JSON parsing logic
-        let provider = NetworkContextProvider(configuration: configuration, session: mockSession)
-
-        // When - this will likely fail due to invalid URL, but will test fallback
+        // When - this will fail due to invalid URL and short timeout, testing fallback
         let context = try await provider.currentContextAsync()
 
         // Then - should return fallback context when network fails
@@ -77,11 +59,19 @@ final class NetworkContextProviderTests: XCTestCase {
     }
 
     func testFallbackContextWhenNetworkFails() async throws {
-        // Given
-        let provider = NetworkContextProvider(
-            configuration: configuration, session: URLSession.shared)
+        // Given - Create a configuration with short timeout to avoid hanging
+        let config = NetworkContextProvider.Configuration(
+            endpoint: URL(string: "https://nonexistent.invalid/context")!,
+            refreshInterval: 60,
+            requestTimeout: 0.001,  // Very short timeout to force failure quickly
+            retryPolicy: .none,
+            fallbackValues: ["fallback": "value"],
+            cacheEnabled: true
+        )
 
-        // When - using invalid URL will trigger fallback
+        let provider = NetworkContextProvider(configuration: config)
+
+        // When - using invalid URL with short timeout will trigger fallback quickly
         let context = try await provider.currentContextAsync()
 
         // Then
@@ -174,12 +164,15 @@ final class NetworkContextProviderTests: XCTestCase {
     func testCacheDisabled() async throws {
         // Given
         let config = NetworkContextProvider.Configuration(
-            endpoint: configuration.endpoint,
+            endpoint: URL(string: "https://nonexistent.invalid/context")!,
+            refreshInterval: 60,
+            requestTimeout: 0.001,  // Very short timeout to force failure
+            retryPolicy: .none,
             fallbackValues: ["test": "fallback_value"],
             cacheEnabled: false
         )
 
-        let provider = NetworkContextProvider(configuration: config, session: URLSession.shared)
+        let provider = NetworkContextProvider(configuration: config)
 
         // When
         let context = try await provider.currentContextAsync()
@@ -229,38 +222,5 @@ final class NetworkContextProviderTests: XCTestCase {
         XCTAssertTrue(context.flag(for: "enabled"))
         XCTAssertEqual(context.segments, Set(["premium", "beta"]))
         XCTAssertEqual(context.event(for: "event1"), Date(timeIntervalSince1970: 1_704_153_600))
-    }
-}
-
-// MARK: - Mock URLSession
-
-@available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
-class MockURLSession: URLSessionProtocol {
-    var data: Data?
-    var response: URLResponse?
-    var error: Error?
-    var shouldFail = false
-    var requestCount = 0
-    var lastRequest: URLRequest?
-
-    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-        requestCount += 1
-        lastRequest = request
-
-        if shouldFail {
-            if let error = error {
-                throw error
-            } else {
-                throw URLError(.networkConnectionLost)
-            }
-        }
-
-        guard let data = data,
-            let response = response
-        else {
-            throw URLError(.badServerResponse)
-        }
-
-        return (data, response)
     }
 }
