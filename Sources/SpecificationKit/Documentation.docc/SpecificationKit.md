@@ -117,6 +117,10 @@ let alert = ThresholdSpec(
 
 - <doc:ReactiveWrappers>
 
+### Platform Integration
+
+- <doc:PlatformContextProviders>
+
 ### Core Concepts
 
 - ``Specification``
