@@ -118,7 +118,7 @@ Segments are unioned across providers by default. See DocC (CompositeContextProv
 
 - 🧩 **Composable Specifications** - Build complex business rules from simple, reusable components
 - 🎯 **Property Wrapper Support** - Declarative syntax with `@Satisfies`, `@Decides` (non-optional), `@Maybe` (optional), `@CachedSatisfies` (cached with TTL), and reactive wrappers `@ObservedSatisfies`, `@ObservedDecides`, `@ObservedMaybe` for SwiftUI
-- 🔄 **Context Providers** - Flexible context injection and dependency management, including `DefaultContextProvider`, `EnvironmentContextProvider`, `NetworkContextProvider`, and `CompositeContextProvider` for composition
+- 🔄 **Context Providers** - Flexible context injection and dependency management, including `DefaultContextProvider`, `EnvironmentContextProvider`, `NetworkContextProvider`, `PersistentContextProvider`, and `CompositeContextProvider` for composition
 - 🚀 **Decision Specifications** - Return typed results beyond just boolean values with `DecisionSpec`
 - 🧭 **Date & Flags Specs** - New built-ins: `DateRangeSpec`, `DateComparisonSpec`, `FeatureFlagSpec`, `UserSegmentSpec`, `SubscriptionStatusSpec`
 - ⚙️ **Async Capable** - Evaluate rules asynchronously via `AsyncSpecification`, `AnyAsyncSpecification`, and `Satisfies.evaluateAsync()`
@@ -686,6 +686,45 @@ var isFeatureEnabled: Bool
 - **Offline Support**: Automatic fallback to cached data when network fails
 - **Swift 6 Ready**: Full concurrency support with `@Sendable` conformance
 - **Reactive Updates**: Combine integration for real-time context changes
+
+#### PersistentContextProvider
+Persist context data locally using Core Data for offline-first applications and data persistence across app launches.
+
+```swift
+// Configure persistent provider
+let config = PersistentContextProvider.Configuration(
+    modelName: "SpecificationContext",
+    storeType: .sqliteStoreType,
+    migrationPolicy: .automatic,
+    encryptionEnabled: true
+)
+let persistentProvider = PersistentContextProvider(configuration: config)
+
+// Store data persistently
+await persistentProvider.setValue("premium", for: "user_tier")
+await persistentProvider.setCounter(42, for: "login_count")
+await persistentProvider.setFlag(true, for: "onboarding_complete")
+await persistentProvider.setEvent(Date(), for: "last_login")
+await persistentProvider.addSegment("beta_tester")
+
+// Use async context fetching
+let context = try await persistentProvider.currentContextAsync()
+
+// Works with specifications
+@Satisfies(provider: persistentProvider, 
+           using: MaxCountSpec(counterKey: "login_count", limit: 50))
+var canShowLoyaltyReward: Bool
+```
+
+**Features:**
+- **Core Data Integration**: Full-featured persistence with automatic model management
+- **Data Expiration**: Set TTL on any stored value for automatic cleanup
+- **Thread Safety**: All operations are thread-safe with serial queue execution
+- **Multiple Data Types**: Support for strings, numbers, dates, arrays, and dictionaries
+- **Migration Support**: Automatic, manual, or no-migration policies
+- **Encryption Ready**: Optional file protection for sensitive data (iOS/watchOS/tvOS)
+- **Change Notifications**: Combine and AsyncStream support for reactive updates
+- **In-Memory Testing**: Seamless testing with in-memory Core Data stores
 
 ## 🎯 Advanced Usage
 

@@ -175,6 +175,7 @@ final class NetworkContextProviderTests: XCTestCase {
         // Given
         let config = NetworkContextProvider.Configuration(
             endpoint: configuration.endpoint,
+            fallbackValues: ["test": "fallback_value"],
             cacheEnabled: false
         )
 
@@ -183,8 +184,14 @@ final class NetworkContextProviderTests: XCTestCase {
         // When
         let context = try await provider.currentContextAsync()
 
-        // Then - should always return fallback when caching disabled and network fails
-        XCTAssertEqual(context.userData["fallback"] as? String, nil)  // No fallback values in this config
+        // Then - should return fallback when caching disabled and network fails
+        XCTAssertEqual(context.userData["test"] as? String, "fallback_value")
+
+        // Verify no other data is present since network will fail and cache is disabled
+        XCTAssertTrue(context.counters.isEmpty)
+        XCTAssertTrue(context.flags.isEmpty)
+        XCTAssertTrue(context.events.isEmpty)
+        XCTAssertTrue(context.segments.isEmpty)
     }
 
     func testContextUpdatesProvider() {

@@ -46,7 +46,10 @@ let package = Package(
         // It depends on the macro target to use the macros.
         .target(
             name: "SpecificationKit",
-            dependencies: ["SpecificationKitMacros"]
+            dependencies: ["SpecificationKitMacros"],
+            resources: [
+                .process("Resources")
+            ]
         ),
 
         // This is your test target.

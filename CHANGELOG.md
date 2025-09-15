@@ -69,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Percentile-based thresholds from data distributions
   - Context keyPath-based threshold extraction
 
-#### 🌐 Phase 3A: Context Provider System (Partial - 2/3 Complete)
+#### 🌐 Phase 3A: Context Provider System (Complete - 3/3)
 - **NetworkContextProvider**: Production-ready network-based context provider
   - Configurable retry policies: exponential backoff, fixed delay, and custom retry logic
   - TTL-based caching with thread-safe actor implementation for optimal performance
@@ -79,6 +79,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - JSON parsing with type-safe data extraction for all `EvaluationContext` fields
   - Automatic periodic refresh with configurable intervals
   - Support for custom fallback values when network and cache are unavailable
+- **PersistentContextProvider**: Core Data-backed context provider for offline-first applications
+  - Full Core Data integration with automatic model management and migration support
+  - Thread-safe async/await API for all persistence operations using serial dispatch queue
+  - Support for multiple data types: strings, numbers, dates, arrays, dictionaries, and custom types
+  - Data expiration with automatic TTL-based cleanup for temporary values
+  - Multiple store types: SQLite, in-memory (for testing), and binary data stores
+  - Migration policies: automatic, manual with custom managers, or no migration
+  - File protection and encryption support for sensitive data on supported platforms
+  - Combine and AsyncStream integration for reactive change notifications
+  - Comprehensive test coverage with 31 unit tests including concurrent access validation
+  - In-memory model generation for seamless testing without external dependencies
 - **CompositeContextProvider**: Multi-provider composition with merge strategies
   - Multiple merge strategies: `preferFirst`, `preferLast`, `custom`
   - Conflict resolution for overlapping context keys
