@@ -726,6 +726,108 @@ var canShowLoyaltyReward: Bool
 - **Change Notifications**: Combine and AsyncStream support for reactive updates
 - **In-Memory Testing**: Seamless testing with in-memory Core Data stores
 
+#### Platform-Specific Context Providers
+
+SpecificationKit v3.0.0 introduces platform-specific context providers that leverage native iOS, macOS, watchOS, and tvOS APIs for context-aware specifications.
+
+##### iOS Integration
+
+Access device state, location services, and system information on iOS devices:
+
+```swift
+import SpecificationKit
+
+// Device context provider (iOS/tvOS)
+@available(iOS 13.0, *)
+let deviceProvider = DeviceContextProvider()
+
+// Use device-based specifications
+@Satisfies(provider: deviceProvider, using: DeviceContextProvider.darkModeSpecification())
+var isDarkModeEnabled: Bool
+
+@Satisfies(provider: deviceProvider, using: DeviceContextProvider.lowBatterySpecification(threshold: 0.2))
+var shouldReduceFeatures: Bool
+
+// Custom device specifications
+struct iPadOnlySpec: Specification {
+    func isSatisfiedBy(_ context: DeviceContextProvider.DeviceContext) -> Bool {
+        return context.isiPad
+    }
+}
+
+// Location-based context provider (iOS/watchOS)
+@available(iOS 14.0, watchOS 7.0, *)
+let locationProvider = LocationContextProvider(
+    configuration: .batteryOptimized // or .highPrecision, .privacyFocused
+)
+
+// Location-based specifications
+let nearStoreSpec = locationProvider.proximitySpecification(
+    center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
+    maxDistance: 1000 // meters
+)
+
+@Satisfies(provider: locationProvider, using: nearStoreSpec)
+var isNearSanFrancisco: Bool
+```
+
+##### Cross-Platform Factory
+
+Use `PlatformContextProviders` for cross-platform compatibility:
+
+```swift
+// Works across all platforms with graceful fallbacks
+let deviceProvider = PlatformContextProviders.deviceContextProvider
+let locationProvider = PlatformContextProviders.locationContextProvider
+
+// Platform-aware specifications
+let darkModeSpec = PlatformContextProviders.createDeviceCapabilitySpec(.darkMode)
+let locationSpec = PlatformContextProviders.createDeviceCapabilitySpec(.location)
+let batterySpec = PlatformContextProviders.createBatterySpec(threshold: 0.3)
+
+@Satisfies(using: darkModeSpec)
+var supportsDarkMode: Bool // Returns false on unsupported platforms
+
+@Satisfies(using: batterySpec)
+var isLowBattery: Bool // Returns false on platforms without battery APIs
+```
+
+##### Privacy & Permissions
+
+Platform providers respect privacy guidelines and handle permissions gracefully:
+
+```swift
+// Check permissions before use
+if PlatformContextProviders.hasLocationPermission {
+    // Use location-based features
+}
+
+// Request permissions asynchronously
+let granted = await PlatformContextProviders.requestLocationPermission()
+if granted {
+    // Permission granted, start location updates
+}
+
+// Capability detection
+if PlatformContextProviders.supportsLocation {
+    // Platform supports location services
+}
+```
+
+**Platform Support:**
+- **iOS**: Device info, location services, battery state, accessibility settings
+- **watchOS**: Health data, device info, location services  
+- **tvOS**: Device info, remote control capabilities
+- **macOS**: System preferences, power state (planned)
+
+**Key Features:**
+- **Privacy Compliant**: Respects platform privacy guidelines and permission requirements
+- **Battery Optimized**: Configurable accuracy levels for power efficiency
+- **Thread Safe**: All operations are thread-safe for concurrent access
+- **Reactive Updates**: Publishes changes via Combine when available
+- **Graceful Fallbacks**: Always returns valid providers even on unsupported platforms
+- **Performance Optimized**: <1ms evaluation time for all platform specifications
+
 ## 🎯 Advanced Usage
 
 ### Decision Specifications
