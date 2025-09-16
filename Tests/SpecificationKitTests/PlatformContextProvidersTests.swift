@@ -353,6 +353,144 @@ final class PlatformContextProvidersTests: XCTestCase {
     }
 #endif
 
+// MARK: - macOS-Specific Tests
+
+#if canImport(AppKit) && os(macOS)
+    import AppKit
+    import SystemConfiguration
+
+    @available(macOS 10.15, *)
+    final class MacOSSystemContextProviderTests: XCTestCase {
+
+        func testMacOSSystemContextProviderCreation() {
+            let provider = MacOSSystemContextProvider()
+            let context = provider.currentContext()
+
+            XCTAssertNotNil(context)
+
+            // Test basic system properties
+            if let isDarkMode = context.isDarkModeEnabled {
+                XCTAssertTrue(isDarkMode == true || isDarkMode == false)
+            }
+
+            if let systemUptime = context.systemUptime {
+                XCTAssertGreaterThan(systemUptime, 0)
+            }
+
+            if let osVersion = context.operatingSystemVersion {
+                XCTAssertFalse(osVersion.isEmpty)
+                // Should be in format like "15.1.0"
+                let components = osVersion.split(separator: ".")
+                XCTAssertGreaterThanOrEqual(components.count, 2)
+            }
+
+            if let processorCount = context.processorCount {
+                XCTAssertGreaterThan(processorCount, 0)
+            }
+
+            if let physicalMemory = context.physicalMemory {
+                XCTAssertGreaterThan(physicalMemory, 0)
+            }
+        }
+
+        func testMacOSSystemContextValues() {
+            let provider = MacOSSystemContextProvider()
+
+            // Test individual getValue calls
+            let isDarkMode = provider.getValue(for: "isDarkModeEnabled") as? Bool
+            let systemUptime = provider.getValue(for: "systemUptime") as? TimeInterval
+            let osVersion = provider.getValue(for: "operatingSystemVersion") as? String
+            let processorCount = provider.getValue(for: "processorCount") as? Int
+            let physicalMemory = provider.getValue(for: "physicalMemory") as? UInt64
+            let isOnBattery = provider.getValue(for: "isOnBattery") as? Bool
+            let dockPosition = provider.getValue(for: "dockPosition") as? String
+
+            // Dark mode should be a valid boolean
+            if let isDarkMode = isDarkMode {
+                XCTAssertTrue(isDarkMode == true || isDarkMode == false)
+            }
+
+            // System uptime should be positive
+            if let systemUptime = systemUptime {
+                XCTAssertGreaterThan(systemUptime, 0)
+            }
+
+            // OS version should be properly formatted
+            if let osVersion = osVersion {
+                XCTAssertFalse(osVersion.isEmpty)
+                XCTAssertTrue(osVersion.contains("."))
+            }
+
+            // Processor count should be positive
+            if let processorCount = processorCount {
+                XCTAssertGreaterThan(processorCount, 0)
+                XCTAssertLessThanOrEqual(processorCount, 128)  // Reasonable upper bound
+            }
+
+            // Physical memory should be positive
+            if let physicalMemory = physicalMemory {
+                XCTAssertGreaterThan(physicalMemory, 0)
+            }
+
+            // Battery state should be boolean
+            if let isOnBattery = isOnBattery {
+                XCTAssertTrue(isOnBattery == true || isOnBattery == false)
+            }
+
+            // Dock position should be valid
+            if let dockPosition = dockPosition {
+                let validPositions = ["bottom", "left", "right"]
+                XCTAssertTrue(validPositions.contains(dockPosition))
+            }
+        }
+
+        func testMacOSSystemContextProviderCaching() {
+            let provider = MacOSSystemContextProvider()
+
+            let context1 = provider.currentContext()
+            let context2 = provider.currentContext()
+
+            // Core system properties should be consistent across calls
+            XCTAssertEqual(context1.operatingSystemVersion, context2.operatingSystemVersion)
+            XCTAssertEqual(context1.processorCount, context2.processorCount)
+            XCTAssertEqual(context1.physicalMemory, context2.physicalMemory)
+        }
+
+        func testMacOSSystemContextProviderInvalidKeys() {
+            let provider = MacOSSystemContextProvider()
+
+            let invalidValue = provider.getValue(for: "nonExistentKey")
+            XCTAssertNil(invalidValue)
+
+            let emptyValue = provider.getValue(for: "")
+            XCTAssertNil(emptyValue)
+        }
+
+        func testMacOSSpecificationFactories() {
+            // Test that macOS-specific specifications can be created
+            let darkModeSpec = PlatformContextProviders.createMacOSSystemSpec(.darkMode)
+            let batterySpec = PlatformContextProviders.createMacOSSystemSpec(.onBattery)
+            let dockSpec = PlatformContextProviders.createMacOSDockSpec(.bottom)
+
+            XCTAssertNotNil(darkModeSpec)
+            XCTAssertNotNil(batterySpec)
+            XCTAssertNotNil(dockSpec)
+
+            // Specifications should be evaluable
+            _ = darkModeSpec.isSatisfiedBy("test")
+            _ = batterySpec.isSatisfiedBy("test")
+            _ = dockSpec.isSatisfiedBy("test")
+        }
+
+        func testMacOSSystemCapabilityDetection() {
+            // Verify that macOS-specific capabilities are properly detected
+            XCTAssertTrue(PlatformContextProviders.supportsMacOSSystemPreferences)
+            XCTAssertTrue(PlatformContextProviders.supportsMacOSDock)
+            XCTAssertTrue(PlatformContextProviders.supportsMacOSPowerManagement)
+        }
+    }
+#endif
+
 #if canImport(CoreLocation) && (os(iOS) || os(watchOS))
     @available(iOS 14.0, watchOS 7.0, *)
     final class LocationContextProviderTests: XCTestCase {

@@ -15,6 +15,10 @@ import Foundation
     import UIKit
 #endif
 
+#if canImport(AppKit)
+    import AppKit
+#endif
+
 #if canImport(HealthKit)
     import HealthKit
 #endif
@@ -121,6 +125,33 @@ public enum PlatformContextProviders {
         #endif
     }
 
+    /// Whether the current platform supports macOS system preferences
+    public static var supportsMacOSSystemPreferences: Bool {
+        #if canImport(AppKit) && os(macOS)
+            return true
+        #else
+            return false
+        #endif
+    }
+
+    /// Whether the current platform supports macOS dock integration
+    public static var supportsMacOSDock: Bool {
+        #if canImport(AppKit) && os(macOS)
+            return true
+        #else
+            return false
+        #endif
+    }
+
+    /// Whether the current platform supports macOS power management
+    public static var supportsMacOSPowerManagement: Bool {
+        #if canImport(AppKit) && os(macOS)
+            return true
+        #else
+            return false
+        #endif
+    }
+
     /// Whether the current platform supports WatchKit features
     public static var supportsWatchKit: Bool {
         #if canImport(WatchKit) && os(watchOS)
@@ -171,6 +202,20 @@ public enum PlatformContextProviders {
             return LocationContextProvider(configuration: configuration)
         }
     #endif
+
+    /// Creates a macOS system context provider if available, or a fallback provider
+    public static var macOSSystemContextProvider: any ContextProviding {
+        #if canImport(AppKit) && os(macOS)
+            if #available(macOS 10.15, *) {
+                return MacOSSystemContextProvider()
+            }
+        #endif
+
+        // Fallback to basic context provider
+        return GenericContextProvider {
+            BasicSystemContext()
+        }
+    }
 
     // MARK: - Specification Factories
 
@@ -278,6 +323,70 @@ public enum PlatformContextProviders {
 
         return AnySpecification { _ in true }  // Default to allowing high performance
     }
+
+    /// Creates a macOS system specification
+    /// - Parameter capability: The system capability to check
+    /// - Returns: A specification that checks the macOS system capability
+    public static func createMacOSSystemSpec(_ capability: MacOSSystemCapability)
+        -> AnySpecification<Any>
+    {
+        #if canImport(AppKit) && os(macOS)
+            if #available(macOS 10.15, *) {
+                switch capability {
+                case .darkMode:
+                    return MacOSSystemContextProvider.darkModeSpecification()
+                case .onBattery:
+                    return MacOSSystemContextProvider.onBatterySpecification()
+                case .reduceMotion:
+                    return MacOSSystemContextProvider.reduceMotionSpecification()
+                case .highMemory(let minimumGB):
+                    return MacOSSystemContextProvider.memorySpecification(minimumGB: minimumGB)
+                case .multiCore(let minimumCores):
+                    return MacOSSystemContextProvider.processorSpecification(
+                        minimumCores: minimumCores)
+                }
+            }
+        #endif
+
+        return AnySpecification { _ in false }
+    }
+
+    /// Creates a macOS dock position specification
+    /// - Parameter position: The expected dock position
+    /// - Returns: A specification that checks the dock position
+    public static func createMacOSDockSpec(_ position: DockPosition) -> AnySpecification<Any> {
+        #if canImport(AppKit) && os(macOS)
+            if #available(macOS 10.15, *) {
+                return MacOSSystemContextProvider.dockPositionSpecification(position)
+            }
+        #endif
+
+        return AnySpecification { _ in false }
+    }
+
+    /// Creates a macOS performance tier specification
+    /// - Parameter minimumTier: The minimum performance tier required
+    /// - Returns: A specification that checks if the system meets the performance requirements
+    public static func createMacOSPerformanceSpec(_ minimumTier: PerformanceTier)
+        -> AnySpecification<Any>
+    {
+        #if canImport(AppKit) && os(macOS)
+            if #available(macOS 10.15, *) {
+                let provider = MacOSSystemContextProvider()
+                return AnySpecification { _ in
+                    let currentTier = provider.currentContext().performanceTier
+                    switch (currentTier, minimumTier) {
+                    case (.high, _): return true
+                    case (.medium, .low), (.medium, .medium): return true
+                    case (.low, .low): return true
+                    default: return false
+                    }
+                }
+            }
+        #endif
+
+        return AnySpecification { _ in false }
+    }
 }
 
 // MARK: - Supporting Types
@@ -346,6 +455,101 @@ public struct EmptyLocationContext {
 
     public init() {}
 }
+
+/// Basic system context for platforms without platform-specific system APIs
+public struct BasicSystemContext {
+    public let systemName: String
+    public let systemVersion: String
+    public let processorCount: Int
+    public let physicalMemory: UInt64
+
+    public init() {
+        #if os(macOS)
+            self.systemName = "macOS"
+        #elseif os(iOS)
+            self.systemName = "iOS"
+        #elseif os(watchOS)
+            self.systemName = "watchOS"
+        #elseif os(tvOS)
+            self.systemName = "tvOS"
+        #else
+            self.systemName = "Unknown"
+        #endif
+
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        self.systemVersion =
+            "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+
+        self.processorCount = ProcessInfo.processInfo.processorCount
+        self.physicalMemory = ProcessInfo.processInfo.physicalMemory
+    }
+}
+
+/// macOS system capabilities that can be checked
+public enum MacOSSystemCapability {
+    case darkMode
+    case onBattery
+    case reduceMotion
+    case highMemory(minimumGB: UInt64)
+    case multiCore(minimumCores: Int)
+}
+
+/// macOS dock positions
+public enum DockPosition: String, CaseIterable {
+    case bottom = "bottom"
+    case left = "left"
+    case right = "right"
+}
+
+/// System performance tiers for macOS
+public enum PerformanceTier: String, CaseIterable {
+    case low = "low"
+    case medium = "medium"
+    case high = "high"
+}
+
+// MARK: - Stub Types for Cross-Platform Compilation
+
+#if !os(macOS)
+    /// Stub for MacOSSystemContextProvider on non-macOS platforms
+    public final class MacOSSystemContextProvider: ContextProviding, ObservableObject {
+        public init() {}
+
+        public func getValue(for key: String) -> Any? {
+            return nil
+        }
+
+        public func currentContext() -> Any {
+            return [:]
+        }
+
+        public static func darkModeSpecification() -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+
+        public static func onBatterySpecification() -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+
+        public static func reduceMotionSpecification() -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+
+        public static func dockPositionSpecification(_ position: DockPosition) -> AnySpecification<
+            Any
+        > {
+            return AnySpecification { _ in false }
+        }
+
+        public static func memorySpecification(minimumGB: UInt64) -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+
+        public static func processorSpecification(minimumCores: Int) -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+    }
+#endif
 
 // MARK: - Privacy and Permission Helpers
 

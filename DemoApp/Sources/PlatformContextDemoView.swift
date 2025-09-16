@@ -28,6 +28,11 @@ struct PlatformContextDemoView: View {
                         Label("Location Context", systemImage: "location")
                             .badge("iOS")
                     }
+                #elseif os(macOS)
+                    NavigationLink(destination: MacOSSystemDemoView()) {
+                        Label("System State", systemImage: "desktopcomputer")
+                            .badge("macOS")
+                    }
                 #else
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Platform-specific features are available on iOS")
@@ -113,6 +118,19 @@ struct PlatformContextDemoView: View {
                         PlatformSupportBadge(supported: false)
                             .frame(width: 50)
                         PlatformSupportBadge(supported: true)
+                            .frame(width: 50)
+                    }
+
+                    HStack {
+                        Text("System State")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        PlatformSupportBadge(supported: false)
+                            .frame(width: 50)
+                        PlatformSupportBadge(supported: true)
+                            .frame(width: 50)
+                        PlatformSupportBadge(supported: false)
+                            .frame(width: 50)
+                        PlatformSupportBadge(supported: false)
                             .frame(width: 50)
                     }
 
@@ -604,6 +622,263 @@ struct PlatformSupportBadge: View {
     }
 #endif
 
+#if os(macOS)
+    @available(macOS 10.15, *)
+    struct MacOSSystemDemoView: View {
+        @StateObject private var systemProvider = MacOSSystemContextProvider()
+        @StateObject private var refreshTimer = RefreshTimer()
+
+        // Specification test results
+        @State private var darkModeResult: String = "—"
+        @State private var batteryResult: String = "—"
+        @State private var dockResult: String = "—"
+        @State private var performanceResult: String = "—"
+        @State private var memoryResult: String = "—"
+
+        var body: some View {
+            List {
+                Section(
+                    header: Text("macOS System State"),
+                    footer: Text("Real-time monitoring of macOS system preferences and state")
+                ) {
+                    SystemStateRow(
+                        title: "Dark Mode",
+                        value: systemProvider.currentContext().isDarkModeEnabled == true
+                            ? "Enabled" : "Disabled",
+                        systemImage: "moon.fill"
+                    )
+
+                    SystemStateRow(
+                        title: "Reduce Motion",
+                        value: systemProvider.currentContext().isReduceMotionEnabled == true
+                            ? "Enabled" : "Disabled",
+                        systemImage: "figure.walk"
+                    )
+
+                    if let uptime = systemProvider.currentContext().systemUptime {
+                        SystemStateRow(
+                            title: "System Uptime",
+                            value: formatUptime(uptime),
+                            systemImage: "clock"
+                        )
+                    }
+
+                    if let version = systemProvider.currentContext().operatingSystemVersion {
+                        SystemStateRow(
+                            title: "macOS Version",
+                            value: version,
+                            systemImage: "info.circle"
+                        )
+                    }
+
+                    if let cores = systemProvider.currentContext().processorCount {
+                        SystemStateRow(
+                            title: "CPU Cores",
+                            value: "\(cores)",
+                            systemImage: "cpu"
+                        )
+                    }
+
+                    if let memory = systemProvider.currentContext().physicalMemory {
+                        SystemStateRow(
+                            title: "Physical Memory",
+                            value: formatMemory(memory),
+                            systemImage: "memorychip"
+                        )
+                    }
+
+                    SystemStateRow(
+                        title: "On Battery",
+                        value: systemProvider.currentContext().isOnBattery == true ? "Yes" : "No",
+                        systemImage: "battery.100"
+                    )
+
+                    if let dockPosition = systemProvider.currentContext().dockPosition {
+                        SystemStateRow(
+                            title: "Dock Position",
+                            value: dockPosition.capitalized,
+                            systemImage: "dock.rectangle"
+                        )
+                    }
+
+                    if let menuBarHeight = systemProvider.currentContext().menuBarHeight {
+                        SystemStateRow(
+                            title: "Menu Bar Height",
+                            value: "\(Int(menuBarHeight))pt",
+                            systemImage: "menubar.rectangle"
+                        )
+                    }
+
+                    SystemStateRow(
+                        title: "Performance Tier",
+                        value: systemProvider.currentContext().performanceTier.rawValue.capitalized,
+                        systemImage: "speedometer"
+                    )
+                }
+
+                Section(header: Text("Specification Examples")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Button("Test Dark Mode Spec") {
+                            testDarkModeSpec()
+                        }
+                        Text("Result: \(darkModeResult)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Button("Test Battery Spec") {
+                            testBatterySpec()
+                        }
+                        Text("Result: \(batteryResult)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Button("Test Dock Position Spec") {
+                            testDockSpec()
+                        }
+                        Text("Result: \(dockResult)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Button("Test Performance Spec") {
+                            testPerformanceSpec()
+                        }
+                        Text("Result: \(performanceResult)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Button("Test Memory Spec (8GB+)") {
+                            testMemorySpec()
+                        }
+                        Text("Result: \(memoryResult)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section(
+                    header: Text("Cross-Platform Factory"),
+                    footer: Text("macOS specifications with automatic platform detection")
+                ) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        CodeExample(
+                            title: "Dark Mode Detection",
+                            code: "PlatformContextProviders.createMacOSSystemSpec(.darkMode)"
+                        )
+
+                        CodeExample(
+                            title: "Battery State",
+                            code: "PlatformContextProviders.createMacOSSystemSpec(.onBattery)"
+                        )
+
+                        CodeExample(
+                            title: "Dock Position",
+                            code: "PlatformContextProviders.createMacOSDockSpec(.bottom)"
+                        )
+
+                        CodeExample(
+                            title: "Performance Tier",
+                            code: "PlatformContextProviders.createMacOSPerformanceSpec(.medium)"
+                        )
+
+                        CodeExample(
+                            title: "Memory Requirement",
+                            code:
+                                "PlatformContextProviders.createMacOSSystemSpec(.highMemory(minimumGB: 8))"
+                        )
+                    }
+                }
+
+                Section(header: Text("System Health")) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        let context = systemProvider.currentContext()
+
+                        HStack {
+                            Image(
+                                systemName: context.isHighPerformanceAvailable
+                                    ? "checkmark.circle.fill" : "xmark.circle.fill"
+                            )
+                            .foregroundColor(context.isHighPerformanceAvailable ? .green : .red)
+                            Text("High Performance Available")
+                        }
+
+                        HStack {
+                            Image(
+                                systemName: context.shouldReduceFeatures
+                                    ? "exclamationmark.triangle.fill" : "checkmark.circle.fill"
+                            )
+                            .foregroundColor(context.shouldReduceFeatures ? .orange : .green)
+                            Text("Should Reduce Features")
+                        }
+
+                        HStack {
+                            Image(
+                                systemName: context.hasAccessibilityFeaturesEnabled
+                                    ? "accessibility" : "checkmark.circle.fill"
+                            )
+                            .foregroundColor(
+                                context.hasAccessibilityFeaturesEnabled ? .blue : .green)
+                            Text("Accessibility Features")
+                        }
+                    }
+                }
+            }
+            .navigationTitle("macOS System")
+            .onReceive(refreshTimer.timer) { _ in
+                // Timer triggers UI refresh
+            }
+        }
+
+        private func formatUptime(_ seconds: TimeInterval) -> String {
+            let days = Int(seconds) / 86400
+            let hours = Int(seconds) % 86400 / 3600
+            let minutes = Int(seconds) % 3600 / 60
+
+            if days > 0 {
+                return "\(days)d \(hours)h \(minutes)m"
+            } else if hours > 0 {
+                return "\(hours)h \(minutes)m"
+            } else {
+                return "\(minutes)m"
+            }
+        }
+
+        private func formatMemory(_ bytes: UInt64) -> String {
+            let gb = Double(bytes) / (1024 * 1024 * 1024)
+            return String(format: "%.1f GB", gb)
+        }
+
+        private func testDarkModeSpec() {
+            let spec = PlatformContextProviders.createMacOSSystemSpec(.darkMode)
+            let result = spec.isSatisfiedBy("test")
+            darkModeResult = result ? "Dark Mode ENABLED" : "Dark Mode DISABLED"
+        }
+
+        private func testBatterySpec() {
+            let spec = PlatformContextProviders.createMacOSSystemSpec(.onBattery)
+            let result = spec.isSatisfiedBy("test")
+            batteryResult = result ? "RUNNING on battery" : "PLUGGED IN"
+        }
+
+        private func testDockSpec() {
+            let spec = PlatformContextProviders.createMacOSDockSpec(.bottom)
+            let result = spec.isSatisfiedBy("test")
+            dockResult = result ? "Dock at BOTTOM" : "Dock NOT at bottom"
+        }
+
+        private func testPerformanceSpec() {
+            let spec = PlatformContextProviders.createMacOSPerformanceSpec(.medium)
+            let result = spec.isSatisfiedBy("test")
+            performanceResult = result ? "Performance tier SUFFICIENT" : "Performance tier LOW"
+        }
+
+        private func testMemorySpec() {
+            let spec = PlatformContextProviders.createMacOSSystemSpec(.highMemory(minimumGB: 8))
+            let result = spec.isSatisfiedBy("test")
+            memoryResult = result ? "Memory SUFFICIENT (8GB+)" : "Memory INSUFFICIENT (<8GB)"
+        }
+    }
+#endif
+
 // MARK: - Helper Views
 
 struct DeviceStateRow: View {
@@ -636,6 +911,27 @@ struct LocationStatusRow: View {
         HStack {
             Image(systemName: systemImage)
                 .foregroundColor(.green)
+                .frame(width: 20)
+
+            Text(title)
+
+            Spacer()
+
+            Text(value)
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
+struct SystemStateRow: View {
+    let title: String
+    let value: String
+    let systemImage: String
+
+    var body: some View {
+        HStack {
+            Image(systemName: systemImage)
+                .foregroundColor(.orange)
                 .frame(width: 20)
 
             Text(title)

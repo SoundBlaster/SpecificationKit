@@ -120,6 +120,7 @@ let alert = ThresholdSpec(
 ### Platform Integration
 
 - <doc:PlatformContextProviders>
+- <doc:MacOSSystemContextProvider>
 
 ### Core Concepts
 

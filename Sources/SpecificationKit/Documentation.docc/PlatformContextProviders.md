@@ -54,6 +54,31 @@ let storeProximitySpec = locationProvider.proximitySpecification(
 var isNearStore: Bool
 ```
 
+### macOS System Integration
+
+Use `MacOSSystemContextProvider` for macOS-specific system state:
+
+```swift
+@available(macOS 10.15, *)
+let systemProvider = MacOSSystemContextProvider()
+
+// Dark mode detection
+@Satisfies(provider: systemProvider, using: MacOSSystemContextProvider.darkModeSpecification())
+var isDarkModeEnabled: Bool
+
+// Battery state (MacBooks)
+@Satisfies(provider: systemProvider, using: MacOSSystemContextProvider.onBatterySpecification())
+var isOnBattery: Bool
+
+// Performance tier detection
+let context = systemProvider.currentContext()
+switch context.performanceTier {
+case .high: enableAdvancedFeatures()
+case .medium: enableStandardFeatures()
+case .low: enableBasicFeatures()
+}
+```
+
 ### Cross-Platform Compatibility
 
 Use `PlatformContextProviders` factory for cross-platform applications:
@@ -64,11 +89,18 @@ let darkModeSpec = PlatformContextProviders.createDeviceCapabilitySpec(.darkMode
 let locationSpec = PlatformContextProviders.createDeviceCapabilitySpec(.location)
 let batterySpec = PlatformContextProviders.createBatterySpec(threshold: 0.3)
 
+// macOS-specific specifications
+let macOSMemorySpec = PlatformContextProviders.createMacOSSystemSpec(.highMemory(minimumGB: 8))
+let macOSDockSpec = PlatformContextProviders.createMacOSDockSpec(.bottom)
+
 @Satisfies(using: darkModeSpec)
 var supportsDarkMode: Bool // false on unsupported platforms
 
 @Satisfies(using: batterySpec)
 var isLowBattery: Bool // false on platforms without battery APIs
+
+@Satisfies(using: macOSMemorySpec)
+var hasEnoughMemory: Bool // false on non-macOS platforms
 ```
 
 ## Privacy and Permissions
@@ -145,7 +177,7 @@ All platform providers are optimized for performance:
 | iPadOS   | ✅          | ✅       | ✅      | ❌     | ❌           |
 | watchOS  | ✅          | ✅       | ✅      | ✅     | ❌           |
 | tvOS     | ✅          | ❌       | ❌      | ❌     | ❌           |
-| macOS    | 🔄 Planned  | ❌       | 🔄 Planned | ❌  | 🔄 Planned   |
+| macOS    | ❌          | ❌       | ✅      | ❌     | ✅           |
 
 ## Best Practices
 
@@ -189,4 +221,4 @@ if PlatformContextProviders.supportsLocation {
 - ``DeviceContextProvider``
 - ``LocationContextProvider``
 - ``PlatformContextProviders``
-- <doc:ReactiveWrappers>
+- ``ReactiveWrappers``
