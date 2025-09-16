@@ -77,11 +77,11 @@ struct SpecificationTracerDemoView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack {
                                 Text("Counter Value:")
-                                TextField(
-                                    "Value", value: $demoManager.counterValue, format: .number
-                                )
-                                .textFieldStyle(.roundedBorder)
-                                .frame(width: 80)
+                                Stepper(value: $demoManager.counterValue, in: 0...10) {
+                                    Text("\(demoManager.counterValue)")
+                                        .fontWeight(.medium)
+                                        .frame(minWidth: 20)
+                                }
                                 .onChange(of: demoManager.counterValue) { _ in
                                     demoManager.updateContext()
                                 }
