@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **IMPORTANT: Use XcodeBuildMCP tools for all build operations when available**
 
 ### Building and Testing
-- `swift build` - Build the main library (use XcodeBuildMCP `swift_package_build`)
-- `swift test` - Run all tests (use XcodeBuildMCP `swift_package_test`)
+- `swift build` - Build the main library
+- `swift test` - Run all tests
 - `swift package resolve` - Resolve dependencies
 - `swift build -v` - Build with verbose output
 - `swift test -v` - Run tests with verbose output
