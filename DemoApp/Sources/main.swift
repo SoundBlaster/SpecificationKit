@@ -65,6 +65,9 @@ struct AppContentView: View {
                         Label("Platform Context", systemImage: "iphone")
                     }
                 }
+                NavigationLink(destination: SpecificationTracerDemoView()) {
+                    Label("Specification Tracer", systemImage: "chart.line.uptrend.xyaxis")
+                }
             }
             .listStyle(SidebarListStyle())
             .navigationTitle("SpecificationKit Demo")
