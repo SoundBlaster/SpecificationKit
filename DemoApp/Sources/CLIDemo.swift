@@ -205,6 +205,7 @@ class CLIDemo {
         let tracer = SpecificationTracer.shared
 
         print("🔍 Demonstrating SpecificationTracer capabilities...")
+        print("   This tool captures detailed execution data for debugging complex specifications.")
 
         // Start tracing session
         let sessionId = tracer.startTracing()
@@ -214,19 +215,22 @@ class CLIDemo {
 
         // Demo 1: Simple specification tracing
         print("\n   🎯 Simple Specification Trace:")
+        print(
+            "      Testing: Is app_opens counter ≤ 50? (Current: \(context.counter(for: "app_opens")))"
+        )
         let maxCountSpec = MaxCountSpec(counterKey: "app_opens", limit: 50)
         let result1 = tracer.trace(specification: maxCountSpec, context: context)
-        print("      • MaxCountSpec → \(result1)")
+        print("      • MaxCountSpec → \(result1 ? "✅ PASS" : "❌ FAIL")")
 
         // Demo 2: Complex composite specification tracing
         print("\n   🧩 Complex Composite Specification Trace:")
+        print("      Testing: (Time since launch > 10s) AND (Notifications enabled)")
         let timeSpec = TimeSinceEventSpec.sinceAppLaunch(seconds: 10)
         let flagSpec = FeatureFlagSpec(flagKey: "notifications_enabled")
-        let cooldownSpec = CooldownIntervalSpec(eventKey: "last_banner", minutes: 10)
 
-        let compositeSpec = timeSpec.and(flagSpec).and(cooldownSpec)
+        let compositeSpec = timeSpec.and(flagSpec)
         let result2 = tracer.trace(specification: compositeSpec, context: context)
-        print("      • CompositeSpec → \(result2)")
+        print("      • CompositeSpec → \(result2 ? "✅ PASS" : "❌ FAIL")")
 
         // Demo 3: Performance analysis
         print("\n   ⚡ Performance Analysis:")

@@ -30,25 +30,41 @@ struct SpecificationTracerDemoView: View {
                     Text("Controls")
                         .font(.headline)
 
-                    HStack(spacing: 12) {
-                        Button(demoManager.isTracing ? "Stop Tracing" : "Start Tracing") {
-                            demoManager.toggleTracing()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(demoManager.isTracing ? .red : .green)
+                    VStack(spacing: 12) {
+                        HStack(spacing: 12) {
+                            Button(demoManager.isTracing ? "Stop Tracing" : "Start Tracing") {
+                                demoManager.toggleTracing()
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(demoManager.isTracing ? .red : .green)
 
-                        Button("Run Test Spec") {
-                            demoManager.runTestSpecification()
+                            Button("Clear Results") {
+                                demoManager.clearResults()
+                            }
                         }
-                        .disabled(!demoManager.isTracing)
 
-                        Button("Run Complex Spec") {
-                            demoManager.runComplexSpecification()
-                        }
-                        .disabled(!demoManager.isTracing)
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Button("Run Simple Spec") {
+                                    demoManager.runTestSpecification()
+                                }
+                                .disabled(!demoManager.isTracing)
 
-                        Button("Clear Results") {
-                            demoManager.clearResults()
+                                Text("MaxCountSpec(counter ≤ 5)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Button("Run Complex Spec") {
+                                    demoManager.runComplexSpecification()
+                                }
+                                .disabled(!demoManager.isTracing)
+
+                                Text("MaxCount AND FeatureFlag")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
 
@@ -58,13 +74,33 @@ struct SpecificationTracerDemoView: View {
                             .font(.subheadline)
                             .fontWeight(.medium)
 
-                        HStack {
-                            Text("Counter Value:")
-                            TextField("Value", value: $demoManager.counterValue, format: .number)
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                Text("Counter Value:")
+                                TextField(
+                                    "Value", value: $demoManager.counterValue, format: .number
+                                )
                                 .textFieldStyle(.roundedBorder)
-                                .frame(width: 60)
+                                .frame(width: 80)
+                                .onChange(of: demoManager.counterValue) { _ in
+                                    demoManager.updateContext()
+                                }
 
-                            Toggle("Feature Flag", isOn: $demoManager.featureFlag)
+                                Text("(tests if ≤ 5)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            HStack {
+                                Toggle("Feature Flag", isOn: $demoManager.featureFlag)
+                                    .onChange(of: demoManager.featureFlag) { _ in
+                                        demoManager.updateContext()
+                                    }
+
+                                Text("(tests if enabled)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
                 }
@@ -327,12 +363,11 @@ class TracerDemoManager: ObservableObject {
 
         updateContext()
 
-        // Create a complex composite specification
+        // Create a complex composite specification that's more predictable
         let maxCountSpec = MaxCountSpec(counterKey: "demo_counter", limit: 5)
         let featureFlagSpec = FeatureFlagSpec(flagKey: "demo_feature")
-        let cooldownSpec = CooldownIntervalSpec(eventKey: "demo_event", seconds: 3)
 
-        let compositeSpec = maxCountSpec.and(featureFlagSpec).and(cooldownSpec)
+        let compositeSpec = maxCountSpec.and(featureFlagSpec)
         let context = contextProvider.currentContext()
 
         _ = tracer.trace(specification: compositeSpec, context: context)
@@ -343,7 +378,7 @@ class TracerDemoManager: ObservableObject {
         treeOutput = ""
     }
 
-    private func updateContext() {
+    func updateContext() {
         contextProvider.setCounter("demo_counter", to: counterValue)
         contextProvider.setFlag("demo_feature", to: featureFlag)
         contextProvider.recordEvent("demo_event")
