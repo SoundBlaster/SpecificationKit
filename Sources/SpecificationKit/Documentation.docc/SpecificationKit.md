@@ -158,3 +158,7 @@ let alert = ThresholdSpec(
 
 - ``specs(_:)``
 - ``AutoContext()``
+
+### Debugging and Development Tools
+
+- <doc:SpecificationTracer>

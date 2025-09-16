@@ -96,6 +96,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Set union operations for segments across providers
   - Type-erased provider support with `AnyContextProvider`
 
+#### 🔍 Phase 4A: Developer Testing Tools (Partial - 1/3 Complete)
+- **SpecificationTracer**: Comprehensive execution tracing and debugging utilities ✅
+  - Hierarchical tracing with parent-child evaluation relationships
+  - Precise timing measurements for performance analysis (microsecond precision)
+  - Visual representation with tree-based output and DOT graph generation for Graphviz
+  - Thread-safe operation with concurrent tracing across multiple threads
+  - Zero-overhead when disabled for production performance
+  - Trace session management with start/stop controls and metadata collection
+  - Composite specification tracing with short-circuit detection for AND/OR operations
+  - Export capabilities for external analysis and debugging workflows
+  - Statistical analysis with performance baselines and slow execution identification
+
 ### Enhanced
 - **Swift 6 Compatibility**: Full concurrency support across all components
   - `@Sendable` conformance for all shared types

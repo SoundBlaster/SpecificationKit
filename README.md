@@ -1301,6 +1301,47 @@ Add performance regression detection to your workflow:
 
 The benchmark validation system automatically detects performance regressions by comparing current results against historical baselines.
 
+## 🔍 Debugging and Tracing
+
+SpecificationKit v3.0.0 includes `SpecificationTracer` for detailed execution analysis and debugging of complex specification compositions. The tracer provides comprehensive insights into specification evaluation flow, timing, and hierarchical execution patterns.
+
+### SpecificationTracer
+
+The `SpecificationTracer` captures detailed information about specification evaluations including execution hierarchy, timing data, and visual representations for debugging complex composite specifications.
+
+```swift
+import SpecificationKit
+
+let tracer = SpecificationTracer.shared
+let sessionId = tracer.startTracing()
+
+// Traced evaluation
+let result = tracer.trace(specification: complexSpec, context: context)
+
+if let session = tracer.stopTracing() {
+    print("Traced \(session.entries.count) evaluations")
+    print("Total time: \(session.totalExecutionTime * 1000)ms")
+    
+    // Print execution tree
+    for tree in session.traceTree {
+        tree.printTree()
+    }
+    
+    // Generate DOT graph for visualization
+    let dotGraph = session.traceTree.first?.generateDotGraph()
+}
+```
+
+#### Key Features
+
+- **Hierarchical Tracing**: Captures nested specification evaluations with parent-child relationships
+- **Performance Monitoring**: Precise timing measurements for each evaluation
+- **Visual Representation**: Tree-based visualization and DOT graph generation for Graphviz
+- **Thread-Safe Operation**: Concurrent tracing across multiple threads
+- **Zero-Overhead When Disabled**: Minimal performance impact when not actively tracing
+
+For complete documentation and examples, see the [SpecificationTracer guide](https://soundblaster.github.io/SpecificationKit/documentation/specificationkit/specificationtracer).
+
 ## 📝 Latest Updates - v3.0.0 Implementation Summary
 
 ### @ConditionalSatisfies Property Wrapper ✅
