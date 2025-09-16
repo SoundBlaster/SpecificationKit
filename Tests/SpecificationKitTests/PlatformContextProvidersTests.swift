@@ -488,6 +488,24 @@ final class PlatformContextProvidersTests: XCTestCase {
             XCTAssertTrue(PlatformContextProviders.supportsMacOSDock)
             XCTAssertTrue(PlatformContextProviders.supportsMacOSPowerManagement)
         }
+
+        func testMacOSSystemContextEnvironmentDetection() {
+            // Test that the environment detection method works correctly
+
+            // The method should return true in test environment (since we're running tests)
+            let shouldUseDefaults = MacOSSystemContextProvider.MacOSSystemContext
+                .shouldUseTestEnvironmentDefaults()
+            XCTAssertTrue(
+                shouldUseDefaults, "Should use test environment defaults when running tests")
+
+            // Test that we can create a context successfully
+            let context = MacOSSystemContextProvider.MacOSSystemContext()
+            XCTAssertNotNil(context)
+
+            // In test environment, these should have default values
+            XCTAssertEqual(context.isDarkModeEnabled, false)
+            XCTAssertEqual(context.menuBarHeight, 24.0)
+        }
     }
 #endif
 

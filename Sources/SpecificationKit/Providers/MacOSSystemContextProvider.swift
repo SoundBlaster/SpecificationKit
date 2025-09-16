@@ -115,13 +115,17 @@
             /// Current dock position ("bottom", "left", "right")
             public let dockPosition: String?
 
-            internal init() {
-                // Check if we're in a testing environment
+            /// Determines if test environment defaults should be used
+            /// Internal for testing purposes
+            internal static func shouldUseTestEnvironmentDefaults() -> Bool {
                 let isTestEnvironment =
                     ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+                return isTestEnvironment || NSApp == nil
+            }
 
+            internal init() {
                 // UI appearance - safe for testing environments
-                if isTestEnvironment || NSApp == nil {
+                if Self.shouldUseTestEnvironmentDefaults() {
                     self.isDarkModeEnabled = false
                     self.menuBarHeight = 24.0  // Default menu bar height
                 } else {
