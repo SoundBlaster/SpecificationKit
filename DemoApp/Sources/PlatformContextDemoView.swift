@@ -48,6 +48,29 @@ struct PlatformContextDemoView: View {
                 #endif
             }
 
+            Section(header: Text("Live Platform Context Demo")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    #if os(macOS)
+                        Text("macOS System Context Provider")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
+                        LiveMacOSContextDemo()
+                    #elseif os(iOS)
+                        Text("iOS Device Context Provider")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
+                        LiveIOSContextDemo()
+                    #else
+                        Text("Platform context providers are available on macOS and iOS")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    #endif
+                }
+                .padding(.vertical, 8)
+            }
+
             Section(header: Text("Cross-Platform Factory")) {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("PlatformContextProviders provides unified factory methods:")
@@ -967,6 +990,257 @@ struct CodeExample: View {
 class RefreshTimer: ObservableObject {
     let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
 }
+
+// MARK: - Live Platform Context Demos
+
+#if os(macOS)
+    @available(macOS 10.15, *)
+    struct LiveMacOSContextDemo: View {
+        @StateObject private var provider = MacOSSystemContextProvider()
+        @StateObject private var refreshTimer = RefreshTimer()
+        @State private var specResults: [String: String] = [:]
+
+        var body: some View {
+            let context = provider.currentContext()
+
+            VStack(alignment: .leading, spacing: 8) {
+                // Current system state
+                Group {
+                    statusRow(
+                        "Dark Mode", value: context.isDarkModeEnabled == true ? "ON" : "OFF",
+                        color: context.isDarkModeEnabled == true ? .blue : .gray)
+
+                    if let uptime = context.systemUptime {
+                        statusRow("System Uptime", value: formatUptime(uptime), color: .green)
+                    }
+
+                    statusRow(
+                        "On Battery", value: context.isOnBattery == true ? "YES" : "NO",
+                        color: context.isOnBattery == true ? .orange : .green)
+
+                    if let dock = context.dockPosition {
+                        statusRow("Dock Position", value: dock.capitalized, color: .purple)
+                    }
+
+                    if let memory = context.physicalMemory {
+                        statusRow("Memory", value: formatMemory(memory), color: .cyan)
+                    }
+                }
+
+                Divider()
+
+                // Specification tests
+                Text("Live Specification Tests")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+
+                Group {
+                    Button("Dark Mode") {
+                        testDarkModeSpec()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
+
+                    if let result = specResults["darkMode"] {
+                        Text("Result: \(result)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button("Memory (8GB+)") {
+                        testMemorySpec()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
+
+                    if let result = specResults["memory"] {
+                        Text("Result: \(result)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .onReceive(refreshTimer.timer) { _ in
+                // Auto-refresh context data
+            }
+        }
+
+        private func statusRow(_ title: String, value: String, color: Color) -> some View {
+            HStack {
+                Circle()
+                    .fill(color)
+                    .frame(width: 8, height: 8)
+                Text(title)
+                    .font(.caption)
+                Spacer()
+                Text(value)
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+        }
+
+        private func formatUptime(_ seconds: TimeInterval) -> String {
+            let hours = Int(seconds) / 3600
+            let minutes = Int(seconds) % 3600 / 60
+            return "\(hours)h \(minutes)m"
+        }
+
+        private func formatMemory(_ bytes: UInt64) -> String {
+            let gb = Double(bytes) / (1024 * 1024 * 1024)
+            return String(format: "%.1f GB", gb)
+        }
+
+        private func testDarkModeSpec() {
+            let spec = PlatformContextProviders.createMacOSSystemSpec(.darkMode)
+            let result = spec.isSatisfiedBy("test")
+            specResults["darkMode"] = result ? "✅ Dark Mode" : "❌ Light Mode"
+        }
+
+        private func testMemorySpec() {
+            let spec = PlatformContextProviders.createMacOSSystemSpec(.highMemory(minimumGB: 8))
+            let result = spec.isSatisfiedBy("test")
+            specResults["memory"] = result ? "✅ 8GB+" : "❌ < 8GB"
+        }
+    }
+#endif
+
+#if os(iOS)
+    @available(iOS 14.0, *)
+    struct LiveIOSContextDemo: View {
+        @StateObject private var provider = DeviceContextProvider()
+        @StateObject private var refreshTimer = RefreshTimer()
+        @State private var specResults: [String: String] = [:]
+
+        var body: some View {
+            let context = provider.deviceContext
+
+            VStack(alignment: .leading, spacing: 8) {
+                // Current device state
+                Group {
+                    statusRow(
+                        "Battery Level", value: "\(Int(context.batteryLevel * 100))%",
+                        color: batteryColor(context.batteryLevel))
+
+                    statusRow(
+                        "Low Power Mode", value: context.isLowPowerModeEnabled ? "ON" : "OFF",
+                        color: context.isLowPowerModeEnabled ? .orange : .green)
+
+                    statusRow(
+                        "Dark Mode", value: context.isDarkModeEnabled ? "ON" : "OFF",
+                        color: context.isDarkModeEnabled ? .blue : .gray)
+
+                    statusRow(
+                        "Thermal State", value: thermalStateText(context.thermalState),
+                        color: thermalColor(context.thermalState))
+
+                    statusRow(
+                        "Voice Over", value: context.isVoiceOverRunning ? "RUNNING" : "OFF",
+                        color: context.isVoiceOverRunning ? .blue : .gray)
+                }
+
+                Divider()
+
+                // Specification tests
+                Text("Live Specification Tests")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+
+                Group {
+                    Button("Low Power") {
+                        testLowPowerSpec()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
+
+                    if let result = specResults["lowPower"] {
+                        Text("Result: \(result)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button("Dark Mode") {
+                        testDarkModeSpec()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
+
+                    if let result = specResults["darkMode"] {
+                        Text("Result: \(result)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .onReceive(refreshTimer.timer) { _ in
+                // Auto-refresh device data
+            }
+        }
+
+        private func statusRow(_ title: String, value: String, color: Color) -> some View {
+            HStack {
+                Circle()
+                    .fill(color)
+                    .frame(width: 8, height: 8)
+                Text(title)
+                    .font(.caption)
+                Spacer()
+                Text(value)
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+        }
+
+        private func batteryColor(_ level: Float) -> Color {
+            switch level {
+            case 0.0..<0.2: return .red
+            case 0.2..<0.5: return .orange
+            default: return .green
+            }
+        }
+
+        private func thermalColor(_ state: ProcessInfo.ThermalState) -> Color {
+            switch state {
+            case .nominal: return .green
+            case .fair: return .yellow
+            case .serious: return .orange
+            case .critical: return .red
+            @unknown default: return .gray
+            }
+        }
+
+        private func thermalStateText(_ state: ProcessInfo.ThermalState) -> String {
+            switch state {
+            case .nominal: return "Normal"
+            case .fair: return "Fair"
+            case .serious: return "Serious"
+            case .critical: return "Critical"
+            @unknown default: return "Unknown"
+            }
+        }
+
+        private func testLowPowerSpec() {
+            if let spec = PlatformContextProviders.createBatterySpec(.lowPowerMode) {
+                let context = provider.currentContext()
+                let result = spec.isSatisfiedBy(context)
+                specResults["lowPower"] = result ? "✅ Low Power ON" : "❌ Low Power OFF"
+            } else {
+                specResults["lowPower"] = "❓ Not supported"
+            }
+        }
+
+        private func testDarkModeSpec() {
+            if let spec = PlatformContextProviders.createDeviceCapabilitySpec(.darkMode) {
+                let context = provider.currentContext()
+                let result = spec.isSatisfiedBy(context)
+                specResults["darkMode"] = result ? "✅ Dark Mode ON" : "❌ Light Mode"
+            } else {
+                specResults["darkMode"] = "❓ Not supported"
+            }
+        }
+    }
+#endif
 
 #Preview {
     if #available(iOS 14.0, macOS 11.0, watchOS 7.0, tvOS 14.0, *) {
