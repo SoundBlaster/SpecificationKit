@@ -5,6 +5,7 @@
 //  Specification execution tracing and debugging utilities for SpecificationKit v3.0.0
 //
 
+import Darwin
 import Foundation
 
 /// A comprehensive execution trace for specification evaluations.
@@ -362,6 +363,12 @@ public final class SpecificationTracer {
     private var isEnabled: Bool = false
     private let queue = DispatchQueue(label: "specification-tracer", qos: .utility)
 
+    // Static timing properties for high-precision measurement
+    private static var timebaseInfo = mach_timebase_info_data_t()
+    private static let initializeTimebase: () = {
+        mach_timebase_info(&timebaseInfo)
+    }()
+
     /// Shared singleton instance of the specification tracer.
     ///
     /// Use this shared instance for consistent tracing across your application.
@@ -370,6 +377,16 @@ public final class SpecificationTracer {
     public static let shared = SpecificationTracer()
 
     private init() {}
+
+    // MARK: - Private Helpers
+
+    /// Convert mach time to seconds for high-precision timing
+    private static func machTimeToSeconds(_ machTime: UInt64) -> TimeInterval {
+        _ = initializeTimebase  // Ensure timebase is initialized
+
+        let nanoseconds = machTime * UInt64(timebaseInfo.numer) / UInt64(timebaseInfo.denom)
+        return TimeInterval(nanoseconds) / 1_000_000_000.0
+    }
 
     // MARK: - Public API
 
@@ -494,9 +511,11 @@ public final class SpecificationTracer {
             return specification.isSatisfiedBy(context)
         }
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = mach_absolute_time()
         let result = specification.isSatisfiedBy(context)
-        let executionTime = CFAbsoluteTimeGetCurrent() - startTime
+        let endTime = mach_absolute_time()
+
+        let executionTime = Self.machTimeToSeconds(endTime - startTime)
 
         let entry = TraceEntry(
             specification: String(describing: type(of: specification)),
@@ -537,9 +556,11 @@ public final class SpecificationTracer {
             return specification.isSatisfiedBy(context)
         }
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = mach_absolute_time()
         let result = specification.isSatisfiedBy(context)
-        let executionTime = CFAbsoluteTimeGetCurrent() - startTime
+        let endTime = mach_absolute_time()
+
+        let executionTime = Self.machTimeToSeconds(endTime - startTime)
 
         let entry = TraceEntry(
             specification: String(describing: type(of: specification)),
@@ -605,7 +626,7 @@ public final class SpecificationTracer {
         depth: Int = 0
     ) -> Bool where LeftSpec.T == Context, RightSpec.T == Context {
         let compositeId = UUID()
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = mach_absolute_time()
 
         // Trace left specification
         let leftResult = trace(
@@ -617,7 +638,8 @@ public final class SpecificationTracer {
 
         // For AND operations, short-circuit if left is false
         if operation == "AND" && !leftResult {
-            let executionTime = CFAbsoluteTimeGetCurrent() - startTime
+            let endTime = mach_absolute_time()
+            let executionTime = Self.machTimeToSeconds(endTime - startTime)
             recordCompositeEntry(
                 compositeId: compositeId,
                 operation: operation,
@@ -632,7 +654,8 @@ public final class SpecificationTracer {
 
         // For OR operations, short-circuit if left is true
         if operation == "OR" && leftResult {
-            let executionTime = CFAbsoluteTimeGetCurrent() - startTime
+            let endTime = mach_absolute_time()
+            let executionTime = Self.machTimeToSeconds(endTime - startTime)
             recordCompositeEntry(
                 compositeId: compositeId,
                 operation: operation,
@@ -655,7 +678,8 @@ public final class SpecificationTracer {
 
         let finalResult =
             operation == "AND" ? (leftResult && rightResult) : (leftResult || rightResult)
-        let executionTime = CFAbsoluteTimeGetCurrent() - startTime
+        let endTime = mach_absolute_time()
+        let executionTime = Self.machTimeToSeconds(endTime - startTime)
 
         recordCompositeEntry(
             compositeId: compositeId,
@@ -746,9 +770,11 @@ extension SpecificationTracer {
             return specification.isSatisfiedBy(context)
         }
 
-        let startTime = CFAbsoluteTimeGetCurrent()
+        let startTime = mach_absolute_time()
         let result = specification.isSatisfiedBy(context)
-        let executionTime = CFAbsoluteTimeGetCurrent() - startTime
+        let endTime = mach_absolute_time()
+
+        let executionTime = Self.machTimeToSeconds(endTime - startTime)
 
         let entry = TraceEntry(
             specification: "AnySpecification<\(String(describing: Context.self))>",

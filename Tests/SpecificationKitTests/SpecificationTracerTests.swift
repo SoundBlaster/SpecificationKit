@@ -341,17 +341,32 @@ final class SpecificationTracerTests: XCTestCase {
     func testSessionTotalExecutionTime() {
         tracer.startTracing()
 
-        // Add multiple traced executions
+        // Add multiple traced executions with slightly more complex operations
         for i in 1...5 {
-            _ = tracer.trace(specification: PredicateSpec<Int> { $0 > 0 }, context: i)
+            // Use a more complex predicate that takes measurable time
+            let spec = PredicateSpec<Int> { value in
+                // Simple computation to ensure some execution time
+                let result = (0..<10).reduce(0) { sum, _ in sum + value }
+                return result > 0
+            }
+            _ = tracer.trace(specification: spec, context: i)
         }
 
         let session = tracer.stopTracing()
-        XCTAssertGreaterThan(session?.totalExecutionTime ?? 0, 0)
+
+        // With high-precision timing, we should always get some measurable time
+        // Even if very small, it should be greater than 0
+        let totalTime = session?.totalExecutionTime ?? 0
+        XCTAssertGreaterThan(
+            totalTime, 0, "Total execution time should be measurable with high-precision timing")
 
         // Total should equal sum of individual execution times
         let manualSum = session?.entries.map(\.executionTime).reduce(0, +) ?? 0
-        XCTAssertEqual(session?.totalExecutionTime ?? 0, manualSum, accuracy: 0.000001)
+        XCTAssertEqual(totalTime, manualSum, accuracy: 0.000001)
+
+        // Verify all entries have some execution time recorded
+        let entriesWithZeroTime = session?.entries.filter { $0.executionTime == 0 }.count ?? 0
+        XCTAssertEqual(entriesWithZeroTime, 0, "All entries should have measurable execution time")
     }
 
     // MARK: - Tree Visualization Tests
