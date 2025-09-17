@@ -2,7 +2,7 @@
 //  HistoricalSpecTests.swift
 //  SpecificationKitTests
 //
-//  Created by SpecificationKit on 2024.
+//  Created by SpecificationKit on 2025.
 //
 
 import XCTest
