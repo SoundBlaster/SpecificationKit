@@ -161,6 +161,34 @@ public enum PlatformContextProviders {
         #endif
     }
 
+    /// Whether the current platform supports Apple TV features
+    public static var supportsAppleTV: Bool {
+        #if canImport(UIKit) && canImport(GameController) && os(tvOS)
+            return true
+        #else
+            return false
+        #endif
+    }
+
+    /// Whether the current platform supports tvOS Game Controller features
+    public static var supportsTVGameController: Bool {
+        #if canImport(GameController) && os(tvOS)
+            return true
+        #else
+            return false
+        #endif
+    }
+
+    /// Whether the current platform supports tvOS HDR content
+    public static var supportsTVHDR: Bool {
+        #if canImport(UIKit) && os(tvOS)
+            if #available(tvOS 13.0, *) {
+                return UIScreen.main.traitCollection.displayGamut == .P3
+            }
+        #endif
+        return false
+    }
+
     // MARK: - Context Provider Factories
 
     /// Creates the best available device context provider for the current platform
@@ -214,6 +242,20 @@ public enum PlatformContextProviders {
         // Fallback to basic context provider
         return GenericContextProvider {
             BasicSystemContext()
+        }
+    }
+
+    /// Creates an Apple TV context provider if available, or a fallback provider
+    public static var appleTVContextProvider: any ContextProviding {
+        #if canImport(UIKit) && canImport(GameController) && os(tvOS)
+            if #available(tvOS 13.0, *) {
+                return AppleTVContextProvider()
+            }
+        #endif
+
+        // Fallback to basic context provider
+        return GenericContextProvider {
+            BasicDeviceContext()
         }
     }
 
@@ -387,6 +429,64 @@ public enum PlatformContextProviders {
 
         return AnySpecification { _ in false }
     }
+
+    /// Creates an Apple TV system specification
+    /// - Parameter capability: The Apple TV capability to check
+    /// - Returns: A specification that checks the Apple TV capability
+    public static func createAppleTVSpec(_ capability: AppleTVCapability) -> AnySpecification<Any> {
+        #if canImport(UIKit) && canImport(GameController) && os(tvOS)
+            if #available(tvOS 13.0, *) {
+                switch capability {
+                case .hdrSupport:
+                    return AppleTVContextProvider.hdrSupportSpecification()
+                case .siriRemote:
+                    return AppleTVContextProvider.siriRemoteSpecification()
+                case .remoteConnected:
+                    return AppleTVContextProvider.remoteConnectedSpecification()
+                case .darkMode:
+                    return AppleTVContextProvider.darkModeSpecification()
+                case .voiceOver:
+                    return AppleTVContextProvider.voiceOverSpecification()
+                case .highResolution(let width, let height):
+                    return AppleTVContextProvider.screenResolutionSpecification(
+                        minimumWidth: width, minimumHeight: height
+                    )
+                case .highMemory(let minimumGB):
+                    return AppleTVContextProvider.memorySpecification(minimumGB: minimumGB)
+                case .multiCore(let minimumCores):
+                    return AppleTVContextProvider.processorSpecification(minimumCores: minimumCores)
+                case .voiceCommands:
+                    return AppleTVContextProvider.voiceCommandSupportSpecification()
+                }
+            }
+        #endif
+
+        return AnySpecification { _ in false }
+    }
+
+    /// Creates an Apple TV performance tier specification
+    /// - Parameter minimumTier: The minimum performance tier required
+    /// - Returns: A specification that checks if the Apple TV meets the performance requirements
+    public static func createAppleTVPerformanceSpec(_ minimumTier: TVPerformanceTier)
+        -> AnySpecification<Any>
+    {
+        #if canImport(UIKit) && canImport(GameController) && os(tvOS)
+            if #available(tvOS 13.0, *) {
+                let provider = AppleTVContextProvider()
+                return AnySpecification { _ in
+                    let currentTier = provider.currentContext().performanceTier
+                    switch (currentTier, minimumTier) {
+                    case (.high, _): return true
+                    case (.standard, .reduced), (.standard, .standard): return true
+                    case (.reduced, .reduced): return true
+                    default: return false
+                    }
+                }
+            }
+        #endif
+
+        return AnySpecification { _ in false }
+    }
 }
 
 // MARK: - Supporting Types
@@ -508,6 +608,26 @@ public enum PerformanceTier: String, CaseIterable {
     case high = "high"
 }
 
+/// Apple TV capabilities that can be checked
+public enum AppleTVCapability {
+    case hdrSupport
+    case siriRemote
+    case remoteConnected
+    case darkMode
+    case voiceOver
+    case highResolution(minimumWidth: CGFloat, minimumHeight: CGFloat)
+    case highMemory(minimumGB: UInt64)
+    case multiCore(minimumCores: Int)
+    case voiceCommands
+}
+
+/// Apple TV performance tiers for tvOS
+public enum TVPerformanceTier: String, CaseIterable {
+    case reduced = "reduced"
+    case standard = "standard"
+    case high = "high"
+}
+
 // MARK: - Stub Types for Cross-Platform Compilation
 
 #if !os(macOS)
@@ -546,6 +666,64 @@ public enum PerformanceTier: String, CaseIterable {
         }
 
         public static func processorSpecification(minimumCores: Int) -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+    }
+
+    /// Stub for AppleTVContextProvider on non-tvOS platforms
+    public final class AppleTVContextProvider: ContextProviding, ObservableObject {
+        public init() {}
+
+        public func getValue(for key: String) -> Any? {
+            return nil
+        }
+
+        public func currentContext() -> Any {
+            return [:]
+        }
+
+        public static func hdrSupportSpecification() -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+
+        public static func siriRemoteSpecification() -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+
+        public static func remoteConnectedSpecification() -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+
+        public static func darkModeSpecification() -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+
+        public static func voiceOverSpecification() -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+
+        public static func thermalStateSpecification(
+            allowedStates: Set<ProcessInfo.ThermalState> = [.nominal, .fair]
+        ) -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+
+        public static func screenResolutionSpecification(
+            minimumWidth: CGFloat,
+            minimumHeight: CGFloat = 0
+        ) -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+
+        public static func memorySpecification(minimumGB: UInt64) -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+
+        public static func processorSpecification(minimumCores: Int) -> AnySpecification<Any> {
+            return AnySpecification { _ in false }
+        }
+
+        public static func voiceCommandSupportSpecification() -> AnySpecification<Any> {
             return AnySpecification { _ in false }
         }
     }

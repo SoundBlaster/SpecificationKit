@@ -741,10 +741,46 @@ let darkModeSpec = PlatformContextProviders.createDeviceCapabilitySpec(.darkMode
 var supportsDarkMode: Bool // Works on all platforms with graceful fallbacks
 ```
 
+#### AppleTVContextProvider
+
+The `AppleTVContextProvider` enables Apple TV applications to make context-aware decisions based on device capabilities, remote control availability, display properties, and system state.
+
+```swift
+let tvProvider = AppleTVContextProvider()
+let context = tvProvider.currentContext()
+
+// HDR content support
+struct HDRContentSpec: Specification {
+    func isSatisfiedBy(_ context: AppleTVContext) -> Bool {
+        return context.supportsHDR == true && context.supportsHighQualityContent
+    }
+}
+
+@Satisfies(provider: tvProvider, using: HDRContentSpec())
+var shouldEnableHDRContent: Bool
+
+// Remote control optimization
+struct SiriRemoteOptimizationSpec: Specification {
+    func isSatisfiedBy(_ context: AppleTVContext) -> Bool {
+        return context.hasSiriRemote && context.supportsAdvancedInput
+    }
+}
+
+@Satisfies(provider: tvProvider, using: SiriRemoteOptimizationSpec())
+var canUseSiriRemoteFeatures: Bool
+```
+
+**Features:**
+- **Device Information**: Model detection, tvOS version, interface idiom validation
+- **Display Properties**: Screen resolution, scale factor, HDR support detection
+- **Remote Control Detection**: Siri Remote, Apple TV Remote, game controller monitoring
+- **System Performance**: Thermal state, memory, CPU cores, performance tier classification
+- **Accessibility**: VoiceOver, Switch Control, reduce motion preferences
+
 **Platform Support Matrix:**
 - **iOS**: Device info, location, battery, accessibility ✅
 - **watchOS**: Device info, location, health data ✅  
-- **tvOS**: Device info, remote capabilities ✅
+- **tvOS**: Device info, remote capabilities, HDR support ✅
 - **macOS**: System preferences, battery state, performance monitoring ✅
 
 ## 🎯 Advanced Usage
