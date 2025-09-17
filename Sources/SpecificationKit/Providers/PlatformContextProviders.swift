@@ -91,7 +91,7 @@ public enum PlatformContextProviders {
 
     /// Whether the current platform supports location services
     public static var supportsLocation: Bool {
-        #if canImport(CoreLocation) && (os(iOS) || os(watchOS))
+        #if canImport(CoreLocation) && !os(tvOS)
             return true
         #else
             return false
@@ -207,12 +207,11 @@ public enum PlatformContextProviders {
 
     /// Creates a location context provider if available, or a fallback provider
     public static var locationContextProvider: any ContextProviding {
-        #if canImport(CoreLocation) && (os(iOS) || os(watchOS))
-            if #available(iOS 14.0, watchOS 7.0, *) {
+        #if canImport(CoreLocation) && !os(tvOS)
+            if #available(iOS 14.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *) {
                 return LocationContextProvider()
             }
         #endif
-
         // Fallback to empty location context
         return GenericContextProvider {
             EmptyLocationContext()

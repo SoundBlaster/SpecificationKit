@@ -5,14 +5,14 @@
 //  Created by SpecificationKit on 2024.
 //
 
-#if canImport(CoreLocation) && (os(iOS) || os(watchOS))
+#if canImport(CoreLocation) && !os(tvOS)
     import Foundation
     import CoreLocation
     #if canImport(Combine)
         import Combine
     #endif
 
-    /// A context provider that provides location-based data for specifications on iOS and watchOS.
+    /// A context provider that provides location-based data for specifications on Apple platforms that support Core Location (excluding tvOS).
     ///
     /// `LocationContextProvider` integrates with CoreLocation to provide real-time location data
     /// for specification evaluation. It handles permission requests, location updates, and provides
@@ -114,7 +114,7 @@
     /// - Supports reduced accuracy mode (iOS 14+)
     /// - Provides clear fallback mechanisms when location is unavailable
     /// - Stops location updates appropriately to preserve battery
-    @available(iOS 14.0, watchOS 7.0, *)
+    @available(iOS 14.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *)
     public final class LocationContextProvider: NSObject, ContextProviding {
 
         // MARK: - Configuration
@@ -157,14 +157,17 @@
                 fallbackLocation: nil
             )
 
-            /// Privacy-conscious configuration with reduced accuracy (iOS 14+)
-            @available(iOS 14.0, *)
-            public static let privacyFocused = Configuration(
-                accuracy: kCLLocationAccuracyReduced,
-                distanceFilter: 50.0,
-                requestPermission: false,
-                fallbackLocation: nil
-            )
+            #if os(iOS)
+                /// Privacy-conscious configuration with reduced accuracy (iOS 14+)
+                @available(iOS 14.0, *)
+                public static let privacyFocused = Configuration(
+                    accuracy: kCLLocationAccuracyReduced,
+                    distanceFilter: 50.0,
+                    requestPermission: false,
+                    fallbackLocation: nil
+                )
+
+            #endif
 
             /// Creates a custom configuration
             public init(
@@ -259,17 +262,30 @@
         }
 
         private func requestLocationPermission() {
-            switch locationManager.authorizationStatus {
-            case .notDetermined:
-                locationManager.requestWhenInUseAuthorization()
-            case .denied, .restricted:
-                // Use fallback location if available
-                handleLocationUnavailable()
-            case .authorizedWhenInUse, .authorizedAlways:
-                startLocationUpdates()
-            @unknown default:
-                handleLocationUnavailable()
-            }
+            #if os(macOS)
+                switch locationManager.authorizationStatus {
+                case .notDetermined:
+                    locationManager.requestWhenInUseAuthorization()
+                case .denied, .restricted:
+                    handleLocationUnavailable()
+                case .authorizedAlways:
+                    startLocationUpdates()
+                @unknown default:
+                    handleLocationUnavailable()
+                }
+            #else
+                switch locationManager.authorizationStatus {
+                case .notDetermined:
+                    locationManager.requestWhenInUseAuthorization()
+                case .denied, .restricted:
+                    // Use fallback location if available
+                    handleLocationUnavailable()
+                case .authorizedWhenInUse, .authorizedAlways:
+                    startLocationUpdates()
+                @unknown default:
+                    handleLocationUnavailable()
+                }
+            #endif
         }
 
         private func startLocationUpdates() {
@@ -315,9 +331,16 @@
 
         /// Check if location services are available and authorized
         public var isLocationAvailable: Bool {
-            return CLLocationManager.locationServicesEnabled()
-                && (locationManager.authorizationStatus == .authorizedWhenInUse
-                    || locationManager.authorizationStatus == .authorizedAlways)
+            guard CLLocationManager.locationServicesEnabled() else {
+                return false
+            }
+
+            #if os(macOS)
+                return locationManager.authorizationStatus == .authorizedAlways
+            #else
+                let status = locationManager.authorizationStatus
+                return status == .authorizedWhenInUse || status == .authorizedAlways
+            #endif
         }
 
         /// Get the current authorization status
@@ -328,7 +351,7 @@
 
     // MARK: - CLLocationManagerDelegate
 
-    @available(iOS 14.0, watchOS 7.0, *)
+    @available(iOS 14.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *)
     extension LocationContextProvider: CLLocationManagerDelegate {
 
         public func locationManager(
@@ -350,18 +373,33 @@
         public func locationManager(
             _ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus
         ) {
-            switch status {
-            case .authorizedWhenInUse, .authorizedAlways:
-                startLocationUpdates()
-            case .denied, .restricted:
-                handleLocationUnavailable()
-            case .notDetermined:
-                if configuration.requestPermission {
-                    manager.requestWhenInUseAuthorization()
+            #if os(macOS)
+                switch status {
+                case .authorizedAlways:
+                    startLocationUpdates()
+                case .denied, .restricted:
+                    handleLocationUnavailable()
+                case .notDetermined:
+                    if configuration.requestPermission {
+                        manager.requestWhenInUseAuthorization()
+                    }
+                @unknown default:
+                    handleLocationUnavailable()
                 }
-            @unknown default:
-                handleLocationUnavailable()
-            }
+            #else
+                switch status {
+                case .authorizedWhenInUse, .authorizedAlways:
+                    startLocationUpdates()
+                case .denied, .restricted:
+                    handleLocationUnavailable()
+                case .notDetermined:
+                    if configuration.requestPermission {
+                        manager.requestWhenInUseAuthorization()
+                    }
+                @unknown default:
+                    handleLocationUnavailable()
+                }
+            #endif
         }
 
         public func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
@@ -373,7 +411,7 @@
     // MARK: - Combine Support
 
     #if canImport(Combine)
-        @available(iOS 14.0, watchOS 7.0, *)
+        @available(iOS 14.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *)
         extension LocationContextProvider: ContextUpdatesProviding {
 
             /// Publisher that emits whenever the location context may have changed
@@ -402,7 +440,7 @@
 
     // MARK: - Convenience Extensions
 
-    @available(iOS 14.0, watchOS 7.0, *)
+    @available(iOS 14.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *)
     extension LocationContextProvider {
 
         /// Creates a specification that evaluates based on distance from a point
@@ -443,22 +481,21 @@
                     return distance <= circularRegion.radius
                 }
 
-                #if os(watchOS)
+                #if os(watchOS) || os(macOS)
                 return region.contains(currentLocation.coordinate)
                 #else
-                // CLRegion.contains(_:) is unavailable on iOS, so we cannot evaluate non-circular regions.
+                // CLRegion.contains(_:) remains unavailable on iOS, so we cannot evaluate non-circular regions.
                 return false
                 #endif
             }
         }
 
-        #if os(iOS)
-        /// Creates a specification that evaluates using a modern geographic condition
-        /// - Parameter condition: The `CLCircularGeographicCondition` to check against (iOS 17+)
+        #if os(iOS) || os(macOS)
+        /// Creates a specification that evaluates using a modern geographic condition on supported platforms
+        /// - Parameter condition: The `CLCircularGeographicCondition` to check against (iOS 17+, macOS 14+)
         /// - Returns: A specification that checks if the current location satisfies the condition
-        @available(iOS 17.0, *)
+        @available(iOS 17.0, macOS 14.0, macCatalyst 17.0, *)
         public func geographicConditionSpecification(condition: CLMonitor.CircularGeographicCondition) -> AnySpecification<Any> {
-            // This API is only available on iOS 17+.
             AnySpecification { _ in
                 let context = self.currentContext()
                 guard let currentLocation = context.currentLocation else { return false }

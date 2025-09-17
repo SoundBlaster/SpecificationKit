@@ -24,7 +24,7 @@ final class PlatformContextProvidersTests: XCTestCase {
 
     func testPlatformCapabilityDetection() {
         // Test capability detection matches expected platform behavior
-        #if canImport(CoreLocation) && (os(iOS) || os(watchOS))
+        #if canImport(CoreLocation) && !os(tvOS)
             XCTAssertTrue(PlatformContextProviders.supportsLocation)
         #else
             XCTAssertFalse(PlatformContextProviders.supportsLocation)
@@ -87,7 +87,7 @@ final class PlatformContextProvidersTests: XCTestCase {
         XCTAssertNotNil(spec)
 
         // Should return false on platforms without location support
-        #if !canImport(CoreLocation) || !(os(iOS) || os(watchOS))
+        #if !canImport(CoreLocation) || os(tvOS)
             XCTAssertFalse(spec.isSatisfiedBy("test"))
         #endif
     }
@@ -509,8 +509,8 @@ final class PlatformContextProvidersTests: XCTestCase {
     }
 #endif
 
-#if canImport(CoreLocation) && (os(iOS) || os(watchOS))
-    @available(iOS 14.0, watchOS 7.0, *)
+#if canImport(CoreLocation) && !os(tvOS)
+    @available(iOS 14.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *)
     final class LocationContextProviderTests: XCTestCase {
 
         func testLocationContextProviderConfiguration() {
@@ -534,10 +534,12 @@ final class PlatformContextProvidersTests: XCTestCase {
             let batteryOptimized = LocationContextProvider.Configuration.batteryOptimized
             let highPrecision = LocationContextProvider.Configuration.highPrecision
 
-            if #available(iOS 14.0, *) {
-                let privacyFocused = LocationContextProvider.Configuration.privacyFocused
-                XCTAssertFalse(privacyFocused.requestPermission)
-            }
+            #if os(iOS)
+                if #available(iOS 14.0, *) {
+                    let privacyFocused = LocationContextProvider.Configuration.privacyFocused
+                    XCTAssertFalse(privacyFocused.requestPermission)
+                }
+            #endif
 
             // All configs should have reasonable values
             XCTAssertGreaterThan(defaultConfig.distanceFilter, 0)
@@ -567,14 +569,12 @@ final class PlatformContextProvidersTests: XCTestCase {
             _ = spec.isSatisfiedBy("test")
         }
 
-        #if os(iOS)
-            @available(iOS 17.0, *)
+        #if os(iOS) || os(macOS)
+            @available(iOS 17.0, macOS 14.0, macCatalyst 17.0, *)
             func testLocationGeographicConditionSpecification() {
-                guard #available(iOS 17.0, *) else { return }
-
                 let provider = LocationContextProvider()
                 let center = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
-                let condition = CircularGeographicCondition(center: center, radius: 1000)
+                let condition = CLMonitor.CircularGeographicCondition(center: center, radius: 1000)
                 let spec = provider.geographicConditionSpecification(condition: condition)
 
                 XCTAssertNotNil(spec)
