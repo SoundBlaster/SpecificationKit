@@ -293,7 +293,7 @@
                 // Thermal state notifications
                 notificationObservers.append(
                     notificationCenter.addObserver(
-                        forName: .NSProcessInfoThermalStateDidChange,
+                        forName: ProcessInfo.thermalStateDidChangeNotification,
                         object: nil,
                         queue: .main
                     ) { [weak self] _ in

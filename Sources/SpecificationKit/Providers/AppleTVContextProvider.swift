@@ -621,7 +621,9 @@
         import CoreGraphics
     #endif
 
-    #if !canImport(UIKit)
+    #if canImport(UIKit)
+        import UIKit
+    #else
         public enum UIUserInterfaceIdiom: String {
             case unspecified = "unspecified"
         }

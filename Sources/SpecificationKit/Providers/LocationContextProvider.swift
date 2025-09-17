@@ -451,6 +451,29 @@
                 #endif
             }
         }
+
+        #if os(iOS)
+            /// Creates a specification that evaluates using a modern geographic condition
+            /// - Parameter condition: The `CLCircularGeographicCondition` to check against (iOS 17+)
+            /// - Returns: A specification that checks if the current location satisfies the condition
+            @available(iOS 17.0, *)
+            public func geographicConditionSpecification(
+                condition: CLCircularGeographicCondition
+            ) -> AnySpecification<Any> {
+                AnySpecification { _ in
+                    let context = self.currentContext()
+                    guard let currentLocation = context.currentLocation else { return false }
+
+                    let centerLocation = CLLocation(
+                        latitude: condition.center.latitude,
+                        longitude: condition.center.longitude
+                    )
+                    let distance = currentLocation.distance(from: centerLocation)
+
+                    return distance <= condition.radius
+                }
+            }
+        #endif
     }
 
 #endif

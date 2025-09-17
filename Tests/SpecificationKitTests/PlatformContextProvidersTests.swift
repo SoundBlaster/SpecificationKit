@@ -566,5 +566,20 @@ final class PlatformContextProvidersTests: XCTestCase {
             XCTAssertNotNil(spec)
             _ = spec.isSatisfiedBy("test")
         }
+
+        #if os(iOS)
+            @available(iOS 17.0, *)
+            func testLocationGeographicConditionSpecification() {
+                guard #available(iOS 17.0, *) else { return }
+
+                let provider = LocationContextProvider()
+                let center = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
+                let condition = CLCircularGeographicCondition(center: center, radius: 1000)
+                let spec = provider.geographicConditionSpecification(condition: condition)
+
+                XCTAssertNotNil(spec)
+                _ = spec.isSatisfiedBy("test")
+            }
+        #endif
     }
 #endif
