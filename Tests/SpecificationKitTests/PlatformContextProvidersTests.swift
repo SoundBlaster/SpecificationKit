@@ -574,7 +574,7 @@ final class PlatformContextProvidersTests: XCTestCase {
 
                 let provider = LocationContextProvider()
                 let center = CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194)
-                let condition = CLCircularGeographicCondition(center: center, radius: 1000)
+                let condition = CircularGeographicCondition(center: center, radius: 1000)
                 let spec = provider.geographicConditionSpecification(condition: condition)
 
                 XCTAssertNotNil(spec)
