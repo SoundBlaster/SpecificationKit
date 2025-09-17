@@ -608,21 +608,51 @@
 
     // MARK: - Supporting Types
 
-    /// Apple TV performance tiers for tvOS
-    public enum TVPerformanceTier: String, CaseIterable {
-        case reduced = "reduced"
-        case standard = "standard"
-        case high = "high"
-    }
-
 #endif
 
 // MARK: - Stub for Non-tvOS Platforms
 
 #if !os(tvOS)
+    import Foundation
+    #if canImport(Combine)
+        import Combine
+    #endif
+    #if canImport(CoreGraphics)
+        import CoreGraphics
+    #endif
+
+    #if !canImport(UIKit)
+        public enum UIUserInterfaceIdiom: String {
+            case unspecified = "unspecified"
+        }
+
+        public enum UIContentSizeCategory: String {
+            case medium = "UICTContentSizeCategoryM"
+        }
+    #endif
+
+    #if !canImport(CoreGraphics)
+        public struct CGSize {
+            public var width: Double
+            public var height: Double
+
+            public init(width: Double, height: Double) {
+                self.width = width
+                self.height = height
+            }
+        }
+
+        public typealias CGFloat = Double
+    #endif
+
+    #if canImport(Combine)
+        typealias AppleTVObservableContext = ObservableObject
+    #else
+        protocol AppleTVObservableContext {}
+    #endif
+
     /// Stub for AppleTVContextProvider on non-tvOS platforms
-    public final class AppleTVContextProvider: ContextProviding, ObservableObject {
-        
+    public final class AppleTVContextProvider: ContextProviding, AppleTVObservableContext {
         public struct AppleTVContext {
             public let deviceModel = "Unknown"
             public let systemVersion = "0.0.0"
@@ -644,7 +674,7 @@
             public let hasAppleRemote = false
             public let connectedControllerCount = 0
             public let supportsVoiceCommands = false
-            
+
             public var isHighPerformanceAvailable: Bool { false }
             public var shouldReduceFeatures: Bool { true }
             public var hasAccessibilityFeaturesEnabled: Bool { false }
@@ -652,7 +682,11 @@
             public var supportsHighQualityContent: Bool { false }
             public var supportsAdvancedInput: Bool { false }
         }
-        
+
+        #if canImport(Combine)
+            public let objectWillChange = PassthroughSubject<Void, Never>()
+        #endif
+
         public init() {}
 
         public func getValue(for key: String) -> Any? {
@@ -662,7 +696,7 @@
         public func currentContext() -> AppleTVContext {
             return AppleTVContext()
         }
-        
+
         // Convenience specifications that return false on non-tvOS platforms
         public static func hdrSupportSpecification() -> AnySpecification<Any> {
             return AnySpecification { _ in false }
@@ -708,11 +742,5 @@
         public static func voiceCommandSupportSpecification() -> AnySpecification<Any> {
             return AnySpecification { _ in false }
         }
-    }
-    
-    public enum TVPerformanceTier: String, CaseIterable {
-        case reduced = "reduced"
-        case standard = "standard"
-        case high = "high"
     }
 #endif

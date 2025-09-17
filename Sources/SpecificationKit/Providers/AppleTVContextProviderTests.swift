@@ -6,7 +6,6 @@
 //
 
 import Testing
-@testable import SpecificationKit
 
 #if canImport(UIKit) && canImport(GameController) && os(tvOS)
     import UIKit
