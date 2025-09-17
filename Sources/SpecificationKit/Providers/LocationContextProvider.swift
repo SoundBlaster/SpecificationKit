@@ -435,13 +435,23 @@
                 guard let currentLocation = context.currentLocation else { return false }
 
                 if let circularRegion = region as? CLCircularRegion {
-                    let distance = currentLocation.distance(from: circularRegion.center)
+                    let centerLocation = CLLocation(
+                        latitude: circularRegion.center.latitude,
+                        longitude: circularRegion.center.longitude
+                    )
+                    let distance = currentLocation.distance(from: centerLocation)
                     return distance <= circularRegion.radius
                 }
 
+                #if os(watchOS)
                 return region.contains(currentLocation.coordinate)
+                #else
+                // CLRegion.contains(_:) is unavailable on iOS, so we cannot evaluate non-circular regions.
+                return false
+                #endif
             }
         }
     }
 
 #endif
+
