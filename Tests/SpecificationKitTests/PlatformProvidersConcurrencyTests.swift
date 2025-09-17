@@ -9,6 +9,10 @@ import XCTest
 
 @testable import SpecificationKit
 
+#if canImport(CoreLocation)
+import CoreLocation
+#endif
+
 /// Thread safety tests for platform-specific context providers
 /// Validates thread-safe API requirement
 final class PlatformProvidersConcurrencyTests: XCTestCase {
@@ -36,8 +40,8 @@ final class PlatformProvidersConcurrencyTests: XCTestCase {
     }
 
     func testLocationContextProviderConcurrency() {
-        #if canImport(CoreLocation) && (os(iOS) || os(watchOS))
-            if #available(iOS 14.0, watchOS 7.0, *) {
+        #if canImport(CoreLocation)
+            if #available(iOS 14.0, macOS 11.0, *) {
                 let config = LocationContextProvider.Configuration(
                     accuracy: kCLLocationAccuracyKilometer,
                     distanceFilter: 100.0,

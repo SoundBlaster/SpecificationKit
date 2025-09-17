@@ -91,7 +91,7 @@ public enum PlatformContextProviders {
 
     /// Whether the current platform supports location services
     public static var supportsLocation: Bool {
-        #if canImport(CoreLocation) && !os(tvOS)
+        #if canImport(CoreLocation)
             return true
         #else
             return false
@@ -207,8 +207,8 @@ public enum PlatformContextProviders {
 
     /// Creates a location context provider if available, or a fallback provider
     public static var locationContextProvider: any ContextProviding {
-        #if canImport(CoreLocation) && !os(tvOS)
-            if #available(iOS 14.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *) {
+        #if canImport(CoreLocation)
+            if #available(iOS 14.0, tvOS 9.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *) {
                 return LocationContextProvider()
             }
         #endif
@@ -221,8 +221,8 @@ public enum PlatformContextProviders {
     /// Creates a location context provider with custom configuration
     /// - Parameter configuration: The configuration to use
     /// - Returns: A configured location provider or fallback
-    #if canImport(CoreLocation) && (os(iOS) || os(watchOS))
-        @available(iOS 14.0, watchOS 7.0, *)
+    #if canImport(CoreLocation)
+        @available(iOS 14.0, tvOS 9.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *)
         public static func locationContextProvider(
             configuration: LocationContextProvider.Configuration
         ) -> any ContextProviding {
@@ -269,8 +269,8 @@ public enum PlatformContextProviders {
         center: LocationCoordinate,
         radius: Double
     ) -> AnySpecification<Any> {
-        #if canImport(CoreLocation) && (os(iOS) || os(watchOS))
-            if #available(iOS 14.0, watchOS 7.0, *) {
+        #if canImport(CoreLocation)
+            if #available(iOS 14.0, tvOS 9.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *) {
                 let provider = LocationContextProvider()
                 return provider.proximitySpecification(
                     center: center.coreLocationCoordinate,
@@ -290,9 +290,9 @@ public enum PlatformContextProviders {
     {
         switch capability {
         case .location:
-            #if canImport(CoreLocation) && (os(iOS) || os(watchOS))
+            #if canImport(CoreLocation)
                 return AnySpecification { _ in
-                    if #available(iOS 14.0, watchOS 7.0, *) {
+                    if #available(iOS 14.0, tvOS 9.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *) {
                         let provider = LocationContextProvider()
                         return provider.isLocationAvailable
                     }
@@ -677,9 +677,13 @@ extension PlatformContextProviders {
 
     /// Checks if location permission has been granted
     public static var hasLocationPermission: Bool {
-        #if canImport(CoreLocation) && (os(iOS) || os(watchOS))
+        #if canImport(CoreLocation)
             let status = CLLocationManager.authorizationStatus()
-            return status == .authorizedWhenInUse || status == .authorizedAlways
+            #if os(macOS)
+                return status == .authorizedAlways
+            #else
+                return status == .authorizedWhenInUse || status == .authorizedAlways
+            #endif
         #else
             return false
         #endif
@@ -688,8 +692,8 @@ extension PlatformContextProviders {
     /// Requests location permission asynchronously
     /// - Returns: Whether permission was granted
     public static func requestLocationPermission() async -> Bool {
-        #if canImport(CoreLocation) && (os(iOS) || os(watchOS))
-            if #available(iOS 14.0, watchOS 7.0, *) {
+        #if canImport(CoreLocation)
+            if #available(iOS 14.0, tvOS 9.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *) {
                 return await withCheckedContinuation { continuation in
                     let manager = CLLocationManager()
                     let delegate = LocationPermissionDelegate { authorized in
@@ -717,7 +721,7 @@ extension PlatformContextProviders {
 
 // MARK: - Helper Classes
 
-#if canImport(CoreLocation) && (os(iOS) || os(watchOS))
+#if canImport(CoreLocation)
     private class LocationPermissionDelegate: NSObject, CLLocationManagerDelegate {
         private let completion: (Bool) -> Void
 

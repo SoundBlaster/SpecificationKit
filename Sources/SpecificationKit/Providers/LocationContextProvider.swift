@@ -2,10 +2,10 @@
 //  LocationContextProvider.swift
 //  SpecificationKit
 //
-//  Created by SpecificationKit on 2024.
+//  Created by SpecificationKit on 2025.
 //
 
-#if canImport(CoreLocation) && !os(tvOS)
+#if canImport(CoreLocation)
     import Foundation
     import CoreLocation
     #if canImport(Combine)
@@ -114,7 +114,7 @@
     /// - Supports reduced accuracy mode (iOS 14+)
     /// - Provides clear fallback mechanisms when location is unavailable
     /// - Stops location updates appropriately to preserve battery
-    @available(iOS 14.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *)
+    @available(iOS 14.0, tvOS 9.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *)
     public final class LocationContextProvider: NSObject, ContextProviding {
 
         // MARK: - Configuration

@@ -24,7 +24,7 @@ final class PlatformContextProvidersTests: XCTestCase {
 
     func testPlatformCapabilityDetection() {
         // Test capability detection matches expected platform behavior
-        #if canImport(CoreLocation) && !os(tvOS)
+        #if canImport(CoreLocation)
             XCTAssertTrue(PlatformContextProviders.supportsLocation)
         #else
             XCTAssertFalse(PlatformContextProviders.supportsLocation)
@@ -219,8 +219,8 @@ final class PlatformContextProvidersTests: XCTestCase {
     }
 
     func testLocationContextProviderIntegration() {
-        #if canImport(CoreLocation) && (os(iOS) || os(watchOS))
-            if #available(iOS 14.0, watchOS 7.0, *) {
+        #if canImport(CoreLocation)
+            if #available(iOS 14.0, tvOS 9.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *) {
                 let config = LocationContextProvider.Configuration(
                     accuracy: kCLLocationAccuracyKilometer,
                     distanceFilter: 100.0,
@@ -509,8 +509,8 @@ final class PlatformContextProvidersTests: XCTestCase {
     }
 #endif
 
-#if canImport(CoreLocation) && !os(tvOS)
-    @available(iOS 14.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *)
+#if canImport(CoreLocation)
+    @available(iOS 14.0, tvOS 9.0, watchOS 7.0, macOS 11.0, macCatalyst 14.0, *)
     final class LocationContextProviderTests: XCTestCase {
 
         func testLocationContextProviderConfiguration() {
