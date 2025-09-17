@@ -670,63 +670,6 @@ public enum TVPerformanceTier: String, CaseIterable {
         }
     }
 
-    /// Stub for AppleTVContextProvider on non-tvOS platforms
-    public final class AppleTVContextProvider: ContextProviding, ObservableObject {
-        public init() {}
-
-        public func getValue(for key: String) -> Any? {
-            return nil
-        }
-
-        public func currentContext() -> Any {
-            return [:]
-        }
-
-        public static func hdrSupportSpecification() -> AnySpecification<Any> {
-            return AnySpecification { _ in false }
-        }
-
-        public static func siriRemoteSpecification() -> AnySpecification<Any> {
-            return AnySpecification { _ in false }
-        }
-
-        public static func remoteConnectedSpecification() -> AnySpecification<Any> {
-            return AnySpecification { _ in false }
-        }
-
-        public static func darkModeSpecification() -> AnySpecification<Any> {
-            return AnySpecification { _ in false }
-        }
-
-        public static func voiceOverSpecification() -> AnySpecification<Any> {
-            return AnySpecification { _ in false }
-        }
-
-        public static func thermalStateSpecification(
-            allowedStates: Set<ProcessInfo.ThermalState> = [.nominal, .fair]
-        ) -> AnySpecification<Any> {
-            return AnySpecification { _ in false }
-        }
-
-        public static func screenResolutionSpecification(
-            minimumWidth: CGFloat,
-            minimumHeight: CGFloat = 0
-        ) -> AnySpecification<Any> {
-            return AnySpecification { _ in false }
-        }
-
-        public static func memorySpecification(minimumGB: UInt64) -> AnySpecification<Any> {
-            return AnySpecification { _ in false }
-        }
-
-        public static func processorSpecification(minimumCores: Int) -> AnySpecification<Any> {
-            return AnySpecification { _ in false }
-        }
-
-        public static func voiceCommandSupportSpecification() -> AnySpecification<Any> {
-            return AnySpecification { _ in false }
-        }
-    }
 #endif
 
 // MARK: - Privacy and Permission Helpers
