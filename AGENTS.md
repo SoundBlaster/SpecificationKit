@@ -1,20 +1,19 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-SpecificationKit is a Swift package with library code under `Sources/SpecificationKit/`. Use `Core/` for shared protocols and operators, `Specs/` for concrete spec types, `Providers/` for context providers, and `Wrappers/` for property wrappers such as `@Satisfies` and `@Spec`. Reference composites live in `Definitions/`, while `Examples/` and `DemoApp/` demonstrate usage. Tests reside in `Tests/SpecificationKitTests/` and docs in `DOCS/markdown/`. Keep UI code out of the library; limit demo changes to `DemoApp/`.
+SpecificationKit is a Swift package. Library sources live under `Sources/SpecificationKit/` with shared protocols in `Core/`, concrete specs in `Specs/`, context providers in `Providers/`, and property wrappers in `Wrappers/`. Composite reference specs belong in `Definitions/`. Usage examples sit in `Examples/` and the showcase app stays in `DemoApp/`. Tests mirror the library in `Tests/SpecificationKitTests/`, while documentation resides in `DOCS/markdown/`. Keep UI code scoped to `DemoApp/` and avoid leaking demo dependencies into the library target.
 
 ## Build, Test, and Development Commands
-- `swift build`: compile the library and surface compiler warnings.
-- `swift test`: run the full XCTest suite; add `--filter NameOfTest` to scope.
-- `swift test --enable-code-coverage`: generate coverage data when validating major changes.
-- `cd DemoApp && swift run SpecificationKitDemo`: run the showcase app.
-- `swift package resolve`: refresh dependencies if Package.resolved drifts.
+Run `swift build` at the root to compile the package and surface warnings. Use `swift test` for the full XCTest suite, or scope with `swift test --filter NameOfTest`. For coverage validation, run `swift test --enable-code-coverage`. Execute the demo via `cd DemoApp && swift run SpecificationKitDemo`. If dependencies drift, refresh them with `swift package resolve`.
 
 ## Coding Style & Naming Conventions
-Follow Swift API Design Guidelines with four-space indentation and spaces (no tabs). Name types with UpperCamelCase and functions, variables, and cases with lowerCamelCase. Suffix all specs with `Spec` (e.g., `CooldownIntervalSpec`) and place them in `Specs/`. Public APIs should carry concise `///` doc comments. Favor small, composable specs that reuse utilities from `Core/`.
+Follow Swift API Design Guidelines with four-space indentation and no tabs. Name types in UpperCamelCase, members in lowerCamelCase, and suffix every spec with `Spec` (e.g., `CooldownIntervalSpec`). Place new specs under `Sources/SpecificationKit/Specs/`. Public APIs require succinct `///` doc comments. Favor small, composable spec implementations and reuse utilities from `Core/` rather than duplicating logic.
 
 ## Testing Guidelines
-XCTest backs the suite. Mirror production types in test filenames (e.g., `FirstMatchSpecTests.swift`), and prefix methods with `test`. Structure test bodies with `// Given`, `// When`, `// Then` comments and use `MockContextProvider` for deterministic contexts. Ensure new specs ship with coverage of nominal and edge scenarios.
+XCTest powers the suite. Mirror production types in test filenames (e.g., `FirstMatchSpecTests.swift`) and prefix methods with `test`. Within each test, structure sections using `// Given`, `// When`, `// Then`. Use `MockContextProvider` to keep scenarios deterministic and cover both nominal and edge cases before merging.
 
 ## Commit & Pull Request Guidelines
-Commit messages use imperative subjects ≤72 characters, optionally prefixed with scope tags such as `Core:`. PRs should describe intent, note behavioral changes, link issues, and confirm `swift build` and `swift test` run cleanly. Include minimal before/after snippets or demo steps when altering spec behavior.
+Write commits with imperative subjects ≤72 characters, optionally prefixed with scope tags such as `Core:`. Ensure `swift build` and `swift test` pass before pushing. Pull requests should describe intent, outline behavioral changes, link relevant issues, and call out demo updates. Include before/after snippets or reproduction notes when altering spec behavior.
+
+## Additional Notes
+Avoid modifying generated files or demo UI when touching library logic. When introducing new specs, add a corresponding example under `Examples/` if it clarifies usage. Keep documentation aligned by updating `DOCS/markdown/` when public APIs change.
