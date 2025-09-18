@@ -163,3 +163,4 @@ let alert = ThresholdSpec(
 ### Debugging and Development Tools
 
 - <doc:SpecificationTracer>
+- <doc:MockSpecificationBuilder>

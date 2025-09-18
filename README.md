@@ -995,7 +995,24 @@ struct ContentView: View {
 
 ## 🧪 Testing
 
-SpecificationKit includes comprehensive testing utilities:
+SpecificationKit includes comprehensive testing utilities. v3.0.0 adds `MockSpecificationBuilder`, a fluent factory for creating deterministic (or intentionally flaky) specifications without touching production logic. Configure behaviors such as fixed results, context-driven predicates, repeating sequences, or synthetic latency, then assert against the mock's call history:
+
+```swift
+let mock = MockSpecificationBuilder<EvaluationContext>()
+    .withSequence([true, false])
+    .withExecutionTime(0.01)
+    .build()
+
+XCTAssertTrue(mock.isSatisfiedBy(EvaluationContext()))
+XCTAssertFalse(mock.isSatisfiedBy(EvaluationContext()))
+XCTAssertEqual(mock.allResults, [true, false])
+
+mock.reset()
+```
+
+Use `.willThrow(_:)` to surface fatal-error scenarios during testing and the convenience helpers (`.alwaysTrue()`, `.flaky(successRate:)`, `.slow(delay:)`) for quick setups.
+
+In addition to the new builder, SpecificationKit continues to ship context provider stubs and snapshot utilities:
 
 ```swift
 class MyFeatureTests: XCTestCase {

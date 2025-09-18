@@ -107,7 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cross-platform compatibility with graceful fallback behavior
   - Comprehensive test suite with 30+ unit tests covering all capabilities
 
-#### 🔍 Phase 4A: Developer Testing Tools (Partial - 1/3 Complete)
+#### 🔍 Phase 4A: Developer Testing Tools (Partial - 2/3 Complete)
 - **SpecificationTracer**: Comprehensive execution tracing and debugging utilities ✅
   - Hierarchical tracing with parent-child evaluation relationships
   - Precise timing measurements for performance analysis (microsecond precision)
@@ -118,6 +118,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Composite specification tracing with short-circuit detection for AND/OR operations
   - Export capabilities for external analysis and debugging workflows
   - Statistical analysis with performance baselines and slow execution identification
+- **MockSpecificationBuilder**: Test-time specification doubles with rich telemetry ✅
+  - Fluent API for always-true/false, predicate-driven, delayed, random, or sequenced behaviours
+  - Synthetic latency and fatal-error simulation to validate resilience paths
+  - Thread-safe call recording with captured contexts, timestamps, and results
+  - Convenience factories for flaky or slow mocks and resettable state between tests
 
 ### Enhanced
 - **Swift 6 Compatibility**: Full concurrency support across all components
@@ -133,7 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Pending Implementation (50% Progress - 15/28 phases complete)
 - **Phase 3B**: Platform-specific context providers (iOS/macOS/watchOS) - AppleTVContextProvider complete ✅
-- **Phase 4A**: Developer testing tools (MockSpecificationBuilder, Profiling) - SpecificationTracer complete ✅
+- **Phase 4A**: Developer testing tools (MockSpecificationBuilder, Profiling) - Tracer & Builder complete ✅
 - **Phase 4B**: Comprehensive documentation (DocC, tutorials, migration guides)
 - **Phase 5**: Release preparation (package metadata, quality assurance, distribution)
 
