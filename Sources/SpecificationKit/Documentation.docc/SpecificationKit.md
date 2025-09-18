@@ -1,17 +1,19 @@
 # ``SpecificationKit``
 
-SpecificationKit is a Swift-first implementation of the Specification pattern.
-It helps you encode business rules as composable, reusable, and testable specifications,
-with first-class support for SwiftUI, property wrappers, macros, and async/await.
+A powerful Swift framework implementing the Specification Pattern for clean, composable, and testable business logic.
 
 ## Overview
 
-- Composable specifications using `.and()`, `.or()`, and `.not()`
-- Declarative property wrappers: `@Satisfies`, `@Decides`, `@Maybe`, `@ObservedSatisfies`, `@ObservedMaybe`
-- Advanced specifications: `WeightedSpec` (probability-based), `HistoricalSpec` (time-series), `ComparativeSpec` (relative comparisons), `ThresholdSpec` (dynamic thresholds)
-- Macros: `@specs` for composite specs and `@AutoContext` for automatic provider injection
-- Context providers for dependency injection and testing (Default/Environment/Mock)
-- Async support and type-safe generics throughout
+SpecificationKit empowers you to build maintainable applications by encapsulating business rules in small, focused, and composable specifications. With first-class SwiftUI integration, reactive property wrappers, and advanced specification types, it's the definitive solution for implementing the Specification Pattern in Swift.
+
+### Key Features
+
+- **🧩 Composable Logic**: Build complex rules from simple specifications using `.and()`, `.or()`, and `.not()`
+- **⚡ Reactive UI**: Declarative property wrappers with SwiftUI integration: ``@Satisfies``, ``@Decides``, ``@Maybe``, ``@ObservedSatisfies``
+- **🎯 Advanced Patterns**: Sophisticated specifications for real-world scenarios: ``WeightedSpec``, ``HistoricalSpec``, ``ComparativeSpec``, ``ThresholdSpec``
+- **🚀 Developer Experience**: Swift macros (`@specs`, `@AutoContext`) for code generation and reduced boilerplate
+- **🔧 Flexible Context**: Powerful context providers for dependency injection and testing
+- **⚙️ Production Ready**: Thread-safe, performant, with comprehensive testing utilities
 
 ## Quick Start
 
@@ -19,29 +21,52 @@ with first-class support for SwiftUI, property wrappers, macros, and async/await
 ```swift
 import SpecificationKit
 
-let isEligible = MaxCountSpec(counterKey: "promoShown", maximumCount: 3)
+// Define a simple specification
+struct PremiumUserSpec: Specification {
+    func isSatisfiedBy(_ user: User) -> Bool {
+        user.subscriptionTier == .premium && user.isActive
+    }
+}
 
-@Satisfies(using: isEligible)
-var shouldShowPromo: Bool
+// Use with property wrapper for clean, declarative code
+@Satisfies(using: PremiumUserSpec())
+var isPremiumUser: Bool
 
-if shouldShowPromo {
-    showPromoBanner()
+if isPremiumUser {
+    showPremiumFeatures()
 }
 ```
 
-### Macro-Generated Composite Specification
+### Composable Business Logic
 ```swift
-@specs(
-    MaxCountSpec(counterKey: "promoShown", maximumCount: 3),
-    TimeSinceEventSpec(eventKey: "lastShown", minimumInterval: 24 * 3600)
-)
-@AutoContext
-struct PromoEligibilitySpec: Specification {
-    typealias T = EvaluationContext
-}
+// Combine specifications with logical operators
+let eligibilitySpec = PremiumUserSpec()
+    .and(MaxCountSpec(counterKey: "feature_used", maximumCount: 10))
+    .and(TimeSinceEventSpec(eventKey: "last_usage", minimumInterval: 3600))
 
-@Satisfies(using: PromoEligibilitySpec.self)
-var isEligibleForPromo: Bool
+@Satisfies(using: eligibilitySpec)
+var canUseFeature: Bool
+```
+
+### SwiftUI Integration
+```swift
+struct FeatureView: View {
+    @ObservedSatisfies(using: PremiumUserSpec())
+    var isPremiumUser: Bool
+    
+    var body: some View {
+        VStack {
+            if isPremiumUser {
+                PremiumContent()
+            } else {
+                UpgradePrompt()
+            }
+        }
+        .onChange(of: isPremiumUser) { enabled in
+            analyticsTracker.track("premium_status_changed", enabled: enabled)
+        }
+    }
+}
 ```
 
 ### Decision Making
@@ -54,113 +79,215 @@ var isEligibleForPromo: Bool
 var discountType: String
 ```
 
-## Advanced Specs Overview (v3.0.0)
+## Getting Started
 
-The v3.0.0 release adds four advanced, production-ready specification types designed for probabilistic selection, time-series analysis, relative comparisons, and dynamic thresholds. See their dedicated pages for full guides and APIs.
+Whether you're new to the Specification Pattern or upgrading from a previous version, SpecificationKit makes it easy to implement clean, maintainable business logic.
 
-- <doc:WeightedSpec>: probability-based selection among candidates; ideal for A/B testing, rollouts, and load balancing.
-- <doc:HistoricalSpec>: time-series aggregation over windows; ideal for trends, percentiles, and adaptive decisions.
-- <doc:ComparativeSpec>: relative comparisons vs. baselines/ranges; ideal for validation and monitoring.
-- <doc:ThresholdSpec>: static/adaptive/contextual thresholds; ideal for alerts and feature gating.
+### Installation
 
-### When To Use Which
+Add SpecificationKit to your project using Swift Package Manager:
 
-- Weighted: choose 1 of N outcomes by probability; compute expected value/variance for numeric results.
-- Historical: summarize past values over a window (median, percentile, trend) to guide current decisions.
-- Comparative: check current value against a fixed/range/custom rule with optional tolerance.
-- Threshold: evaluate against dynamic thresholds derived from context or functions.
+```swift
+dependencies: [
+    .package(url: "https://github.com/specificationkit/SpecificationKit.git", from: "3.0.0")
+]
+```
 
-### Quick Examples
+### Your First Specification
 
-Weighted (A/B/C split):
+1. **Define the rule**: Create a struct conforming to ``Specification``
+2. **Implement logic**: Add your business logic in `isSatisfiedBy(_:)`
+3. **Use declaratively**: Apply with property wrappers for clean code
+
+```swift
+// 1. Define the specification
+struct ActiveSubscriptionSpec: Specification {
+    func isSatisfiedBy(_ user: User) -> Bool {
+        return user.subscription?.isActive == true
+    }
+}
+
+// 2. Use in your app
+@Satisfies(using: ActiveSubscriptionSpec())
+var hasActiveSubscription: Bool
+
+// 3. Build conditional logic
+if hasActiveSubscription {
+    showPremiumContent()
+} else {
+    showSubscriptionOffer()
+}
+```
+
+### Composition and Reusability
+
+Combine simple specifications to create complex business rules:
+
+```swift
+let premiumAccess = ActiveSubscriptionSpec()
+    .and(UserVerificationSpec())
+    .and(RegionAvailabilitySpec(region: .northAmerica))
+
+@Satisfies(using: premiumAccess)
+var canAccessPremiumFeatures: Bool
+```
+
+## Advanced Specifications (v3.0.0)
+
+SpecificationKit v3.0.0 introduces sophisticated specification types for complex real-world scenarios:
+
+### ``WeightedSpec`` - Probabilistic Decisions
+Perfect for A/B testing, feature rollouts, and load balancing.
+
 ```swift
 let abTest = WeightedSpec([
-    (FeatureFlagSpec(flag: "variant_a"), 0.5, "A"),
-    (FeatureFlagSpec(flag: "variant_b"), 0.3, "B"),
-    (FeatureFlagSpec(flag: "control"), 0.2, "C")
+    (VariantASpec(), 0.5, "variant_a"),
+    (VariantBSpec(), 0.3, "variant_b"),
+    (ControlSpec(), 0.2, "control")
 ])
-@Maybe(using: abTest) var variant: String?
+
+@Maybe(using: abTest)
+var experimentVariant: String?
 ```
 
-Historical (median of last 30):
+### ``HistoricalSpec`` - Time-Series Analysis
+Analyze trends and patterns from historical data.
+
 ```swift
-let perf = HistoricalSpec(
-    provider: MetricsHistoryProvider(),
+let performanceSpec = HistoricalSpec(
+    provider: MetricsProvider(),
     window: .lastN(30),
-    aggregation: .median
+    aggregation: .percentile(0.95)
 )
-@Maybe(using: perf) var medianPerf: Double?
+
+@Maybe(using: performanceSpec) 
+var p95ResponseTime: Double?
 ```
 
-Comparative (range check):
+### ``ComparativeSpec`` - Relative Validation
+Compare values against baselines and ranges.
+
 ```swift
-let tempOK = ComparativeSpec(
-    keyPath: \.currentTemperature,
-    comparison: .between(18.0, 24.0)
+let temperatureSpec = ComparativeSpec(
+    keyPath: \.temperature,
+    comparison: .between(18.0, 24.0),
+    tolerance: 0.5
 )
-@Satisfies(using: tempOK) var isComfortable: Bool
+
+@Satisfies(using: temperatureSpec)
+var isComfortableTemperature: Bool
 ```
 
-Threshold (adaptive baseline):
+### ``ThresholdSpec`` - Adaptive Thresholds
+Dynamic thresholds that adapt to changing conditions.
+
 ```swift
-let alert = ThresholdSpec(
-    keyPath: \.responseTime,
-    threshold: .adaptive { getCurrentBaseline() },
+let alertSpec = ThresholdSpec(
+    keyPath: \.cpuUsage,
+    threshold: .adaptive { context in
+        context.systemLoad > 0.8 ? 0.7 : 0.9
+    },
     operator: .greaterThan
 )
-@Satisfies(using: alert) var shouldAlert: Bool
+
+@Satisfies(using: alertSpec)
+var shouldTriggerAlert: Bool
 ```
 
 ## Topics
 
-### Reactive Wrappers
+### Learning SpecificationKit
 
-- <doc:ReactiveWrappers>
+- <doc:GettingStarted>
+- <doc:AdvancedPatterns>
 
-### Platform Integration
-
-- <doc:PlatformContextProviders>
-- <doc:MacOSSystemContextProvider>
-- <doc:AppleTVContextProvider>
-
-### Core Concepts
+### Core Architecture
 
 - ``Specification``
 - ``AnySpecification``
 - ``DecisionSpec``
+- ``AsyncSpecification``
+
+### Property Wrappers
+
+#### Basic Wrappers
+- ``Satisfies``
+- ``Decides``
+- ``Maybe``
+- ``AsyncSatisfies``
+
+#### Reactive Wrappers
+- ``ObservedSatisfies``
+- ``ObservedDecides``
+- ``ObservedMaybe``
+
+#### Performance Wrappers
+- ``CachedSatisfies``
+- ``ConditionalSatisfies``
+
+#### Reactive Integration
+- <doc:ReactiveWrappers>
+
+### Built-in Specifications
+
+#### Core Specifications
+- ``MaxCountSpec``
+- ``TimeSinceEventSpec``
+- ``CooldownIntervalSpec``
+- ``PredicateSpec``
 - ``FirstMatchSpec``
+
+#### Date and Time
+- ``DateRangeSpec``
+- ``DateComparisonSpec``
+
+#### Context-Based
+- ``FeatureFlagSpec``
+- ``UserSegmentSpec``
+- ``SubscriptionStatusSpec``
+
+### Advanced Specifications (v3.0.0)
+
+#### Probabilistic & Analytics
+- <doc:WeightedSpec>
+- <doc:HistoricalSpec>
+
+#### Validation & Monitoring
+- <doc:ComparativeSpec>
+- <doc:ThresholdSpec>
+
+### Context System
+
+#### Core Providers
 - ``ContextProviding``
 - ``DefaultContextProvider``
 - ``EnvironmentContextProvider``
+- ``MockContextProvider``
+
+#### Advanced Providers
 - ``NetworkContextProvider``
 - ``PersistentContextProvider``
 - ``CompositeContextProvider``
 - ``AnyContextProvider``
 
-### Built-in Specs
+#### Platform Integration
+- <doc:PlatformContextProviders>
+- <doc:MacOSSystemContextProvider>
+- <doc:AppleTVContextProvider>
 
-- ``MaxCountSpec``
-- ``TimeSinceEventSpec``
-- ``CooldownIntervalSpec``
-- ``DateRangeSpec``
-- ``DateComparisonSpec``
-- ``FeatureFlagSpec``
-- ``UserSegmentSpec``
-- ``SubscriptionStatusSpec``
-
-### Advanced Specs
-
-- <doc:WeightedSpec>
-- <doc:HistoricalSpec>
-- <doc:ComparativeSpec>
-- <doc:ThresholdSpec>
-
-### Macros
+### Code Generation
 
 - ``specs(_:)``
 - ``AutoContext()``
 
-### Debugging and Development Tools
+### Testing & Development
 
-- <doc:SpecificationTracer>
+#### Testing Utilities
 - <doc:MockSpecificationBuilder>
+- ``MockContextProvider``
+
+#### Debugging Tools
+- <doc:SpecificationTracer>
+
+#### Performance Analysis
+- Performance profiling tools

@@ -1,0 +1,178 @@
+# Getting Started with SpecificationKit
+
+@Metadata {
+    @PageImage(purpose: icon, source: "specification-pattern-icon")
+    @PageImage(purpose: card, source: "getting-started-card")
+}
+
+Learn how to implement the Specification Pattern in Swift using SpecificationKit for maintainable, testable business logic.
+
+## Overview
+
+SpecificationKit enables you to implement the Specification Pattern in Swift, allowing you to encapsulate business rules in small, composable, and testable components. This tutorial walks you through creating your first specifications and integrating them with SwiftUI.
+
+The Specification Pattern helps you:
+- Separate business logic from UI and data layers
+- Create reusable and composable business rules
+- Write more testable code
+- Maintain clean architecture
+
+## Section 1: Your First Specification
+
+@ContentAndMedia {
+    Create a simple specification to validate user eligibility for premium features.
+
+    You'll learn how to define a basic specification that checks if a user meets certain criteria for accessing premium content.
+}
+
+@Steps {
+    @Step {
+        Import SpecificationKit and define a User model.
+
+        Start by importing the framework and creating a simple User model that your specification will evaluate.
+
+        @Code(name: "UserEligibilitySpec.swift", file: "getting-started-01-import.swift")
+    }
+
+    @Step {
+        Create your first specification.
+
+        Implement the `Specification` protocol to create a rule that determines if a user is eligible for premium features.
+
+        @Code(name: "UserEligibilitySpec.swift", file: "getting-started-02-specification.swift") {
+            @Image(source: "specification-protocol-diagram", alt: "Specification Protocol Structure")
+        }
+    }
+
+    @Step {
+        Test your specification with sample data.
+
+        Create test users and verify that your specification works correctly.
+
+        @Code(name: "UserEligibilitySpec.swift", file: "getting-started-03-testing.swift")
+    }
+}
+
+## Section 2: Composing Specifications
+
+@ContentAndMedia {
+    Learn how to combine multiple specifications using logical operators to create complex business rules.
+
+    Composition is one of the key benefits of the Specification Pattern. You'll see how to build sophisticated logic from simple components.
+}
+
+@Steps {
+    @Step {
+        Create additional specifications.
+
+        Add more specifications that check different aspects of user eligibility.
+
+        @Code(name: "UserEligibilitySpec.swift", file: "getting-started-04-additional-specs.swift")
+    }
+
+    @Step {
+        Combine specifications with logical operators.
+
+        Use the `and()`, `or()`, and `not()` methods to create complex business rules.
+
+        @Code(name: "UserEligibilitySpec.swift", file: "getting-started-05-composition.swift") {
+            @Image(source: "specification-composition", alt: "Specification Composition Diagram")
+        }
+    }
+
+    @Step {
+        Test the composed specification.
+
+        Verify that your combined specifications work correctly with different user scenarios.
+
+        @Code(name: "UserEligibilitySpec.swift", file: "getting-started-06-composition-test.swift")
+    }
+}
+
+## Section 3: SwiftUI Integration
+
+@ContentAndMedia {
+    Integrate your specifications with SwiftUI using property wrappers for declarative, reactive UI updates.
+
+    SpecificationKit provides property wrappers that make it easy to use specifications in SwiftUI views.
+}
+
+@Steps {
+    @Step {
+        Create a SwiftUI view that uses specifications.
+
+        Build a view that conditionally displays content based on specification results.
+
+        @Code(name: "PremiumFeatureView.swift", file: "getting-started-07-swiftui-basic.swift")
+    }
+
+    @Step {
+        Use the @Satisfies property wrapper.
+
+        Replace manual specification evaluation with the declarative @Satisfies property wrapper.
+
+        @Code(name: "PremiumFeatureView.swift", file: "getting-started-08-property-wrapper.swift") {
+            @Image(source: "property-wrapper-flow", alt: "Property Wrapper Evaluation Flow")
+        }
+    }
+
+    @Step {
+        Add reactive behavior with @ObservedSatisfies.
+
+        Use @ObservedSatisfies for automatic UI updates when specification results change.
+
+        @Code(name: "PremiumFeatureView.swift", file: "getting-started-09-reactive.swift")
+    }
+}
+
+## Section 4: Testing Your Specifications
+
+@ContentAndMedia {
+    Learn best practices for testing specifications and specification-based UI components.
+
+    Testing is crucial for maintaining reliable business logic. You'll see how to effectively test both individual specifications and their integration with UI.
+}
+
+@Steps {
+    @Step {
+        Create unit tests for individual specifications.
+
+        Write focused tests that verify each specification's behavior in isolation.
+
+        @Code(name: "UserEligibilitySpecTests.swift", file: "getting-started-10-unit-tests.swift")
+    }
+
+    @Step {
+        Test composed specifications.
+
+        Verify that combinations of specifications work correctly.
+
+        @Code(name: "UserEligibilitySpecTests.swift", file: "getting-started-11-composition-tests.swift")
+    }
+
+    @Step {
+        Test SwiftUI integration with MockContextProvider.
+
+        Use SpecificationKit's testing utilities to test UI components that depend on specifications.
+
+        @Code(name: "PremiumFeatureViewTests.swift", file: "getting-started-12-ui-tests.swift") {
+            @Image(source: "testing-architecture", alt: "Testing Architecture Diagram")
+        }
+    }
+}
+
+## Next Steps
+
+Congratulations! You've learned the fundamentals of SpecificationKit. Here are some next steps to explore:
+
+- **Advanced Patterns**: Learn about ``WeightedSpec``, ``HistoricalSpec``, and other advanced specification types
+- **Context Providers**: Explore different context providers for various data sources
+- **Macro Usage**: Use the `@specs` macro to generate composite specifications
+- **Performance Optimization**: Learn about ``CachedSatisfies`` for expensive operations
+
+### See Also
+
+- <doc:AdvancedPatterns>
+- <doc:ContextProviders>
+- <doc:PerformanceOptimization>
+- <doc:MacroUsage>
