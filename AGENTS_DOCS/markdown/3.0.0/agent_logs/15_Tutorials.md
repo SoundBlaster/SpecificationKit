@@ -3227,11 +3227,8 @@ This tutorial covers:
 - ``WeightedSpec`` for probabilistic decision making
 - ``HistoricalSpec`` for time-series analysis
 - ``ComparativeSpec`` for relative comparisons
-- ``ThresholdSpec`` for adaptive thresholds
 
-## Section 1: Probabilistic Decisions with WeightedSpec
 
-@ContentAndMedia {
     Learn how to implement A/B testing, feature rollouts, and load balancing using probabilistic specifications.
 
     ``WeightedSpec`` enables weighted random selection among multiple candidates, perfect for experiments and gradual feature rollouts.
@@ -4008,10 +4005,6 @@ var canAccessPremiumFeatures: Bool
 
 ## Advanced Specifications (v3.0.0)
 
-SpecificationKit v3.0.0 introduces sophisticated specification types for complex real-world scenarios:
-
-### ``WeightedSpec`` - Probabilistic Decisions
-Perfect for A/B testing, feature rollouts, and load balancing.
 
 ```swift
 let abTest = WeightedSpec([
@@ -4270,10 +4263,6 @@ var canAccessPremiumFeatures: Bool
 
 ## Advanced Specifications (v3.0.0)
 
-SpecificationKit v3.0.0 introduces sophisticated specification types for complex real-world scenarios:
-
-### ``WeightedSpec`` - Probabilistic Decisions
-Perfect for A/B testing, feature rollouts, and load balancing.
 
 ```swift
 let abTest = WeightedSpec([
@@ -4995,11 +4984,7 @@ A '.tutorial' file should contain a top-level directive ('Tutorials', 'Tutorial'
 15  + - ``WeightedSpec`` for probabilistic decision making
 16  + - ``HistoricalSpec`` for time-series analysis
 17  + - ``ComparativeSpec`` for relative comparisons
-18  + - ``ThresholdSpec`` for adaptive thresholds
-19  +
-20  + ## Section 1: Probabilistic Decisions with WeightedSpec
-21  +
-22  + @ContentAndMedia {
+
 23  +     Learn how to implement A/B testing, feature rollouts, and load balancing using probabilistic specifications.
 24  +
 25  +     ``WeightedSpec`` enables weighted random selection among multiple candidates, perfect for experiments and gradual feature rollouts.
