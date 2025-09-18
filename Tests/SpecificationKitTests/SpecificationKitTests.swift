@@ -254,6 +254,272 @@ final class SpecificationKitTests: XCTestCase {
         XCTAssertTrue(notSpec.isSatisfiedBy(5))
     }
 
+    // MARK: - Custom Operators Tests
+
+    func testCustomOperators_AndOperator() {
+        // Given
+        let spec1 = PredicateSpec<Int> { $0 > 5 }
+        let spec2 = PredicateSpec<Int> { $0 < 15 }
+        let combinedSpec = spec1 && spec2
+
+        // When & Then
+        XCTAssertTrue(combinedSpec.isSatisfiedBy(10))
+        XCTAssertFalse(combinedSpec.isSatisfiedBy(3))
+        XCTAssertFalse(combinedSpec.isSatisfiedBy(20))
+    }
+
+    func testCustomOperators_OrOperator() {
+        // Given
+        let spec1 = PredicateSpec<Int> { $0 < 5 }
+        let spec2 = PredicateSpec<Int> { $0 > 15 }
+        let combinedSpec = spec1 || spec2
+
+        // When & Then
+        XCTAssertTrue(combinedSpec.isSatisfiedBy(3))
+        XCTAssertTrue(combinedSpec.isSatisfiedBy(20))
+        XCTAssertFalse(combinedSpec.isSatisfiedBy(10))
+    }
+
+    func testCustomOperators_NotOperator() {
+        // Given
+        let spec = PredicateSpec<Int> { $0 > 10 }
+        let notSpec = !spec
+
+        // When & Then
+        XCTAssertFalse(notSpec.isSatisfiedBy(15))
+        XCTAssertTrue(notSpec.isSatisfiedBy(5))
+    }
+
+    func testCustomOperators_ComplexExpression() {
+        // Given
+        let isEven = PredicateSpec<Int> { $0 % 2 == 0 }
+        let greaterThan5 = PredicateSpec<Int> { $0 > 5 }
+        let lessThan20 = PredicateSpec<Int> { $0 < 20 }
+
+        // Complex expression: (even AND greater than 5) OR (NOT less than 20)
+        let complexSpec = (isEven && greaterThan5) || !lessThan20
+
+        // When & Then
+        XCTAssertTrue(complexSpec.isSatisfiedBy(8))  // even and > 5
+        XCTAssertTrue(complexSpec.isSatisfiedBy(25))  // >= 20
+        XCTAssertFalse(complexSpec.isSatisfiedBy(7))  // odd, < 20, not > 5
+        XCTAssertFalse(complexSpec.isSatisfiedBy(3))  // odd, not > 5, < 20
+    }
+
+    // MARK: - Convenience Functions Tests
+
+    func testConvenienceFunctions_SpecFunction() {
+        // Given
+        let specFromPredicate = spec { (str: String) in str.count > 3 }
+
+        // When & Then
+        XCTAssertTrue(specFromPredicate.isSatisfiedBy("Hello"))
+        XCTAssertFalse(specFromPredicate.isSatisfiedBy("Hi"))
+    }
+
+    func testConvenienceFunctions_AlwaysTrue() {
+        // Given
+        let alwaysTrueSpec: AnySpecification<String> = alwaysTrue()
+
+        // When & Then
+        XCTAssertTrue(alwaysTrueSpec.isSatisfiedBy(""))
+        XCTAssertTrue(alwaysTrueSpec.isSatisfiedBy("anything"))
+        XCTAssertTrue(alwaysTrueSpec.isSatisfiedBy("test"))
+    }
+
+    func testConvenienceFunctions_AlwaysFalse() {
+        // Given
+        let alwaysFalseSpec: AnySpecification<String> = alwaysFalse()
+
+        // When & Then
+        XCTAssertFalse(alwaysFalseSpec.isSatisfiedBy(""))
+        XCTAssertFalse(alwaysFalseSpec.isSatisfiedBy("anything"))
+        XCTAssertFalse(alwaysFalseSpec.isSatisfiedBy("test"))
+    }
+
+    // MARK: - SpecificationBuilder Tests
+
+    func testSpecificationBuilder_BasicAndChain() {
+        // Given
+        let spec1 = PredicateSpec<Int> { $0 > 5 }
+        let spec2 = PredicateSpec<Int> { $0 < 15 }
+        let spec3 = PredicateSpec<Int> { $0 % 2 == 0 }
+
+        let builtSpec = build(spec1)
+            .and(spec2)
+            .and(spec3)
+            .build()
+
+        // When & Then
+        XCTAssertTrue(builtSpec.isSatisfiedBy(8))  // 8 > 5, < 15, even
+        XCTAssertFalse(builtSpec.isSatisfiedBy(7))  // 7 > 5, < 15, but odd
+        XCTAssertFalse(builtSpec.isSatisfiedBy(16))  // 16 > 5, even, but not < 15
+    }
+
+    func testSpecificationBuilder_BasicOrChain() {
+        // Given
+        let spec1 = PredicateSpec<Int> { $0 < 3 }
+        let spec2 = PredicateSpec<Int> { $0 > 15 }
+        let spec3 = PredicateSpec<Int> { $0 == 10 }
+
+        let builtSpec = build(spec1)
+            .or(spec2)
+            .or(spec3)
+            .build()
+
+        // When & Then
+        XCTAssertTrue(builtSpec.isSatisfiedBy(2))  // < 3
+        XCTAssertTrue(builtSpec.isSatisfiedBy(20))  // > 15
+        XCTAssertTrue(builtSpec.isSatisfiedBy(10))  // == 10
+        XCTAssertFalse(builtSpec.isSatisfiedBy(7))  // doesn't match any condition
+    }
+
+    func testSpecificationBuilder_NotMethod() {
+        // Given
+        let spec = PredicateSpec<Int> { $0 > 10 }
+        let builtSpec = build(spec)
+            .not()
+            .build()
+
+        // When & Then
+        XCTAssertFalse(builtSpec.isSatisfiedBy(15))
+        XCTAssertTrue(builtSpec.isSatisfiedBy(5))
+    }
+
+    func testSpecificationBuilder_ComplexChain() {
+        // Given
+        let isPositive = PredicateSpec<Int> { $0 > 0 }
+        let isEven = PredicateSpec<Int> { $0 % 2 == 0 }
+        let isLarge = PredicateSpec<Int> { $0 > 100 }
+
+        // Build: (positive AND even) OR (NOT large)
+        let builtSpec = build(isPositive)
+            .and(isEven)
+            .or(build(isLarge).not().build())
+            .build()
+
+        // When & Then
+        XCTAssertTrue(builtSpec.isSatisfiedBy(4))  // positive and even
+        XCTAssertTrue(builtSpec.isSatisfiedBy(50))  // not large (also positive and even)
+        XCTAssertTrue(builtSpec.isSatisfiedBy(-5))  // not large
+        XCTAssertFalse(builtSpec.isSatisfiedBy(101))  // large and not (positive and even)
+    }
+
+    func testSpecificationBuilder_WithPredicate() {
+        // Given
+        let builtSpec = build { (str: String) in str.count > 3 }
+            .and(PredicateSpec { $0.hasPrefix("te") })
+            .build()
+
+        // When & Then
+        XCTAssertTrue(builtSpec.isSatisfiedBy("test"))
+        XCTAssertTrue(builtSpec.isSatisfiedBy("testing"))
+        XCTAssertFalse(builtSpec.isSatisfiedBy("te"))  // too short
+        XCTAssertFalse(builtSpec.isSatisfiedBy("hello"))  // doesn't start with "te"
+    }
+
+    func testSpecificationBuilder_EmptyChain() {
+        // Given
+        let originalSpec = PredicateSpec<Int> { $0 > 5 }
+        let builtSpec = build(originalSpec).build()
+
+        // When & Then - should behave exactly like original spec
+        XCTAssertTrue(builtSpec.isSatisfiedBy(10))
+        XCTAssertFalse(builtSpec.isSatisfiedBy(3))
+    }
+
+    func testSpecificationBuilder_MultipleNots() {
+        // Given
+        let spec = PredicateSpec<Int> { $0 > 5 }
+        let builtSpec = build(spec)
+            .not()
+            .not()
+            .build()
+
+        // When & Then - double negative should equal original
+        XCTAssertTrue(builtSpec.isSatisfiedBy(10))
+        XCTAssertFalse(builtSpec.isSatisfiedBy(3))
+    }
+
+    // MARK: - Build Function Tests
+
+    func testBuildFunction_WithSpecification() {
+        // Given
+        let originalSpec = PredicateSpec<String> { $0.count > 5 }
+        let builder = build(originalSpec)
+
+        // When
+        let builtSpec = builder.build()
+
+        // Then
+        XCTAssertTrue(builtSpec.isSatisfiedBy("Hello World"))
+        XCTAssertFalse(builtSpec.isSatisfiedBy("Hi"))
+    }
+
+    func testBuildFunction_WithPredicate() {
+        // Given
+        let builder = build { (num: Int) in num % 3 == 0 }
+
+        // When
+        let builtSpec = builder.build()
+
+        // Then
+        XCTAssertTrue(builtSpec.isSatisfiedBy(9))
+        XCTAssertTrue(builtSpec.isSatisfiedBy(12))
+        XCTAssertFalse(builtSpec.isSatisfiedBy(10))
+    }
+
+    // MARK: - Integration Tests
+
+    func testOperators_AndBuilderIntegration() {
+        // Given
+        let spec1 = PredicateSpec<Int> { $0 > 0 }
+        let spec2 = PredicateSpec<Int> { $0 < 100 }
+
+        // Mix operators and builder
+        let mixedSpec = build(spec1 && spec2)
+            .and(PredicateSpec { $0 % 5 == 0 })
+            .build()
+
+        // When & Then
+        XCTAssertTrue(mixedSpec.isSatisfiedBy(25))  // positive, < 100, divisible by 5
+        XCTAssertFalse(mixedSpec.isSatisfiedBy(23))  // positive, < 100, but not divisible by 5
+        XCTAssertFalse(mixedSpec.isSatisfiedBy(-5))  // negative
+    }
+
+    func testOperators_OrBuilderIntegration() {
+        // Given
+        let spec1 = PredicateSpec<Int> { $0 < 0 }
+        let spec2 = PredicateSpec<Int> { $0 > 100 }
+
+        // Mix operators and builder
+        let mixedSpec = build(spec1 || spec2)
+            .or(PredicateSpec { $0 == 50 })
+            .build()
+
+        // When & Then
+        XCTAssertTrue(mixedSpec.isSatisfiedBy(-10))  // negative
+        XCTAssertTrue(mixedSpec.isSatisfiedBy(150))  // > 100
+        XCTAssertTrue(mixedSpec.isSatisfiedBy(50))  // equals 50
+        XCTAssertFalse(mixedSpec.isSatisfiedBy(25))  // doesn't match any condition
+    }
+
+    func testOperators_ComplexNesting() {
+        // Given
+        let a = PredicateSpec<Int> { $0 > 10 }
+        let b = PredicateSpec<Int> { $0 < 20 }
+        let c = PredicateSpec<Int> { $0 % 2 == 0 }
+
+        // Test: (a AND b) OR (NOT c)
+        let complexSpec = (a && b) || !c
+
+        // When & Then
+        XCTAssertTrue(complexSpec.isSatisfiedBy(15))  // 10 < 15 < 20
+        XCTAssertTrue(complexSpec.isSatisfiedBy(7))  // odd number
+        XCTAssertFalse(complexSpec.isSatisfiedBy(8))  // even, not in range [10,20)
+        XCTAssertFalse(complexSpec.isSatisfiedBy(22))  // even, not in range [10,20)
+    }
+
     // MARK: - AnySpecification Tests
 
     func testAnySpecification_TypeErasure() {
@@ -1045,4 +1311,5 @@ final class SpecificationKitTests: XCTestCase {
         // Then
         XCTAssertFalse(result, "SubscriptionUpgradeSpec should fail with insufficient app opens")
     }
+
 }
