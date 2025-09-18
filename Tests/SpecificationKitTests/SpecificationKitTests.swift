@@ -474,4 +474,575 @@ final class SpecificationKitTests: XCTestCase {
         // Then
         XCTAssertFalse(result, "CompositeSpec should fail when count exceeds limit")
     }
+
+    func testCompositeSpec_CustomConfiguration() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-300)  // 5 minutes ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["custom_counter": 2],
+            events: ["custom_event": currentDate.addingTimeInterval(-172800)]  // 2 days ago
+        )
+        let spec = CompositeSpec(
+            minimumLaunchDelay: 60,  // 1 minute
+            maxShowCount: 5,
+            cooldownDays: 1,  // 1 day
+            counterKey: "custom_counter",
+            eventKey: "custom_event"
+        )
+
+        // When
+        let result = spec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertTrue(result, "Custom CompositeSpec should be satisfied")
+    }
+
+    func testCompositeSpec_CustomConfiguration_FailsInsufficientTime() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-30)  // 30 seconds ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["custom_counter": 2],
+            events: ["custom_event": currentDate.addingTimeInterval(-172800)]  // 2 days ago
+        )
+        let spec = CompositeSpec(
+            minimumLaunchDelay: 60,  // 1 minute required
+            maxShowCount: 5,
+            cooldownDays: 1,
+            counterKey: "custom_counter",
+            eventKey: "custom_event"
+        )
+
+        // When
+        let result = spec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertFalse(result, "Custom CompositeSpec should fail when insufficient time has passed")
+    }
+
+    func testCompositeSpec_PromoBanner() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-60)  // 1 minute ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["promo_banner_count": 1],
+            events: ["last_promo_banner": currentDate.addingTimeInterval(-259200)]  // 3 days ago
+        )
+
+        // When
+        let result = CompositeSpec.promoBanner.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertTrue(result, "PromoBanner spec should be satisfied")
+    }
+
+    func testCompositeSpec_PromoBanner_FailsMaxCount() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-60)  // 1 minute ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["promo_banner_count": 3],  // Exceeds limit of 2
+            events: ["last_promo_banner": currentDate.addingTimeInterval(-259200)]  // 3 days ago
+        )
+
+        // When
+        let result = CompositeSpec.promoBanner.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertFalse(result, "PromoBanner spec should fail when max count exceeded")
+    }
+
+    func testCompositeSpec_OnboardingTip() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-10)  // 10 seconds ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["onboarding_tip_count": 2],
+            events: ["last_onboarding_tip": currentDate.addingTimeInterval(-7200)]  // 2 hours ago
+        )
+
+        // When
+        let result = CompositeSpec.onboardingTip.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertTrue(result, "OnboardingTip spec should be satisfied")
+    }
+
+    func testCompositeSpec_OnboardingTip_FailsCooldown() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-10)  // 10 seconds ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["onboarding_tip_count": 2],
+            events: ["last_onboarding_tip": currentDate.addingTimeInterval(-1800)]  // 30 minutes ago (within 1 hour cooldown)
+        )
+
+        // When
+        let result = CompositeSpec.onboardingTip.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertFalse(result, "OnboardingTip spec should fail within cooldown period")
+    }
+
+    func testCompositeSpec_FeatureAnnouncement() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-120)  // 2 minutes ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["feature_announcement_count": 0],
+            events: [:]
+        )
+
+        // When
+        let result = CompositeSpec.featureAnnouncement.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertTrue(result, "FeatureAnnouncement spec should be satisfied")
+    }
+
+    func testCompositeSpec_FeatureAnnouncement_FailsMaxCount() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-120)  // 2 minutes ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["feature_announcement_count": 1],  // Max is 1
+            events: [:]
+        )
+
+        // When
+        let result = CompositeSpec.featureAnnouncement.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertFalse(result, "FeatureAnnouncement spec should fail when max count reached")
+    }
+
+    func testCompositeSpec_RatingPrompt() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-600)  // 10 minutes ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["rating_prompt_count": 1],
+            events: ["last_rating_prompt": currentDate.addingTimeInterval(-1_209_600)]  // 2 weeks ago
+        )
+
+        // When
+        let result = CompositeSpec.ratingPrompt.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertTrue(result, "RatingPrompt spec should be satisfied")
+    }
+
+    func testCompositeSpec_RatingPrompt_FailsInsufficientTime() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-120)  // 2 minutes ago (less than 5 minutes required)
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["rating_prompt_count": 1],
+            events: ["last_rating_prompt": currentDate.addingTimeInterval(-1_209_600)]  // 2 weeks ago
+        )
+
+        // When
+        let result = CompositeSpec.ratingPrompt.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertFalse(result, "RatingPrompt spec should fail with insufficient launch time")
+    }
+
+    // MARK: - AdvancedCompositeSpec Tests
+
+    func testAdvancedCompositeSpec_BasicComposition() {
+        // Given
+        let baseSpec = CompositeSpec(
+            minimumLaunchDelay: 60,
+            maxShowCount: 3,
+            cooldownDays: 1,
+            counterKey: "test_counter",
+            eventKey: "test_event"
+        )
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-120)  // 2 minutes ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["test_counter": 1],
+            events: ["test_event": currentDate.addingTimeInterval(-172800)]  // 2 days ago
+        )
+        let advancedSpec = AdvancedCompositeSpec(baseSpec: baseSpec)
+
+        // When
+        let result = advancedSpec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertTrue(result, "AdvancedCompositeSpec should satisfy base spec")
+    }
+
+    func testAdvancedCompositeSpec_WithBusinessHours() {
+        // Given
+        let baseSpec = CompositeSpec(
+            minimumLaunchDelay: 60,
+            maxShowCount: 3,
+            cooldownDays: 1,
+            counterKey: "test_counter",
+            eventKey: "test_event"
+        )
+
+        // Create a date during business hours (2 PM)
+        let calendar = Calendar.current
+        let currentDate = calendar.date(bySettingHour: 14, minute: 0, second: 0, of: Date())!
+        let launchDate = currentDate.addingTimeInterval(-120)  // 2 minutes ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["test_counter": 1],
+            events: ["test_event": currentDate.addingTimeInterval(-172800)]  // 2 days ago
+        )
+        let advancedSpec = AdvancedCompositeSpec(
+            baseSpec: baseSpec,
+            requireBusinessHours: true
+        )
+
+        // When
+        let result = advancedSpec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertTrue(result, "AdvancedCompositeSpec should satisfy during business hours")
+    }
+
+    func testAdvancedCompositeSpec_WithBusinessHours_FailsOutsideHours() {
+        // Given
+        let baseSpec = CompositeSpec(
+            minimumLaunchDelay: 60,
+            maxShowCount: 3,
+            cooldownDays: 1,
+            counterKey: "test_counter",
+            eventKey: "test_event"
+        )
+
+        // Create a date outside business hours (8 PM)
+        let calendar = Calendar.current
+        let currentDate = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: Date())!
+        let launchDate = currentDate.addingTimeInterval(-120)  // 2 minutes ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["test_counter": 1],
+            events: ["test_event": currentDate.addingTimeInterval(-172800)]  // 2 days ago
+        )
+        let advancedSpec = AdvancedCompositeSpec(
+            baseSpec: baseSpec,
+            requireBusinessHours: true
+        )
+
+        // When
+        let result = advancedSpec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertFalse(result, "AdvancedCompositeSpec should fail outside business hours")
+    }
+
+    func testAdvancedCompositeSpec_WithWeekdays() {
+        // Given
+        let baseSpec = CompositeSpec(
+            minimumLaunchDelay: 60,
+            maxShowCount: 3,
+            cooldownDays: 1,
+            counterKey: "test_counter",
+            eventKey: "test_event"
+        )
+
+        // Create a date on a weekday (Tuesday)
+        let calendar = Calendar.current
+        let currentDate =
+            calendar.dateInterval(of: .weekOfYear, for: Date())?.start.addingTimeInterval(86400)
+            ?? Date()  // Tuesday
+        let launchDate = currentDate.addingTimeInterval(-120)  // 2 minutes ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["test_counter": 1],
+            events: ["test_event": currentDate.addingTimeInterval(-172800)]  // 2 days ago
+        )
+        let advancedSpec = AdvancedCompositeSpec(
+            baseSpec: baseSpec,
+            requireWeekdays: true
+        )
+
+        // When
+        let result = advancedSpec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertTrue(result, "AdvancedCompositeSpec should satisfy on weekdays")
+    }
+
+    func testAdvancedCompositeSpec_WithMinimumEngagement() {
+        // Given
+        let baseSpec = CompositeSpec(
+            minimumLaunchDelay: 60,
+            maxShowCount: 3,
+            cooldownDays: 1,
+            counterKey: "test_counter",
+            eventKey: "test_event"
+        )
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-120)  // 2 minutes ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["test_counter": 1, "user_engagement_score": 85],
+            events: ["test_event": currentDate.addingTimeInterval(-172800)]  // 2 days ago
+        )
+        let advancedSpec = AdvancedCompositeSpec(
+            baseSpec: baseSpec,
+            minimumEngagementLevel: 80
+        )
+
+        // When
+        let result = advancedSpec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertTrue(result, "AdvancedCompositeSpec should satisfy with sufficient engagement")
+    }
+
+    func testAdvancedCompositeSpec_WithMinimumEngagement_FailsLowEngagement() {
+        // Given
+        let baseSpec = CompositeSpec(
+            minimumLaunchDelay: 60,
+            maxShowCount: 3,
+            cooldownDays: 1,
+            counterKey: "test_counter",
+            eventKey: "test_event"
+        )
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-120)  // 2 minutes ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["test_counter": 1, "user_engagement_score": 50],
+            events: ["test_event": currentDate.addingTimeInterval(-172800)]  // 2 days ago
+        )
+        let advancedSpec = AdvancedCompositeSpec(
+            baseSpec: baseSpec,
+            minimumEngagementLevel: 80
+        )
+
+        // When
+        let result = advancedSpec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertFalse(result, "AdvancedCompositeSpec should fail with low engagement")
+    }
+
+    // MARK: - ECommercePromoBannerSpec Tests
+
+    func testECommercePromoBannerSpec_AllConditionsMet() {
+        // Given
+        let calendar = Calendar.current
+        let currentDate = calendar.date(bySettingHour: 15, minute: 0, second: 0, of: Date())!  // 3 PM (shopping hours)
+        let launchDate = currentDate.addingTimeInterval(-180)  // 3 minutes ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["products_viewed": 5],
+            events: [
+                "last_purchase": currentDate.addingTimeInterval(-172800),  // 2 days ago
+                "last_promo_shown": currentDate.addingTimeInterval(-18000),  // 5 hours ago
+            ]
+        )
+        let spec = ECommercePromoBannerSpec()
+
+        // When
+        let result = spec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertTrue(
+            result, "ECommercePromoBannerSpec should be satisfied when all conditions are met")
+    }
+
+    func testECommercePromoBannerSpec_FailsInsufficientActivity() {
+        // Given
+        let calendar = Calendar.current
+        let currentDate = calendar.date(bySettingHour: 15, minute: 0, second: 0, of: Date())!  // 3 PM
+        let launchDate = currentDate.addingTimeInterval(-60)  // 1 minute ago (insufficient)
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["products_viewed": 5],
+            events: [
+                "last_purchase": currentDate.addingTimeInterval(-172800),  // 2 days ago
+                "last_promo_shown": currentDate.addingTimeInterval(-18000),  // 5 hours ago
+            ]
+        )
+        let spec = ECommercePromoBannerSpec()
+
+        // When
+        let result = spec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertFalse(
+            result, "ECommercePromoBannerSpec should fail with insufficient activity time")
+    }
+
+    func testECommercePromoBannerSpec_FailsInsufficientProductViews() {
+        // Given
+        let calendar = Calendar.current
+        let currentDate = calendar.date(bySettingHour: 15, minute: 0, second: 0, of: Date())!  // 3 PM
+        let launchDate = currentDate.addingTimeInterval(-180)  // 3 minutes ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["products_viewed": 2],  // Insufficient (needs 3+)
+            events: [
+                "last_purchase": currentDate.addingTimeInterval(-172800),  // 2 days ago
+                "last_promo_shown": currentDate.addingTimeInterval(-18000),  // 5 hours ago
+            ]
+        )
+        let spec = ECommercePromoBannerSpec()
+
+        // When
+        let result = spec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertFalse(
+            result, "ECommercePromoBannerSpec should fail with insufficient product views")
+    }
+
+    func testECommercePromoBannerSpec_FailsOutsideShoppingHours() {
+        // Given
+        let calendar = Calendar.current
+        let currentDate = calendar.date(bySettingHour: 23, minute: 0, second: 0, of: Date())!  // 11 PM (outside shopping hours)
+        let launchDate = currentDate.addingTimeInterval(-180)  // 3 minutes ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: ["products_viewed": 5],
+            events: [
+                "last_purchase": currentDate.addingTimeInterval(-172800),  // 2 days ago
+                "last_promo_shown": currentDate.addingTimeInterval(-18000),  // 5 hours ago
+            ]
+        )
+        let spec = ECommercePromoBannerSpec()
+
+        // When
+        let result = spec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertFalse(result, "ECommercePromoBannerSpec should fail outside shopping hours")
+    }
+
+    // MARK: - SubscriptionUpgradeSpec Tests
+
+    func testSubscriptionUpgradeSpec_AllConditionsMet() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-1_209_600)  // 2 weeks ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: [
+                "premium_feature_usage": 8,
+                "app_opens": 15,
+            ],
+            events: ["last_upgrade_prompt": currentDate.addingTimeInterval(-345600)],  // 4 days ago
+            flags: ["is_premium_subscriber": false]
+        )
+        let spec = SubscriptionUpgradeSpec()
+
+        // When
+        let result = spec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertTrue(
+            result, "SubscriptionUpgradeSpec should be satisfied when all conditions are met")
+    }
+
+    func testSubscriptionUpgradeSpec_FailsPremiumSubscriber() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-1_209_600)  // 2 weeks ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: [
+                "premium_feature_usage": 8,
+                "app_opens": 15,
+            ],
+            events: ["last_upgrade_prompt": currentDate.addingTimeInterval(-345600)],  // 4 days ago
+            flags: ["is_premium_subscriber": true]  // Already premium
+        )
+        let spec = SubscriptionUpgradeSpec()
+
+        // When
+        let result = spec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertFalse(result, "SubscriptionUpgradeSpec should fail for premium subscribers")
+    }
+
+    func testSubscriptionUpgradeSpec_FailsInsufficientPremiumUsage() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-1_209_600)  // 2 weeks ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: [
+                "premium_feature_usage": 3,  // Insufficient (needs 5+)
+                "app_opens": 15,
+            ],
+            events: ["last_upgrade_prompt": currentDate.addingTimeInterval(-345600)],  // 4 days ago
+            flags: ["is_premium_subscriber": false]
+        )
+        let spec = SubscriptionUpgradeSpec()
+
+        // When
+        let result = spec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertFalse(
+            result, "SubscriptionUpgradeSpec should fail with insufficient premium feature usage")
+    }
+
+    func testSubscriptionUpgradeSpec_FailsInsufficientAppOpens() {
+        // Given
+        let currentDate = Date()
+        let launchDate = currentDate.addingTimeInterval(-1_209_600)  // 2 weeks ago
+        let context = EvaluationContext(
+            currentDate: currentDate,
+            launchDate: launchDate,
+            counters: [
+                "premium_feature_usage": 8,
+                "app_opens": 5,  // Insufficient (needs 10+)
+            ],
+            events: ["last_upgrade_prompt": currentDate.addingTimeInterval(-345600)],  // 4 days ago
+            flags: ["is_premium_subscriber": false]
+        )
+        let spec = SubscriptionUpgradeSpec()
+
+        // When
+        let result = spec.isSatisfiedBy(context)
+
+        // Then
+        XCTAssertFalse(result, "SubscriptionUpgradeSpec should fail with insufficient app opens")
+    }
 }
