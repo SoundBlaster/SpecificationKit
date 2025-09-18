@@ -6,6 +6,7 @@ import PackageDescription
 
 let package = Package(
     name: "SpecificationKit",
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v13),
         .macOS(.v10_15),
