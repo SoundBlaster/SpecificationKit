@@ -7,6 +7,10 @@
 
 import XCTest
 
+#if canImport(CoreLocation)
+import CoreLocation
+#endif
+
 @testable import SpecificationKit
 
 /// Performance tests for platform-specific context providers
