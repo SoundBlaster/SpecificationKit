@@ -1,0 +1,18 @@
+@Tutorials(name: "SpecificationKit Tutorials") {
+    @Intro(title: "Learn the Specification Pattern in Swift") {
+        Learn how to use SpecificationKit to build maintainable business rules using modern Swift APIs.
+        @Image(source: "specification-pattern-icon", alt: "Specification Pattern Icon")
+    }
+    @Chapter(name: "Getting Started") {
+        Create and compose your first specifications for testable business logic.
+        @TutorialReference(tutorial: "doc:GettingStarted")
+    }
+    @Chapter(name: "Advanced Specification Patterns") {
+        Explore weighted decisions, historical analysis, and advanced composition.
+        @TutorialReference(tutorial: "doc:AdvancedPatterns")
+    }
+    @Resources {
+        See documentation for all SpecificationKit APIs.
+        @Link(destination: "doc:SpecificationKit") { "SpecificationKit Reference" }
+    }
+}

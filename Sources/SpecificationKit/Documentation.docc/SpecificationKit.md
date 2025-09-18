@@ -53,7 +53,7 @@ var canUseFeature: Bool
 struct FeatureView: View {
     @ObservedSatisfies(using: PremiumUserSpec())
     var isPremiumUser: Bool
-    
+
     var body: some View {
         VStack {
             if isPremiumUser {
@@ -79,6 +79,13 @@ struct FeatureView: View {
 var discountType: String
 ```
 
+## Tutorials
+
+Start your journey with SpecificationKit through our comprehensive tutorials:
+
+- <doc:GettingStarted> - Learn the fundamentals of the Specification Pattern and create your first specifications
+- <doc:AdvancedPatterns> - Master sophisticated patterns for real-world applications
+
 ## Getting Started
 
 Whether you're new to the Specification Pattern or upgrading from a previous version, SpecificationKit makes it easy to implement clean, maintainable business logic.
@@ -89,7 +96,7 @@ Add SpecificationKit to your project using Swift Package Manager:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/specificationkit/SpecificationKit.git", from: "3.0.0")
+    .package(url: "https://github.com/SoundBlaster/SpecificationKit.git", from: "3.0.0")
 ]
 ```
 
@@ -136,8 +143,10 @@ var canAccessPremiumFeatures: Bool
 
 SpecificationKit v3.0.0 introduces sophisticated specification types for complex real-world scenarios:
 
-### ``WeightedSpec`` - Probabilistic Decisions
+### Probabilistic Decisions
 Perfect for A/B testing, feature rollouts, and load balancing.
+
+<doc:WeightedSpec>
 
 ```swift
 let abTest = WeightedSpec([
@@ -150,8 +159,10 @@ let abTest = WeightedSpec([
 var experimentVariant: String?
 ```
 
-### ``HistoricalSpec`` - Time-Series Analysis
+### Time-Series Analysis
 Analyze trends and patterns from historical data.
+
+<doc:HistoricalSpec>
 
 ```swift
 let performanceSpec = HistoricalSpec(
@@ -160,12 +171,14 @@ let performanceSpec = HistoricalSpec(
     aggregation: .percentile(0.95)
 )
 
-@Maybe(using: performanceSpec) 
+@Maybe(using: performanceSpec)
 var p95ResponseTime: Double?
 ```
 
-### ``ComparativeSpec`` - Relative Validation
+### Relative Validation
 Compare values against baselines and ranges.
+
+<doc:ComparativeSpec>
 
 ```swift
 let temperatureSpec = ComparativeSpec(
@@ -178,8 +191,10 @@ let temperatureSpec = ComparativeSpec(
 var isComfortableTemperature: Bool
 ```
 
-### ``ThresholdSpec`` - Adaptive Thresholds
+### Adaptive Thresholds
 Dynamic thresholds that adapt to changing conditions.
+
+<doc:ThresholdSpec>
 
 ```swift
 let alertSpec = ThresholdSpec(
