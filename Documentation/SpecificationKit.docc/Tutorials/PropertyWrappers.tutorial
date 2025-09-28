@@ -1,0 +1,111 @@
+@Tutorial(time: 25) {
+    @Intro(title: "Drive Subscription UI with Property Wrappers") {
+        @Content {
+            Use `@Satisfies` to evaluate specifications from SwiftUI without scattering logic through
+            the view. This tutorial walks through modeling a subscription rule and binding it to a
+            screen that updates automatically.
+        }
+        @CallToAction(destination: "doc:Satisfies") {
+            Review the `@Satisfies` reference to explore every initializer and capability.
+        }
+    }
+
+    @Section(title: "Describe the subscription rule") {
+        @Content {
+            Start with a focused specification that reads only the context it needs to decide whether
+            a user currently has access.
+        }
+
+        @Steps {
+            @Step {
+                @Content {
+                    Build a specification that checks the subscription flags stored in the shared
+                    evaluation context.
+                }
+                @CodeListing(language: swift) {
+                    ```swift
+                    struct ActiveSubscriptionSpec: Specification {
+                        func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+                            let isActive = context.flag(for: "subscription.isActive")
+                            return isActive && !context.flag(for: "subscription.expired")
+                        }
+                    }
+                    ```
+                }
+            }
+        }
+    }
+
+    @Section(title: "Prepare a context provider for the view") {
+        @Content {
+            Centralize subscription state in a provider so every property wrapper reads the same
+            source of truth.
+        }
+
+        @Steps {
+            @Step {
+                @Content {
+                    Configure the shared provider with baseline subscription values that your UI can
+                    react to immediately.
+                }
+                @CodeListing(language: swift) {
+                    ```swift
+                    let subscriptionProvider = DefaultContextProvider.shared
+                    subscriptionProvider.setFlag("subscription.isActive", value: true)
+                    subscriptionProvider.setFlag("subscription.expired", value: false)
+
+                    let subscriptionSpec = ActiveSubscriptionSpec()
+                    ```
+                }
+            }
+        }
+    }
+
+    @Section(title: "Bind the rule inside SwiftUI") {
+        @Content {
+            Attach the specification to a SwiftUI view with `@Satisfies` so the interface can flip
+            between premium content and an upsell without manual plumbing.
+        }
+
+        @Steps {
+            @Step {
+                @Content {
+                    Declare a view that reads the subscription status directly through the property
+                    wrapper and switches layouts accordingly.
+                }
+                @CodeListing(language: swift) {
+                    ```swift
+                    struct SubscriptionScreen: View {
+                        @Satisfies(provider: subscriptionProvider, using: ActiveSubscriptionSpec())
+                        private var hasSubscription: Bool
+
+                        var body: some View {
+                            if hasSubscription {
+                                PremiumContent()
+                            } else {
+                                SubscribePrompt()
+                            }
+                        }
+                    }
+                    ```
+                }
+            }
+
+            @Step {
+                @Content {
+                    Update the provider when the subscription changes so every bound view refreshes in
+                    one place.
+                }
+                @CodeListing(language: swift) {
+                    ```swift
+                    func recordSubscriptionChange(isActive: Bool) {
+                        subscriptionProvider.setFlag("subscription.isActive", value: isActive)
+                        subscriptionProvider.setFlag("subscription.expired", value: !isActive)
+                        print("Subscription toggled:", isActive)
+                    }
+                    ```
+                }
+            }
+        }
+    }
+}

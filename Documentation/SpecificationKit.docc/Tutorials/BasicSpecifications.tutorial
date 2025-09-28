@@ -1,0 +1,143 @@
+@Tutorial(time: 20) {
+    @Intro(title: "Qualify Orders for Promotions") {
+        @Content {
+            Learn how to break a promotion rule into small, testable specifications. You will model
+            an online order, express the business rules that matter, and combine them into a
+            decision that is easy to maintain.
+        }
+        @CallToAction(destination: "doc:SpecificationKit") {
+            Review the SpecificationKit overview to see every available operator.
+        }
+    }
+
+    @Section(title: "Model the order you want to evaluate") {
+        @Content {
+            Describe the essential data an order needs so that later steps can read it directly in
+            specifications.
+        }
+
+        @Steps {
+            @Step {
+                @Content {
+                    Create a lightweight `Order` type that captures the pieces of state your
+                    promotion rules depend on.
+                }
+                @CodeListing(language: swift) {
+                    ```swift
+                    struct Order {
+                        var total: Decimal
+                        var isFirstPurchase: Bool
+                        var couponApplied: Bool
+                        var loyaltyPoints: Int
+                    }
+                    ```
+                }
+            }
+        }
+    }
+
+    @Section(title: "Capture each rule in its own specification") {
+        @Content {
+            Express every requirement separately so you can reuse or adjust it without rewriting the
+            rest of the logic.
+        }
+
+        @Steps {
+            @Step {
+                @Content {
+                    Require a minimum purchase amount with a dedicated specification that reads the
+                    order total.
+                }
+                @CodeListing(language: swift) {
+                    ```swift
+                    struct MinimumTotalSpec: Specification {
+                        let minimum: Decimal
+
+                        func isSatisfiedBy(_ order: Order) -> Bool {
+                            order.total >= minimum
+                        }
+                    }
+                    ```
+                }
+            }
+
+            @Step {
+                @Content {
+                    Add a specification that checks whether the customer is placing their very first
+                    order.
+                }
+                @CodeListing(language: swift) {
+                    ```swift
+                    struct FirstPurchaseSpec: Specification {
+                        func isSatisfiedBy(_ order: Order) -> Bool {
+                            order.isFirstPurchase
+                        }
+                    }
+                    ```
+                }
+            }
+
+            @Step {
+                @Content {
+                    Keep promotions exclusive by ensuring no coupon was already applied to the order.
+                }
+                @CodeListing(language: swift) {
+                    ```swift
+                    struct CouponUnusedSpec: Specification {
+                        func isSatisfiedBy(_ order: Order) -> Bool {
+                            order.couponApplied == false
+                        }
+                    }
+                    ```
+                }
+            }
+        }
+    }
+
+    @Section(title: "Combine the rules into a single decision") {
+        @Content {
+            Compose the independent specifications with logical operators so you can reuse the same
+            decision anywhere in your app.
+        }
+
+        @Steps {
+            @Step {
+                @Content {
+                    Chain the individual specifications with logical AND so all promotion rules must
+                    pass together.
+                }
+                @CodeListing(language: swift) {
+                    ```swift
+                    let totalSpec = MinimumTotalSpec(minimum: 50)
+                    let firstPurchaseSpec = FirstPurchaseSpec()
+                    let couponUnusedSpec = CouponUnusedSpec()
+
+                    let welcomeBonusSpec = totalSpec
+                        .and(firstPurchaseSpec)
+                        .and(couponUnusedSpec)
+                    ```
+                }
+            }
+
+            @Step {
+                @Content {
+                    Evaluate the combined specification against a sample order and branch on the
+                    result just like you would in production code.
+                }
+                @CodeListing(language: swift) {
+                    ```swift
+                    let sampleOrder = Order(
+                        total: 72,
+                        isFirstPurchase: true,
+                        couponApplied: false,
+                        loyaltyPoints: 30
+                    )
+
+                    let qualifies = welcomeBonusSpec.isSatisfiedBy(sampleOrder)
+                    print(qualifies ? "Apply welcome bonus" : "Keep regular pricing")
+                    ```
+                }
+            }
+        }
+    }
+}
