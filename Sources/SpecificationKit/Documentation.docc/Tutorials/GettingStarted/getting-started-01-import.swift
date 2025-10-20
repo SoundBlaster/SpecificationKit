@@ -1,11 +1,9 @@
 import Foundation
 import SpecificationKit
 
+// A simple User model for our examples
 struct User {
-    let id: UUID
+    let name: String
     var age: Int
-    var referralCount: Int
-    var isPremiumSubscriber: Bool
-    var isOnboardingComplete: Bool
-    var hasDelinquentPayments: Bool
+    var isPremium: Bool
 }

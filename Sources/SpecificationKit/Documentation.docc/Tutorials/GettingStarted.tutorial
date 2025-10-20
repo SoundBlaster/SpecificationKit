@@ -18,13 +18,13 @@
 
         @Steps {
             @Step {
-                Import SpecificationKit and define a ``User`` model that your specification will evaluate.
+                Import SpecificationKit and define a User model.
 
                 @Code(name: "UserEligibilitySpec.swift", file: "getting-started-01-import.swift")
             }
 
             @Step {
-                Create your first specification by conforming to ``Specification`` and determining premium eligibility.
+                Create a specification that checks premium eligibility.
 
                 @Code(name: "UserEligibilitySpec.swift", file: "getting-started-02-specification.swift") {
                     @Image(source: "specification-protocol-diagram", alt: "Specification protocol structure diagram")
@@ -32,7 +32,7 @@
             }
 
             @Step {
-                Test the specification with sample data to confirm the rule behaves as expected.
+                Test the specification with sample users.
 
                 @Code(name: "UserEligibilitySpec.swift", file: "getting-started-03-testing.swift")
             }
@@ -46,13 +46,13 @@
 
         @Steps {
             @Step {
-                Create additional specifications that check separate eligibility concerns.
+                Add specifications for account age and subscription status.
 
                 @Code(name: "UserEligibilitySpec.swift", file: "getting-started-04-additional-specs.swift")
             }
 
             @Step {
-                Compose specifications with ``and()``, ``or()``, and ``not()`` to model complex requirements.
+                Combine specifications using logical operators.
 
                 @Code(name: "UserEligibilitySpec.swift", file: "getting-started-05-composition.swift") {
                     @Image(source: "specification-composition", alt: "Specification composition diagram")
@@ -60,7 +60,7 @@
             }
 
             @Step {
-                Validate the composed specification against varied user scenarios.
+                Test the composed specification with different user scenarios.
 
                 @Code(name: "UserEligibilitySpec.swift", file: "getting-started-06-composition-test.swift")
             }
@@ -74,13 +74,13 @@
 
         @Steps {
             @Step {
-                Build a SwiftUI view that conditionally displays premium content based on specification checks.
+                Create a SwiftUI view with conditional premium content.
 
                 @Code(name: "PremiumFeatureView.swift", file: "getting-started-07-swiftui-basic.swift")
             }
 
             @Step {
-                Adopt the ``@Satisfies`` property wrapper to evaluate specifications declaratively within the view.
+                Use the @Satisfies property wrapper for declarative evaluation.
 
                 @Code(name: "PremiumFeatureView.swift", file: "getting-started-08-property-wrapper.swift") {
                     @Image(source: "property-wrapper-flow", alt: "Property wrapper evaluation flow diagram")
@@ -88,7 +88,7 @@
             }
 
             @Step {
-                Add reactive behavior with ``@ObservedSatisfies`` so the UI updates automatically when context changes.
+                Add reactive updates with @ObservedSatisfies.
 
                 @Code(name: "PremiumFeatureView.swift", file: "getting-started-09-reactive.swift")
             }
@@ -102,19 +102,19 @@
 
         @Steps {
             @Step {
-                Write focused unit tests that verify each specification in isolation.
+                Write unit tests for individual specifications.
 
                 @Code(name: "UserEligibilitySpecTests.swift", file: "getting-started-10-unit-tests.swift")
             }
 
             @Step {
-                Exercise composed specifications to ensure logical combinations behave correctly.
+                Test composed specifications with multiple scenarios.
 
                 @Code(name: "UserEligibilitySpecTests.swift", file: "getting-started-11-composition-tests.swift")
             }
 
             @Step {
-                Test SwiftUI integration with ``MockContextProvider`` to validate UI components that depend on specifications.
+                Test SwiftUI views using MockContextProvider.
 
                 @Code(name: "PremiumFeatureViewTests.swift", file: "getting-started-12-ui-tests.swift") {
                     @Image(source: "testing-architecture", alt: "Testing architecture diagram")

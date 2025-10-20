@@ -1,61 +1,53 @@
 import SwiftUI
 import SpecificationKit
 
-struct PremiumFeatureView: View {
-    private let user: User
-    private let spec: PremiumEligibilitySpec
+// A simple User model
+struct User {
+    let name: String
+    var age: Int
+    var isPremium: Bool
+}
 
-    init(
-        user: User,
-        spec: PremiumEligibilitySpec = PremiumEligibilitySpec(minimumAge: 21, minimumReferrals: 3)
-    ) {
-        self.user = user
-        self.spec = spec
+// Check if eligible for premium features
+struct MinimumAgeSpec: Specification {
+    typealias T = User
+    let minimumAge: Int
+
+    func isSatisfiedBy(_ candidate: User) -> Bool {
+        return candidate.age >= minimumAge
     }
+}
+
+struct IsPremiumSpec: Specification {
+    typealias T = User
+
+    func isSatisfiedBy(_ candidate: User) -> Bool {
+        return candidate.isPremium
+    }
+}
+
+// Basic SwiftUI view with specification
+struct PremiumFeatureView: View {
+    let user: User
+    let eligibilitySpec: any Specification<User>
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Premium Hub")
+        VStack(spacing: 20) {
+            Text("Premium Features")
                 .font(.title)
 
-            if spec.isSatisfiedBy(user) {
-                PremiumContentView(user: user)
+            if eligibilitySpec.isSatisfiedBy(user) {
+                Text("Welcome, \(user.name)!")
+                    .foregroundColor(.green)
+                Text("You have access to premium features")
+                    .font(.caption)
             } else {
-                LockedContentView()
+                Text("Premium access required")
+                    .foregroundColor(.orange)
+                Text("Upgrade to unlock all features")
+                    .font(.caption)
             }
         }
         .padding()
-    }
-}
-
-struct PremiumContentView: View {
-    let user: User
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Text("Welcome back, \(user.id.uuidString.prefix(6))!")
-                .font(.headline)
-            Text("Enjoy premium insights tailored to you.")
-                .font(.subheadline)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.green.opacity(0.2))
-        .cornerRadius(12)
-    }
-}
-
-struct LockedContentView: View {
-    var body: some View {
-        VStack(spacing: 8) {
-            Text("Premium content locked")
-                .font(.headline)
-            Text("Complete onboarding to unlock feature access.")
-                .font(.subheadline)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.gray.opacity(0.15))
-        .cornerRadius(12)
     }
 }

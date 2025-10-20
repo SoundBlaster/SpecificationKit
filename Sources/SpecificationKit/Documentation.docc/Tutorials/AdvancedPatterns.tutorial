@@ -18,13 +18,13 @@
 
         @Steps {
             @Step {
-                Set up a basic A/B test scenario by creating specifications for different feature variants and defining their weights.
+                Define feature variants with their weights for A/B testing.
 
                 @Code(name: "ExperimentDecisions.swift", file: "advanced-patterns-01-weighted-context.swift")
             }
 
             @Step {
-                Implement weighted selection that chooses between variants according to their weights using ``WeightedSpec``.
+                Create a WeightedSpec to select between variants.
 
                 @Code(name: "ExperimentDecisions.swift", file: "advanced-patterns-02-weighted-selection.swift") {
                     @Image(source: "weighted-selection-diagram", alt: "Weighted selection process diagram")
@@ -32,13 +32,13 @@
             }
 
             @Step {
-                Handle numeric results by calculating expected values and variance from weighted outcomes.
+                Calculate expected values from weighted outcomes.
 
                 @Code(name: "ExperimentAnalytics.swift", file: "advanced-patterns-03-weighted-analytics.swift")
             }
 
             @Step {
-                Integrate weighted results with property wrappers, using ``@Maybe`` to expose optional outcomes.
+                Use @Maybe to expose weighted results in your UI.
 
                 @Code(name: "ExperimentDashboard.swift", file: "advanced-patterns-04-weighted-ui.swift")
             }
@@ -52,13 +52,13 @@
 
         @Steps {
             @Step {
-                Create a custom historical data provider by implementing ``HistoricalDataProviding`` to supply time-series data.
+                Implement HistoricalDataProviding to supply time-series data.
 
                 @Code(name: "PerformanceMonitor.swift", file: "advanced-patterns-05-historical-provider.swift")
             }
 
             @Step {
-                Configure ``HistoricalSpec`` instances for different types of time-series analysis and aggregation.
+                Configure HistoricalSpec for different analysis types.
 
                 @Code(name: "PerformanceMonitor.swift", file: "advanced-patterns-06-historical-specs.swift") {
                     @Image(source: "historical-analysis-types", alt: "Historical analysis type overview")
@@ -66,13 +66,13 @@
             }
 
             @Step {
-                Implement trend detection that surfaces performance anomalies from historical samples.
+                Add trend detection for performance anomalies.
 
                 @Code(name: "PerformanceMonitor.swift", file: "advanced-patterns-07-trend-detection.swift")
             }
 
             @Step {
-                Build adaptive monitoring dashboards with SwiftUI views that react to historical analysis results.
+                Build a monitoring dashboard that reacts to trends.
 
                 @Code(name: "MonitoringDashboard.swift", file: "advanced-patterns-08-historical-dashboard.swift")
             }
@@ -86,13 +86,13 @@
 
         @Steps {
             @Step {
-                Define comparison specifications that compare values against fixed thresholds and ranges.
+                Create comparisons against fixed thresholds.
 
                 @Code(name: "ValidationSystem.swift", file: "advanced-patterns-09-comparative-basics.swift")
             }
 
             @Step {
-                Implement range-based validation to ensure values remain within acceptable bounds.
+                Add range-based validation for acceptable bounds.
 
                 @Code(name: "ValidationSystem.swift", file: "advanced-patterns-10-comparative-ranges.swift") {
                     @Image(source: "range-validation-diagram", alt: "Range validation process diagram")
@@ -100,13 +100,13 @@
             }
 
             @Step {
-                Add tolerance-based comparisons that handle floating-point values with configurable tolerances.
+                Handle floating-point values with tolerance comparisons.
 
                 @Code(name: "ValidationSystem.swift", file: "advanced-patterns-11-comparative-tolerance.swift")
             }
 
             @Step {
-                Build real-time validation interfaces that surface comparative results in SwiftUI.
+                Display validation results in a SwiftUI interface.
 
                 @Code(name: "ValidationView.swift", file: "advanced-patterns-12-comparative-ui.swift")
             }
@@ -120,13 +120,13 @@
 
         @Steps {
             @Step {
-                Create static threshold specifications for baseline alerting scenarios.
+                Define static thresholds for baseline alerting.
 
                 @Code(name: "AlertSystem.swift", file: "advanced-patterns-13-threshold-static.swift")
             }
 
             @Step {
-                Implement adaptive thresholds driven by functions that respond to changing conditions.
+                Create adaptive thresholds that respond to conditions.
 
                 @Code(name: "AlertSystem.swift", file: "advanced-patterns-14-threshold-adaptive.swift") {
                     @Image(source: "adaptive-threshold-flow", alt: "Adaptive threshold evaluation flow")
@@ -134,13 +134,13 @@
             }
 
             @Step {
-                Add contextual threshold evaluation that considers multiple inputs to produce complex decisions.
+                Add contextual thresholds with multiple inputs.
 
                 @Code(name: "AlertSystem.swift", file: "advanced-patterns-15-threshold-contextual.swift")
             }
 
             @Step {
-                Build comprehensive monitoring systems that combine static, adaptive, and contextual thresholds.
+                Combine threshold types in a monitoring system.
 
                 @Code(name: "MonitoringSystem.swift", file: "advanced-patterns-16-threshold-monitoring.swift")
             }
@@ -154,13 +154,13 @@
 
         @Steps {
             @Step {
-                Design a comprehensive recommendation system that blends weighted, historical, and threshold specifications for intelligent outcomes.
+                Design a recommendation system using multiple spec types.
 
                 @Code(name: "RecommendationEngine.swift", file: "advanced-patterns-17-combined-system.swift")
             }
 
             @Step {
-                Implement multi-stage decision pipelines that apply different specification types at each stage.
+                Build multi-stage decision pipelines.
 
                 @Code(name: "RecommendationEngine.swift", file: "advanced-patterns-18-decision-pipeline.swift") {
                     @Image(source: "decision-pipeline-diagram", alt: "Multi-stage decision pipeline diagram")
@@ -168,7 +168,7 @@
             }
 
             @Step {
-                Add comprehensive testing strategies that validate systems composed of multiple specification types.
+                Test the complete system with comprehensive strategies.
 
                 @Code(name: "RecommendationEngineTests.swift", file: "advanced-patterns-19-testing.swift")
             }

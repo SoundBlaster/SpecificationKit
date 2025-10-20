@@ -1,42 +1,50 @@
 import XCTest
 import SpecificationKit
 
-final class UserEligibilitySpecTests: XCTestCase {
-    private let spec = PremiumEligibilitySpec(minimumAge: 21, minimumReferrals: 3)
+// A simple User model
+struct User {
+    let name: String
+    var age: Int
+    var isPremium: Bool
+}
 
-    func testPremiumSubscriberIsEligible() {
-        // Given
-        let user = User(
-            id: UUID(),
-            age: 25,
-            referralCount: 0,
-            isPremiumSubscriber: true,
-            isOnboardingComplete: true,
-            hasDelinquentPayments: false
-        )
+// Specifications to test
+struct MinimumAgeSpec: Specification {
+    typealias T = User
+    let minimumAge: Int
 
-        // When
-        let result = spec.isSatisfiedBy(user)
+    func isSatisfiedBy(_ candidate: User) -> Bool {
+        return candidate.age >= minimumAge
+    }
+}
 
-        // Then
-        XCTAssertTrue(result)
+struct IsPremiumSpec: Specification {
+    typealias T = User
+
+    func isSatisfiedBy(_ candidate: User) -> Bool {
+        return candidate.isPremium
+    }
+}
+
+// Unit tests for individual specs
+final class SpecificationTests: XCTestCase {
+    func testMinimumAgeSpec() {
+        let spec = MinimumAgeSpec(minimumAge: 18)
+
+        let adult = User(name: "Alice", age: 25, isPremium: false)
+        let minor = User(name: "Bob", age: 16, isPremium: false)
+
+        XCTAssertTrue(spec.isSatisfiedBy(adult))
+        XCTAssertFalse(spec.isSatisfiedBy(minor))
     }
 
-    func testUserWithoutOnboardingIsRejected() {
-        // Given
-        let user = User(
-            id: UUID(),
-            age: 30,
-            referralCount: 5,
-            isPremiumSubscriber: false,
-            isOnboardingComplete: false,
-            hasDelinquentPayments: false
-        )
+    func testIsPremiumSpec() {
+        let spec = IsPremiumSpec()
 
-        // When
-        let result = spec.isSatisfiedBy(user)
+        let premium = User(name: "Alice", age: 25, isPremium: true)
+        let regular = User(name: "Bob", age: 25, isPremium: false)
 
-        // Then
-        XCTAssertFalse(result)
+        XCTAssertTrue(spec.isSatisfiedBy(premium))
+        XCTAssertFalse(spec.isSatisfiedBy(regular))
     }
 }

@@ -1,34 +1,18 @@
 import Foundation
 import SpecificationKit
 
-enum ExperimentVariant: String, CaseIterable {
+// Define experiment variants for A/B testing
+enum ExperimentVariant: String {
     case control
-    case onboardingRevamp
-    case loyaltyUpsell
+    case variantA
+    case variantB
 }
 
-struct ExperimentConfiguration {
-    let candidates: [(FeatureFlagSpec, Double, ExperimentVariant)]
-
-    init() {
-        candidates = [
-            (FeatureFlagSpec.enabled("experiment_onboarding_revamp"), 0.45, .onboardingRevamp),
-            (FeatureFlagSpec.enabled("experiment_loyalty_upsell"), 0.35, .loyaltyUpsell),
-            (FeatureFlagSpec.enabled("experiment_control"), 0.20, .control)
-        ]
-    }
-}
-
-extension ExperimentConfiguration {
-    func availableFlagKeys() -> [String] {
-        candidates.map(\.0.flagKey)
-    }
-}
-
-let previewContext = EvaluationContext(
+// Setup feature flags for each variant
+let experimentContext = EvaluationContext(
     flags: [
-        "experiment_onboarding_revamp": true,
-        "experiment_loyalty_upsell": true,
-        "experiment_control": true
+        "variant_control": true,
+        "variant_a": true,
+        "variant_b": true
     ]
 )

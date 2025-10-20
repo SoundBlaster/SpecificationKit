@@ -1,79 +1,70 @@
 import XCTest
 import SpecificationKit
 
-final class UserEligibilitySpecTests: XCTestCase {
-    private let spec = PremiumEligibilitySpec(minimumAge: 21, minimumReferrals: 3)
-    private let rules = PremiumEligibilityRules(minimumAge: 21, minimumReferrals: 3)
+// A simple User model
+struct User {
+    let name: String
+    var age: Int
+    var isPremium: Bool
+}
 
-    func testPremiumSubscriberIsEligible() {
-        // Given
-        let user = User(
-            id: UUID(),
-            age: 25,
-            referralCount: 0,
-            isPremiumSubscriber: true,
-            isOnboardingComplete: true,
-            hasDelinquentPayments: false
-        )
+// Specifications
+struct MinimumAgeSpec: Specification {
+    typealias T = User
+    let minimumAge: Int
 
-        // When
-        let result = spec.isSatisfiedBy(user)
+    func isSatisfiedBy(_ candidate: User) -> Bool {
+        return candidate.age >= minimumAge
+    }
+}
 
-        // Then
-        XCTAssertTrue(result)
+struct IsPremiumSpec: Specification {
+    typealias T = User
+
+    func isSatisfiedBy(_ candidate: User) -> Bool {
+        return candidate.isPremium
+    }
+}
+
+// Test composed specifications
+final class CompositionTests: XCTestCase {
+    let ageSpec = MinimumAgeSpec(minimumAge: 18)
+    let premiumSpec = IsPremiumSpec()
+
+    func testOrComposition() {
+        // Eligible if premium OR old enough
+        let eligibilitySpec = premiumSpec.or(ageSpec)
+
+        let premiumTeen = User(name: "Alice", age: 16, isPremium: true)
+        let regularAdult = User(name: "Bob", age: 25, isPremium: false)
+        let regularTeen = User(name: "Charlie", age: 16, isPremium: false)
+
+        XCTAssertTrue(eligibilitySpec.isSatisfiedBy(premiumTeen))
+        XCTAssertTrue(eligibilitySpec.isSatisfiedBy(regularAdult))
+        XCTAssertFalse(eligibilitySpec.isSatisfiedBy(regularTeen))
     }
 
-    func testUserWithoutOnboardingIsRejected() {
-        // Given
-        let user = User(
-            id: UUID(),
-            age: 30,
-            referralCount: 5,
-            isPremiumSubscriber: false,
-            isOnboardingComplete: false,
-            hasDelinquentPayments: false
-        )
+    func testAndComposition() {
+        // Eligible if premium AND old enough
+        let vipSpec = premiumSpec.and(ageSpec)
 
-        // When
-        let result = spec.isSatisfiedBy(user)
+        let premiumAdult = User(name: "Alice", age: 25, isPremium: true)
+        let premiumTeen = User(name: "Bob", age: 16, isPremium: true)
+        let regularAdult = User(name: "Charlie", age: 25, isPremium: false)
 
-        // Then
-        XCTAssertFalse(result)
+        XCTAssertTrue(vipSpec.isSatisfiedBy(premiumAdult))
+        XCTAssertFalse(vipSpec.isSatisfiedBy(premiumTeen))
+        XCTAssertFalse(vipSpec.isSatisfiedBy(regularAdult))
     }
 
-    func testReferralPathUnlocksEligibility() {
-        // Given
-        let user = User(
-            id: UUID(),
-            age: 28,
-            referralCount: 5,
-            isPremiumSubscriber: false,
-            isOnboardingComplete: true,
-            hasDelinquentPayments: false
-        )
+    func testNotComposition() {
+        // Not premium (free users only)
+        let freeUserSpec = premiumSpec.not()
 
-        // When
-        let compositeResult = rules.evaluate(user)
+        let premium = User(name: "Alice", age: 25, isPremium: true)
+        let regular = User(name: "Bob", age: 25, isPremium: false)
 
-        // Then
-        XCTAssertTrue(compositeResult)
-    }
-
-    func testDelinquentPaymentsBlockAccess() {
-        // Given
-        let user = User(
-            id: UUID(),
-            age: 35,
-            referralCount: 8,
-            isPremiumSubscriber: false,
-            isOnboardingComplete: true,
-            hasDelinquentPayments: true
-        )
-
-        // When
-        let compositeResult = rules.evaluate(user)
-
-        // Then
-        XCTAssertFalse(compositeResult)
+        XCTAssertFalse(freeUserSpec.isSatisfiedBy(premium))
+        XCTAssertTrue(freeUserSpec.isSatisfiedBy(regular))
     }
 }
