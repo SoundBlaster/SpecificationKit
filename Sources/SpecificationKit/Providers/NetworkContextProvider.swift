@@ -112,10 +112,10 @@ public final class NetworkContextProvider: ContextProviding {
     private let cache: NetworkCache
 
     #if canImport(Combine)
-        private nonisolated(unsafe) let contextUpdatesSubject = PassthroughSubject<Void, Never>()
+        private let contextUpdatesSubject = PassthroughSubject<Void, Never>()
     #endif
 
-    private nonisolated(unsafe) var refreshTimer: Timer?
+    private var refreshTimer: Timer?
 
     /// Creates a NetworkContextProvider with the given configuration
     /// - Parameters:
