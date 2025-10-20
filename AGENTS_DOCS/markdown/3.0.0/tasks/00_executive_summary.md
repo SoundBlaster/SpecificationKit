@@ -70,3 +70,8 @@ Transform the SpecificationKit v3.0.0 TODO specification into an actionable, dep
   - Implement minimal code to make tests pass
   - Refactor while maintaining test coverage
   - Each commit should include corresponding tests
+
+### Progress Tracking Requirements
+- **Task Completion**: All implemented tasks must be checked off in `SpecificationKit_v3.0.0_Progress.md`
+- **Progress Updates**: Update phase completion status and overall progress percentage
+- **Coordination**: Check dependencies before starting new tasks to ensure proper sequencing

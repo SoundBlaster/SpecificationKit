@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
+**IMPORTANT: Use XcodeBuildMCP tools for all build operations when available**
+
 ### Building and Testing
 - `swift build` - Build the main library
 - `swift test` - Run all tests

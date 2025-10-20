@@ -44,6 +44,11 @@ class CLIDemo {
         print("---------------------------------------")
         demoContextProviders()
 
+        // Demo 6: SpecificationTracer
+        print("\n🔍 Demo 6: SpecificationTracer")
+        print("-------------------------------")
+        demoSpecificationTracer()
+
         print("\n✅ Demo completed successfully!")
     }
 
@@ -194,6 +199,108 @@ class CLIDemo {
         print("   • Mock counter: \(mockContext.counter(for: "test_counter"))")
         print("   • Mock flag: \(mockContext.flag(for: "test_flag"))")
         print("   • Context requests: \(mockProvider.contextRequestCount)")
+    }
+
+    private func demoSpecificationTracer() {
+        let tracer = SpecificationTracer.shared
+
+        print("🔍 Demonstrating SpecificationTracer capabilities...")
+        print("   This tool captures detailed execution data for debugging complex specifications.")
+
+        // Start tracing session
+        let sessionId = tracer.startTracing()
+        print("   📝 Started tracing session: \(sessionId.uuidString.prefix(8))...")
+
+        let context = contextProvider.currentContext()
+
+        // Demo 1: Simple specification tracing
+        print("\n   🎯 Simple Specification Trace:")
+        print(
+            "      Testing: Is app_opens counter ≤ 50? (Current: \(context.counter(for: "app_opens")))"
+        )
+        let maxCountSpec = MaxCountSpec(counterKey: "app_opens", limit: 50)
+        let result1 = tracer.trace(specification: maxCountSpec, context: context)
+        print("      • MaxCountSpec → \(result1 ? "✅ PASS" : "❌ FAIL")")
+
+        // Demo 2: Complex composite specification tracing
+        print("\n   🧩 Complex Composite Specification Trace:")
+        print("      Testing: (Time since launch > 10s) AND (Notifications enabled)")
+        let timeSpec = TimeSinceEventSpec.sinceAppLaunch(seconds: 10)
+        let flagSpec = FeatureFlagSpec(flagKey: "notifications_enabled")
+
+        let compositeSpec = timeSpec.and(flagSpec)
+        let result2 = tracer.trace(specification: compositeSpec, context: context)
+        print("      • CompositeSpec → \(result2 ? "✅ PASS" : "❌ FAIL")")
+
+        // Demo 3: Performance analysis
+        print("\n   ⚡ Performance Analysis:")
+
+        // Run multiple evaluations for performance data
+        for i in 1...5 {
+            let perfSpec = PredicateSpec<EvaluationContext> { ctx in
+                // Simulate some work
+                Thread.sleep(forTimeInterval: Double.random(in: 0.001...0.005))
+                return ctx.counter(for: "app_opens") > i * 5
+            }
+            _ = tracer.trace(specification: perfSpec, context: context)
+        }
+
+        // Stop tracing and analyze results
+        if let session = tracer.stopTracing() {
+            print("      • Total evaluations: \(session.entries.count)")
+            print(
+                "      • Total execution time: \(String(format: "%.3f", session.totalExecutionTime * 1000))ms"
+            )
+
+            // Find slowest execution
+            if let slowest = session.entries.max(by: { $0.executionTime < $1.executionTime }) {
+                print(
+                    "      • Slowest evaluation: \(slowest.specification) (\(String(format: "%.3f", slowest.executionTime * 1000))ms)"
+                )
+            }
+
+            // Show execution tree
+            print("\n   🌳 Execution Tree:")
+            for tree in session.traceTree {
+                printTraceTree(tree, indent: "      ")
+            }
+
+            // Performance statistics
+            print("\n   📊 Performance Statistics:")
+            let times = session.entries.map { $0.executionTime * 1000 }  // Convert to ms
+            let avgTime = times.reduce(0, +) / Double(times.count)
+            let minTime = times.min() ?? 0
+            let maxTime = times.max() ?? 0
+
+            print("      • Average time: \(String(format: "%.3f", avgTime))ms")
+            print("      • Min time: \(String(format: "%.3f", minTime))ms")
+            print("      • Max time: \(String(format: "%.3f", maxTime))ms")
+
+            // Show specifications by type
+            print("\n   📋 Specifications by Type:")
+            let groupedSpecs = Dictionary(grouping: session.entries) { $0.specification }
+            for (specType, entries) in groupedSpecs.sorted(by: { $0.key < $1.key }) {
+                let count = entries.count
+                let avgTimeForType =
+                    entries.map(\.executionTime).reduce(0, +) / Double(count) * 1000
+                print(
+                    "      • \(specType): \(count) calls, \(String(format: "%.3f", avgTimeForType))ms avg"
+                )
+            }
+        }
+
+        print("\n   ✅ SpecificationTracer demo completed!")
+    }
+
+    private func printTraceTree(_ node: SpecificationTracer.TraceNode, indent: String) {
+        let duration = String(format: "%.3f", node.entry.executionTime * 1000)
+        print("\(indent)├─ \(node.entry.specification) → \(node.entry.result) (\(duration)ms)")
+
+        for (index, child) in node.children.enumerated() {
+            let isLast = index == node.children.count - 1
+            let childIndent = indent + (isLast ? "   " : "│  ")
+            printTraceTree(child, indent: childIndent)
+        }
     }
 
     private func checkMark(_ condition: Bool) -> String {

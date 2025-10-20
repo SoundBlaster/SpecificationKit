@@ -2,13 +2,62 @@
 //  Satisfies.swift
 //  SpecificationKit
 //
-//  Created by SpecificationKit on 2024.
+//  Created by SpecificationKit on 2025.
 //
 
 import Foundation
 
-/// A property wrapper that applies a specification using a context provider.
-/// This enables declarative specification usage throughout your application.
+/// A property wrapper that provides declarative specification evaluation.
+///
+/// `@Satisfies` enables clean, readable specification usage throughout your application
+/// by automatically handling context retrieval and specification evaluation.
+///
+/// ## Overview
+///
+/// The `@Satisfies` property wrapper simplifies specification usage by:
+/// - Automatically retrieving context from a provider
+/// - Evaluating the specification against that context
+/// - Providing a boolean result as a simple property
+///
+/// ## Basic Usage
+///
+/// ```swift
+/// struct FeatureView: View {
+///     @Satisfies(using: FeatureFlagSpec(key: "newFeature"))
+///     var isNewFeatureEnabled: Bool
+///
+///     var body: some View {
+///         VStack {
+///             if isNewFeatureEnabled {
+///                 NewFeatureContent()
+///             } else {
+///                 LegacyContent()
+///             }
+///         }
+///     }
+/// }
+/// ```
+///
+/// ## Custom Context Provider
+///
+/// ```swift
+/// struct UserView: View {
+///     @Satisfies(provider: myContextProvider, using: PremiumUserSpec())
+///     var isPremiumUser: Bool
+///
+///     var body: some View {
+///         Text(isPremiumUser ? "Premium Content" : "Basic Content")
+///     }
+/// }
+/// ```
+///
+/// ## Performance Considerations
+///
+/// The specification is evaluated each time the `wrappedValue` is accessed.
+/// For expensive specifications, consider using ``CachedSatisfies`` instead.
+///
+/// - Note: The wrapped value is computed on each access, so expensive specifications may impact performance.
+/// - Important: Ensure the specification and context provider are thread-safe if used in concurrent environments.
 @propertyWrapper
 public struct Satisfies<Context> {
 
@@ -16,16 +65,42 @@ public struct Satisfies<Context> {
     private let asyncContextFactory: (() async throws -> Context)?
     private let specification: AnySpecification<Context>
 
-    /// The wrapped value representing whether the specification is satisfied
+    /**
+     * The wrapped value representing whether the specification is satisfied.
+     *
+     * This property evaluates the specification against the current context
+     * each time it's accessed, ensuring the result is always up-to-date.
+     *
+     * - Returns: `true` if the specification is satisfied by the current context, `false` otherwise.
+     */
     public var wrappedValue: Bool {
         let context = contextFactory()
         return specification.isSatisfiedBy(context)
     }
 
-    /// Creates a Satisfies property wrapper with a context provider and specification
-    /// - Parameters:
-    ///   - provider: The context provider to use for evaluation
-    ///   - specification: The specification to evaluate
+    /**
+     * Creates a Satisfies property wrapper with a custom context provider and specification.
+     *
+     * Use this initializer when you need to specify a custom context provider
+     * instead of using the default provider.
+     *
+     * - Parameters:
+     *   - provider: The context provider to use for retrieving evaluation context.
+     *   - specification: The specification to evaluate against the context.
+     *
+     * ## Example
+     *
+     * ```swift
+     * struct CustomView: View {
+     *     @Satisfies(provider: customProvider, using: PremiumUserSpec())
+     *     var isPremiumUser: Bool
+     *
+     *     var body: some View {
+     *         Text(isPremiumUser ? "Premium Features" : "Basic Features")
+     *     }
+     * }
+     * ```
+     */
     public init<Provider: ContextProviding, Spec: Specification>(
         provider: Provider,
         using specification: Spec
@@ -35,10 +110,31 @@ public struct Satisfies<Context> {
         self.specification = AnySpecification(specification)
     }
 
-    /// Creates a Satisfies property wrapper with a context provider and specification type
-    /// - Parameters:
-    ///   - provider: The context provider to use for evaluation
-    ///   - specificationType: The specification type to instantiate and use
+    /**
+     * Creates a Satisfies property wrapper with a custom context provider and specification type.
+     *
+     * This initializer creates an instance of the specification type automatically.
+     * The specification type must be expressible by nil literal.
+     *
+     * - Parameters:
+     *   - provider: The context provider to use for retrieving evaluation context.
+     *   - specificationType: The specification type to instantiate and evaluate.
+     *
+     * ## Example
+     *
+     * ```swift
+     * struct FeatureView: View {
+     *     @Satisfies(provider: customProvider, using: FeatureFlagSpec.self)
+     *     var isFeatureEnabled: Bool
+     *
+     *     var body: some View {
+     *         if isFeatureEnabled {
+     *             NewFeatureContent()
+     *         }
+     *     }
+     * }
+     * ```
+     */
     public init<Provider: ContextProviding, Spec: Specification>(
         provider: Provider,
         using specificationType: Spec.Type
@@ -48,10 +144,31 @@ public struct Satisfies<Context> {
         self.specification = AnySpecification(Spec(nilLiteral: ()))
     }
 
-    /// Creates a Satisfies property wrapper with a predicate function
-    /// - Parameters:
-    ///   - provider: The context provider to use for evaluation
-    ///   - predicate: A predicate function that takes the context and returns a Bool
+    /**
+     * Creates a Satisfies property wrapper with a custom context provider and predicate function.
+     *
+     * This initializer allows you to use a simple closure instead of creating
+     * a full specification type for simple conditions.
+     *
+     * - Parameters:
+     *   - provider: The context provider to use for retrieving evaluation context.
+     *   - predicate: A closure that takes the context and returns a boolean result.
+     *
+     * ## Example
+     *
+     * ```swift
+     * struct UserView: View {
+     *     @Satisfies(provider: customProvider) { context in
+     *         context.userAge >= 18 && context.hasVerifiedEmail
+     *     }
+     *     var isEligibleUser: Bool
+     *
+     *     var body: some View {
+     *         Text(isEligibleUser ? "Welcome!" : "Please verify your account")
+     *     }
+     * }
+     * ```
+     */
     public init<Provider: ContextProviding>(
         provider: Provider,
         predicate: @escaping (Context) -> Bool

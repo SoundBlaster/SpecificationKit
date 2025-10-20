@@ -32,6 +32,9 @@ struct AppContentView: View {
                 NavigationLink(destination: MainDemoView()) {
                     Label("Overview", systemImage: "rectangle.grid.1x2")
                 }
+                NavigationLink(destination: AdvancedSpecsDemoView()) {
+                    Label("Advanced Specs", systemImage: "slider.horizontal.3")
+                }
                 NavigationLink(destination: DecisionsDemoView()) {
                     Label("Decisions", systemImage: "switch.2")
                 }
@@ -41,8 +44,29 @@ struct AppContentView: View {
                 NavigationLink(destination: EnvironmentDemoView()) {
                     Label("Environment Context", systemImage: "globe")
                 }
+                NavigationLink(destination: CompositeDemoView()) {
+                    Label("Context Composition", systemImage: "square.stack.3d.up")
+                }
                 NavigationLink(destination: ObservationDemoView()) {
                     Label("Observation", systemImage: "eye")
+                }
+                if #available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *) {
+                    NavigationLink(destination: NetworkContextDemoView()) {
+                        Label("Network Context", systemImage: "network")
+                    }
+                }
+                if #available(macOS 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, *) {
+                    NavigationLink(destination: PersistentContextDemoView()) {
+                        Label("Persistent Context", systemImage: "externaldrive")
+                    }
+                }
+                if #available(iOS 14.0, macOS 11.0, watchOS 7.0, tvOS 14.0, *) {
+                    NavigationLink(destination: PlatformContextDemoView()) {
+                        Label("Platform Context", systemImage: "iphone")
+                    }
+                }
+                NavigationLink(destination: SpecificationTracerDemoView()) {
+                    Label("Specification Tracer", systemImage: "chart.line.uptrend.xyaxis")
                 }
             }
             .listStyle(SidebarListStyle())

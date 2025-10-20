@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="23F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="ContextValue" representedClassName="SpecificationKit.ContextValue" syncable="YES">
+        <attribute name="category" attributeType="String"/>
+        <attribute name="expirationDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="key" attributeType="String"/>
+        <attribute name="timestamp" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="valueData" attributeType="Binary"/>
+        <attribute name="valueType" attributeType="String"/>
+        <attribute name="version" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="YES"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="key"/>
+                <constraint value="category"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+</model>

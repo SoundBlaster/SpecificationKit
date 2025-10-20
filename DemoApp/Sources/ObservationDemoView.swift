@@ -25,6 +25,19 @@ struct ObservationDemoView: View {
                                             eventKey: "obs_event"))
     private var shouldShow: Bool
 
+    // ObservedMaybe demos (optional reactive results)
+    @ObservedMaybe(provider: DefaultContextProvider.shared,
+                   firstMatch: [
+                       (FeatureFlagSpec(flagKey: "obs_flag"), "Flag is ON")
+                   ])
+    private var maybeFlagMessage: String?
+
+    @ObservedMaybe(provider: DefaultContextProvider.shared,
+                   decide: { ctx in
+                       ctx.counter(for: "obs_count") > 0 ? "Count > 0" : nil
+                   })
+    private var maybeCountMessage: String?
+
     @State private var flagState: Bool = false
     @State private var countState: Int = 0
     @State private var lastEvent: String = "Never"
@@ -40,6 +53,9 @@ struct ObservationDemoView: View {
                 LabelRow(ok: cooldownOK, text: "Cooldown obs_event ≥ 3s")
                 Divider()
                 LabelRow(ok: shouldShow, text: "Composite: show when all true")
+                Divider()
+                OptionalRow(value: maybeFlagMessage, label: "@ObservedMaybe flag message")
+                OptionalRow(value: maybeCountMessage, label: "@ObservedMaybe count message")
             }
 
             Divider()
@@ -112,6 +128,19 @@ private struct LabelRow: View {
                 .fill(ok ? Color.green : Color.red)
                 .frame(width: 12, height: 12)
             Text(text)
+        }
+    }
+}
+
+private struct OptionalRow: View {
+    let value: String?
+    let label: String
+    var body: some View {
+        HStack {
+            Circle()
+                .fill((value != nil) ? Color.green : Color.gray)
+                .frame(width: 12, height: 12)
+            Text("\(label): \(value ?? "nil")")
         }
     }
 }

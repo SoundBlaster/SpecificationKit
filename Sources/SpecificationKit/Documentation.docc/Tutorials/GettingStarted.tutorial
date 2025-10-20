@@ -1,0 +1,138 @@
+@Tutorial(time: 30) {
+    @Intro(title: "Getting Started with SpecificationKit") {
+        Learn how to implement the Specification Pattern in Swift using SpecificationKit for maintainable, testable business logic. You will create your first specifications, compose rules, and integrate results with SwiftUI interfaces.
+
+        The Specification Pattern helps you:
+        - Separate business logic from UI and data layers
+        - Create reusable and composable business rules
+        - Write more testable code
+        - Maintain clean architecture
+
+        @Image(source: "getting-started-card", alt: "SpecificationKit getting started hero graphic")
+    }
+
+    @Section(title: "Create Your First Specification") {
+        @ContentAndMedia {
+            Build a simple specification to validate user eligibility for premium features. Start by defining the data you evaluate and finish with a working rule implemented using SpecificationKit.
+        }
+
+        @Steps {
+            @Step {
+                Import SpecificationKit and define a ``User`` model that your specification will evaluate.
+
+                @Code(name: "UserEligibilitySpec.swift", file: "getting-started-01-import.swift")
+            }
+
+            @Step {
+                Create your first specification by conforming to ``Specification`` and determining premium eligibility.
+
+                @Code(name: "UserEligibilitySpec.swift", file: "getting-started-02-specification.swift") {
+                    @Image(source: "specification-protocol-diagram", alt: "Specification protocol structure diagram")
+                }
+            }
+
+            @Step {
+                Test the specification with sample data to confirm the rule behaves as expected.
+
+                @Code(name: "UserEligibilitySpec.swift", file: "getting-started-03-testing.swift")
+            }
+        }
+    }
+
+    @Section(title: "Compose Specifications") {
+        @ContentAndMedia {
+            Combine multiple specifications using logical operators to create expressive business rules composed from small pieces.
+        }
+
+        @Steps {
+            @Step {
+                Create additional specifications that check separate eligibility concerns.
+
+                @Code(name: "UserEligibilitySpec.swift", file: "getting-started-04-additional-specs.swift")
+            }
+
+            @Step {
+                Compose specifications with ``and()``, ``or()``, and ``not()`` to model complex requirements.
+
+                @Code(name: "UserEligibilitySpec.swift", file: "getting-started-05-composition.swift") {
+                    @Image(source: "specification-composition", alt: "Specification composition diagram")
+                }
+            }
+
+            @Step {
+                Validate the composed specification against varied user scenarios.
+
+                @Code(name: "UserEligibilitySpec.swift", file: "getting-started-06-composition-test.swift")
+            }
+        }
+    }
+
+    @Section(title: "Integrate with SwiftUI") {
+        @ContentAndMedia {
+            Use SpecificationKit property wrappers for declarative, reactive UI updates that respond to specification results.
+        }
+
+        @Steps {
+            @Step {
+                Build a SwiftUI view that conditionally displays premium content based on specification checks.
+
+                @Code(name: "PremiumFeatureView.swift", file: "getting-started-07-swiftui-basic.swift")
+            }
+
+            @Step {
+                Adopt the ``@Satisfies`` property wrapper to evaluate specifications declaratively within the view.
+
+                @Code(name: "PremiumFeatureView.swift", file: "getting-started-08-property-wrapper.swift") {
+                    @Image(source: "property-wrapper-flow", alt: "Property wrapper evaluation flow diagram")
+                }
+            }
+
+            @Step {
+                Add reactive behavior with ``@ObservedSatisfies`` so the UI updates automatically when context changes.
+
+                @Code(name: "PremiumFeatureView.swift", file: "getting-started-09-reactive.swift")
+            }
+        }
+    }
+
+    @Section(title: "Test Your Specifications") {
+        @ContentAndMedia {
+            Follow best practices for testing specifications and specification-driven UI components to keep business logic reliable.
+        }
+
+        @Steps {
+            @Step {
+                Write focused unit tests that verify each specification in isolation.
+
+                @Code(name: "UserEligibilitySpecTests.swift", file: "getting-started-10-unit-tests.swift")
+            }
+
+            @Step {
+                Exercise composed specifications to ensure logical combinations behave correctly.
+
+                @Code(name: "UserEligibilitySpecTests.swift", file: "getting-started-11-composition-tests.swift")
+            }
+
+            @Step {
+                Test SwiftUI integration with ``MockContextProvider`` to validate UI components that depend on specifications.
+
+                @Code(name: "PremiumFeatureViewTests.swift", file: "getting-started-12-ui-tests.swift") {
+                    @Image(source: "testing-architecture", alt: "Testing architecture diagram")
+                }
+            }
+        }
+    }
+
+    @Section(title: "Next Steps") {
+        @ContentAndMedia {
+            Continue learning with advanced patterns, context providers, macro-assisted composition, and performance tools like ``CachedSatisfies``.
+        }
+    }
+
+    @SeeAlso {
+        <doc:AdvancedPatterns>
+        <doc:ContextProviders>
+        <doc:PerformanceOptimization>
+        <doc:MacroUsage>
+    }
+}

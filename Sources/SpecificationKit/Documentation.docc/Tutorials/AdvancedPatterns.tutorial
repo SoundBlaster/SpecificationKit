@@ -1,0 +1,212 @@
+@Tutorial(time: 45) {
+    @Intro(title: "Advanced Specification Patterns") {
+        Explore sophisticated specification patterns including weighted decisions, historical analysis, and adaptive thresholds. SpecificationKit v3.0.0 introduces advanced specification types that enable probabilistic selection, time-series analysis, comparative evaluation, and dynamic thresholds for real-world decision making.
+
+        This tutorial covers:
+        - ``WeightedSpec`` for probabilistic decision making
+        - ``HistoricalSpec`` for time-series analysis
+        - ``ComparativeSpec`` for relative comparisons
+        - ``ThresholdSpec`` for adaptive thresholds
+
+        @Image(source: "advanced-patterns-card", alt: "Advanced specification patterns illustration")
+    }
+
+    @Section(title: "Probabilistic Decisions with WeightedSpec") {
+        @ContentAndMedia {
+            Learn how to implement A/B testing, feature rollouts, and load balancing using probabilistic specifications. ``WeightedSpec`` enables weighted random selection among multiple candidates, perfect for experiments and gradual feature rollouts.
+        }
+
+        @Steps {
+            @Step {
+                Set up a basic A/B test scenario by creating specifications for different feature variants and defining their weights.
+
+                @Code(name: "ExperimentDecisions.swift", file: "advanced-patterns-01-weighted-context.swift")
+            }
+
+            @Step {
+                Implement weighted selection that chooses between variants according to their weights using ``WeightedSpec``.
+
+                @Code(name: "ExperimentDecisions.swift", file: "advanced-patterns-02-weighted-selection.swift") {
+                    @Image(source: "weighted-selection-diagram", alt: "Weighted selection process diagram")
+                }
+            }
+
+            @Step {
+                Handle numeric results by calculating expected values and variance from weighted outcomes.
+
+                @Code(name: "ExperimentAnalytics.swift", file: "advanced-patterns-03-weighted-analytics.swift")
+            }
+
+            @Step {
+                Integrate weighted results with property wrappers, using ``@Maybe`` to expose optional outcomes.
+
+                @Code(name: "ExperimentDashboard.swift", file: "advanced-patterns-04-weighted-ui.swift")
+            }
+        }
+    }
+
+    @Section(title: "Time-Series Analysis with HistoricalSpec") {
+        @ContentAndMedia {
+            Analyze historical data patterns to make informed decisions based on trends and statistical aggregations. ``HistoricalSpec`` supports performance monitoring, trend detection, and adaptive behavior.
+        }
+
+        @Steps {
+            @Step {
+                Create a custom historical data provider by implementing ``HistoricalDataProviding`` to supply time-series data.
+
+                @Code(name: "PerformanceMonitor.swift", file: "advanced-patterns-05-historical-provider.swift")
+            }
+
+            @Step {
+                Configure ``HistoricalSpec`` instances for different types of time-series analysis and aggregation.
+
+                @Code(name: "PerformanceMonitor.swift", file: "advanced-patterns-06-historical-specs.swift") {
+                    @Image(source: "historical-analysis-types", alt: "Historical analysis type overview")
+                }
+            }
+
+            @Step {
+                Implement trend detection that surfaces performance anomalies from historical samples.
+
+                @Code(name: "PerformanceMonitor.swift", file: "advanced-patterns-07-trend-detection.swift")
+            }
+
+            @Step {
+                Build adaptive monitoring dashboards with SwiftUI views that react to historical analysis results.
+
+                @Code(name: "MonitoringDashboard.swift", file: "advanced-patterns-08-historical-dashboard.swift")
+            }
+        }
+    }
+
+    @Section(title: "Relative Comparisons with ComparativeSpec") {
+        @ContentAndMedia {
+            Implement validation and monitoring using relative comparisons against baselines, ranges, and custom rules. ``ComparativeSpec`` excels when current values must align with expected ranges or baselines.
+        }
+
+        @Steps {
+            @Step {
+                Define comparison specifications that compare values against fixed thresholds and ranges.
+
+                @Code(name: "ValidationSystem.swift", file: "advanced-patterns-09-comparative-basics.swift")
+            }
+
+            @Step {
+                Implement range-based validation to ensure values remain within acceptable bounds.
+
+                @Code(name: "ValidationSystem.swift", file: "advanced-patterns-10-comparative-ranges.swift") {
+                    @Image(source: "range-validation-diagram", alt: "Range validation process diagram")
+                }
+            }
+
+            @Step {
+                Add tolerance-based comparisons that handle floating-point values with configurable tolerances.
+
+                @Code(name: "ValidationSystem.swift", file: "advanced-patterns-11-comparative-tolerance.swift")
+            }
+
+            @Step {
+                Build real-time validation interfaces that surface comparative results in SwiftUI.
+
+                @Code(name: "ValidationView.swift", file: "advanced-patterns-12-comparative-ui.swift")
+            }
+        }
+    }
+
+    @Section(title: "Dynamic Thresholds with ThresholdSpec") {
+        @ContentAndMedia {
+            Implement adaptive thresholds that change based on context, functions, or external conditions. ``ThresholdSpec`` provides flexible evaluation for alerting, feature gating, and adaptive behaviors.
+        }
+
+        @Steps {
+            @Step {
+                Create static threshold specifications for baseline alerting scenarios.
+
+                @Code(name: "AlertSystem.swift", file: "advanced-patterns-13-threshold-static.swift")
+            }
+
+            @Step {
+                Implement adaptive thresholds driven by functions that respond to changing conditions.
+
+                @Code(name: "AlertSystem.swift", file: "advanced-patterns-14-threshold-adaptive.swift") {
+                    @Image(source: "adaptive-threshold-flow", alt: "Adaptive threshold evaluation flow")
+                }
+            }
+
+            @Step {
+                Add contextual threshold evaluation that considers multiple inputs to produce complex decisions.
+
+                @Code(name: "AlertSystem.swift", file: "advanced-patterns-15-threshold-contextual.swift")
+            }
+
+            @Step {
+                Build comprehensive monitoring systems that combine static, adaptive, and contextual thresholds.
+
+                @Code(name: "MonitoringSystem.swift", file: "advanced-patterns-16-threshold-monitoring.swift")
+            }
+        }
+    }
+
+    @Section(title: "Combining Advanced Patterns") {
+        @ContentAndMedia {
+            Learn how to combine multiple advanced specification types to create sophisticated decision-making systems. Real-world systems often require these patterns to collaborate.
+        }
+
+        @Steps {
+            @Step {
+                Design a comprehensive recommendation system that blends weighted, historical, and threshold specifications for intelligent outcomes.
+
+                @Code(name: "RecommendationEngine.swift", file: "advanced-patterns-17-combined-system.swift")
+            }
+
+            @Step {
+                Implement multi-stage decision pipelines that apply different specification types at each stage.
+
+                @Code(name: "RecommendationEngine.swift", file: "advanced-patterns-18-decision-pipeline.swift") {
+                    @Image(source: "decision-pipeline-diagram", alt: "Multi-stage decision pipeline diagram")
+                }
+            }
+
+            @Step {
+                Add comprehensive testing strategies that validate systems composed of multiple specification types.
+
+                @Code(name: "RecommendationEngineTests.swift", file: "advanced-patterns-19-testing.swift")
+            }
+        }
+    }
+
+    @Section(title: "Best Practices") {
+        @ContentAndMedia {
+            **Performance Considerations**
+            - Use ``CachedSatisfies`` for expensive historical analysis
+            - Implement efficient data providers for time-series workloads
+            - Monitor memory usage when storing large historical datasets
+            - Tune rolling window sizes for historical analysis accuracy
+
+            **Testing Strategies**
+            - Mock data providers for consistent test results
+            - Cover edge cases such as empty historical data
+            - Verify weighted selections over large sample sizes
+            - Exercise threshold adaptations under varying conditions
+
+            **Architecture Guidelines**
+            - Separate specification logic from data retrieval concerns
+            - Use dependency injection for data providers and context
+            - Handle data provider failures explicitly
+            - Apply caching where specifications run frequently
+        }
+    }
+
+    @Section(title: "Next Steps") {
+        @ContentAndMedia {
+            You've mastered advanced specification patterns. Continue by exploring custom types, optimization techniques, and production deployment guidance.
+        }
+    }
+
+    @SeeAlso {
+        <doc:CustomSpecifications>
+        <doc:PerformanceOptimization>
+        <doc:ProductionDeployment>
+        <doc:IntegrationPatterns>
+    }
+}
