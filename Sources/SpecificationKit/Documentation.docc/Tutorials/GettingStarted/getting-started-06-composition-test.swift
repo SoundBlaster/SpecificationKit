@@ -1,132 +1,46 @@
 import Foundation
 import SpecificationKit
 
+// A simple User model
 struct User {
-    let id: UUID
+    let name: String
     var age: Int
-    var referralCount: Int
-    var isPremiumSubscriber: Bool
-    var isOnboardingComplete: Bool
-    var hasDelinquentPayments: Bool
+    var isPremium: Bool
 }
 
-struct PremiumEligibilitySpec: Specification {
-    typealias T = User
-
-    let minimumAge: Int
-    let minimumReferrals: Int
-
-    func isSatisfiedBy(_ candidate: User) -> Bool {
-        guard candidate.isOnboardingComplete else { return false }
-        guard candidate.hasDelinquentPayments == false else { return false }
-
-        if candidate.isPremiumSubscriber {
-            return true
-        }
-
-        let meetsAgeRequirement = candidate.age >= minimumAge
-        let meetsReferralRequirement = candidate.referralCount >= minimumReferrals
-        return meetsAgeRequirement && meetsReferralRequirement
-    }
-}
-
+// Check if user is old enough
 struct MinimumAgeSpec: Specification {
     typealias T = User
     let minimumAge: Int
 
     func isSatisfiedBy(_ candidate: User) -> Bool {
-        candidate.age >= minimumAge
+        return candidate.age >= minimumAge
     }
 }
 
-struct ReferralRequirementSpec: Specification {
-    typealias T = User
-    let minimumReferrals: Int
-
-    func isSatisfiedBy(_ candidate: User) -> Bool {
-        candidate.referralCount >= minimumReferrals
-    }
-}
-
-struct ActiveSubscriptionSpec: Specification {
+// Check if user has premium subscription
+struct IsPremiumSpec: Specification {
     typealias T = User
 
     func isSatisfiedBy(_ candidate: User) -> Bool {
-        candidate.isPremiumSubscriber
+        return candidate.isPremium
     }
 }
 
-struct OnboardingCompleteSpec: Specification {
-    typealias T = User
+// Combine specs: eligible if premium OR old enough
+let ageSpec = MinimumAgeSpec(minimumAge: 18)
+let premiumSpec = IsPremiumSpec()
+let eligibilitySpec = premiumSpec.or(ageSpec)
 
-    func isSatisfiedBy(_ candidate: User) -> Bool {
-        candidate.isOnboardingComplete
-    }
-}
+// Test different scenarios
+let testCases = [
+    User(name: "Premium teen", age: 16, isPremium: true),
+    User(name: "Adult", age: 25, isPremium: false),
+    User(name: "Teen", age: 16, isPremium: false),
+    User(name: "Premium adult", age: 25, isPremium: true)
+]
 
-struct DelinquentPaymentsSpec: Specification {
-    typealias T = User
-
-    func isSatisfiedBy(_ candidate: User) -> Bool {
-        candidate.hasDelinquentPayments
-    }
-}
-
-struct PremiumEligibilityRules {
-    private let subscription = ActiveSubscriptionSpec()
-    private let onboarding = OnboardingCompleteSpec()
-    private let delinquent = DelinquentPaymentsSpec()
-    private let referrals: ReferralRequirementSpec
-    private let minimumAge: MinimumAgeSpec
-
-    init(minimumAge: Int = 21, minimumReferrals: Int = 3) {
-        self.referrals = ReferralRequirementSpec(minimumReferrals: minimumReferrals)
-        self.minimumAge = MinimumAgeSpec(minimumAge: minimumAge)
-    }
-
-    func evaluate(_ user: User) -> Bool {
-        let subscriberPath = subscription.and(delinquent.not())
-        let referralPath = referrals.and(minimumAge)
-        let combinedEligibility = subscriberPath.or(referralPath)
-        return combinedEligibility.and(onboarding).isSatisfiedBy(user)
-    }
-}
-
-struct PremiumEligibilityExamples {
-    private let rules = PremiumEligibilityRules()
-
-    func evaluateSampleUsers() -> [String: Bool] {
-        let premiumSubscriber = User(
-            id: UUID(),
-            age: 25,
-            referralCount: 1,
-            isPremiumSubscriber: true,
-            isOnboardingComplete: true,
-            hasDelinquentPayments: false
-        )
-
-        let engagedUser = User(
-            id: UUID(),
-            age: 29,
-            referralCount: 4,
-            isPremiumSubscriber: false,
-            isOnboardingComplete: true,
-            hasDelinquentPayments: false
-        )
-
-        let blockedUser = User(
-            id: UUID(),
-            age: 31,
-            referralCount: 6,
-            isPremiumSubscriber: false,
-            isOnboardingComplete: true,
-            hasDelinquentPayments: true
-        )
-
-        return [
-            "PremiumSubscriber": rules.evaluate(premiumSubscriber),
-            "EngagedUser": rules.evaluate(engagedUser),
-            "BlockedUser": rules.evaluate(blockedUser)
-        ]
-    }
+for user in testCases {
+    let result = eligibilitySpec.isSatisfiedBy(user)
+    print("\(user.name): \(result)")
 }

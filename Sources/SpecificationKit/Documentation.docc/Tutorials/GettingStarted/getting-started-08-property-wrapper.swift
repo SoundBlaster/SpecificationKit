@@ -1,83 +1,58 @@
 import SwiftUI
 import SpecificationKit
 
-struct PremiumEligibilityContextSpec: Specification {
+// A simple User model
+struct User {
+    let name: String
+    var age: Int
+    var isPremium: Bool
+}
+
+// Check eligibility: premium OR old enough
+struct EligibilitySpec: Specification {
     typealias T = EvaluationContext
 
-    private let rules: PremiumEligibilityRules
-
-    init(rules: PremiumEligibilityRules) {
-        self.rules = rules
-    }
-
-    func isSatisfiedBy(_ candidate: EvaluationContext) -> Bool {
-        guard let user = candidate.userData(for: "user", as: User.self) else { return false }
-        return rules.evaluate(user)
+    func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+        guard let user = context.userData(for: "currentUser", as: User.self) else {
+            return false
+        }
+        return user.isPremium || user.age >= 18
     }
 }
 
+// Using @Satisfies property wrapper
 struct PremiumFeatureView: View {
-    private let user: User
-    private let rules: PremiumEligibilityRules
+    let user: User
 
-    @Satisfies(provider: staticContext(EvaluationContext()), using: PremiumEligibilityContextSpec(rules: PremiumEligibilityRules()))
+    // Declarative specification evaluation
+    @Satisfies(using: EligibilitySpec())
     private var isEligible: Bool
 
-    init(user: User, rules: PremiumEligibilityRules = PremiumEligibilityRules()) {
+    init(user: User) {
         self.user = user
-        self.rules = rules
 
-        let provider = staticContext(EvaluationContext(userData: ["user": user]))
-        self._isEligible = Satisfies(provider: provider, using: PremiumEligibilityContextSpec(rules: rules))
+        // Setup context with user data
+        let context = EvaluationContext(userData: ["currentUser": user])
+        self._isEligible = Satisfies(
+            provider: staticContext(context),
+            using: EligibilitySpec()
+        )
     }
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Premium Hub")
+        VStack(spacing: 20) {
+            Text("Premium Features")
                 .font(.title)
 
+            // Use the property wrapper result
             if isEligible {
-                PremiumContentView(user: user)
+                Text("Welcome, \(user.name)!")
+                    .foregroundColor(.green)
             } else {
-                LockedContentView()
+                Text("Access denied")
+                    .foregroundColor(.orange)
             }
         }
         .padding()
-    }
-
-    func eligibilityStatus() -> Bool {
-        isEligible
-    }
-}
-
-struct PremiumContentView: View {
-    let user: User
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Text("Welcome back, \(user.id.uuidString.prefix(6))!")
-                .font(.headline)
-            Text("Enjoy premium insights tailored to you.")
-                .font(.subheadline)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.green.opacity(0.2))
-        .cornerRadius(12)
-    }
-}
-
-struct LockedContentView: View {
-    var body: some View {
-        VStack(spacing: 8) {
-            Text("Premium content locked")
-                .font(.headline)
-            Text("Complete onboarding to unlock feature access.")
-                .font(.subheadline)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.gray.opacity(0.15))
-        .cornerRadius(12)
     }
 }

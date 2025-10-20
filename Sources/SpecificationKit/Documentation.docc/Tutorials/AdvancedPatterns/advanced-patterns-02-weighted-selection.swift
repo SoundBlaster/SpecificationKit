@@ -1,51 +1,34 @@
 import Foundation
 import SpecificationKit
 
-enum ExperimentVariant: String, CaseIterable {
+// Define experiment variants
+enum ExperimentVariant: String {
     case control
-    case onboardingRevamp
-    case loyaltyUpsell
+    case variantA
+    case variantB
 }
 
-struct ExperimentConfiguration {
-    let candidates: [(FeatureFlagSpec, Double, ExperimentVariant)]
-
-    init() {
-        candidates = [
-            (FeatureFlagSpec.enabled("experiment_onboarding_revamp"), 0.45, .onboardingRevamp),
-            (FeatureFlagSpec.enabled("experiment_loyalty_upsell"), 0.35, .loyaltyUpsell),
-            (FeatureFlagSpec.enabled("experiment_control"), 0.20, .control)
-        ]
-    }
-}
-
-struct ExperimentDecider {
-    private let configuration: ExperimentConfiguration
-    private let weightedSpec: WeightedSpec<EvaluationContext, ExperimentVariant>
-
-    init(configuration: ExperimentConfiguration = ExperimentConfiguration()) throws {
-        self.configuration = configuration
-        self.weightedSpec = try WeightedSpec(configuration.candidates)
-    }
-
-    func chooseVariant(for context: EvaluationContext) -> ExperimentVariant? {
-        weightedSpec.decide(context)
-    }
-
-    func probabilityByVariant() -> [ExperimentVariant: Double] {
-        let probabilities = weightedSpec.probabilityDistribution
-        return Dictionary(uniqueKeysWithValues: zip(configuration.candidates.map(\.2), probabilities))
-    }
-}
-
-let sampleContext = EvaluationContext(
+// Setup experiment context with feature flags
+let context = EvaluationContext(
     flags: [
-        "experiment_onboarding_revamp": true,
-        "experiment_loyalty_upsell": true,
-        "experiment_control": true
+        "variant_control": true,
+        "variant_a": true,
+        "variant_b": true
     ]
 )
 
-let decider = try? ExperimentDecider()
-let selectedVariant = decider?.chooseVariant(for: sampleContext)
-let probabilities = decider?.probabilityByVariant()
+// Create weighted specification for A/B testing
+// Format: (specification, weight, result)
+let weightedSpec = try WeightedSpec<EvaluationContext, ExperimentVariant>([
+    (FeatureFlagSpec.enabled("variant_control"), 0.5, .control),  // 50% control
+    (FeatureFlagSpec.enabled("variant_a"), 0.3, .variantA),       // 30% variant A
+    (FeatureFlagSpec.enabled("variant_b"), 0.2, .variantB)        // 20% variant B
+])
+
+// Choose a variant based on weights
+let selectedVariant = weightedSpec.decide(context)
+print("Selected variant: \(selectedVariant?.rawValue ?? "none")")
+
+// View probability distribution
+let probabilities = weightedSpec.probabilityDistribution
+print("Probabilities: \(probabilities)")

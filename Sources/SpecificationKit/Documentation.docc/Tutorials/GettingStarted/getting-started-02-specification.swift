@@ -1,31 +1,20 @@
 import Foundation
 import SpecificationKit
 
+// A simple User model
 struct User {
-    let id: UUID
+    let name: String
     var age: Int
-    var referralCount: Int
-    var isPremiumSubscriber: Bool
-    var isOnboardingComplete: Bool
-    var hasDelinquentPayments: Bool
+    var isPremium: Bool
 }
 
-struct PremiumEligibilitySpec: Specification {
+// Check if user is old enough for premium features
+struct MinimumAgeSpec: Specification {
     typealias T = User
 
     let minimumAge: Int
-    let minimumReferrals: Int
 
     func isSatisfiedBy(_ candidate: User) -> Bool {
-        guard candidate.isOnboardingComplete else { return false }
-        guard candidate.hasDelinquentPayments == false else { return false }
-
-        if candidate.isPremiumSubscriber {
-            return true
-        }
-
-        let meetsAgeRequirement = candidate.age >= minimumAge
-        let meetsReferralRequirement = candidate.referralCount >= minimumReferrals
-        return meetsAgeRequirement && meetsReferralRequirement
+        return candidate.age >= minimumAge
     }
 }

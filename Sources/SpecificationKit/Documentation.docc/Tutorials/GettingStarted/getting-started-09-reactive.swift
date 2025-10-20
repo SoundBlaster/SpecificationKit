@@ -1,99 +1,73 @@
 import SwiftUI
 import SpecificationKit
 
-struct PremiumEligibilityContextSpec: Specification {
+// A simple User model
+struct User {
+    let name: String
+    var age: Int
+    var isPremium: Bool
+}
+
+// Check eligibility from context
+struct EligibilitySpec: Specification {
     typealias T = EvaluationContext
 
-    private let rules: PremiumEligibilityRules
-
-    init(rules: PremiumEligibilityRules) {
-        self.rules = rules
-    }
-
-    func isSatisfiedBy(_ candidate: EvaluationContext) -> Bool {
-        guard let user = candidate.userData(for: "user", as: User.self) else { return false }
-        return rules.evaluate(user)
+    func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+        guard let user = context.userData(for: "currentUser", as: User.self) else {
+            return false
+        }
+        return user.isPremium || user.age >= 18
     }
 }
 
+// Using @ObservedSatisfies for reactive updates
 struct PremiumFeatureView: View {
-    private var user: User
-    private let rules: PremiumEligibilityRules
-    private let provider: MockContextProvider
+    @ObservedObject var contextProvider: DefaultContextProvider
 
-    @ObservedSatisfies(provider: MockContextProvider(), using: PremiumEligibilityContextSpec(rules: PremiumEligibilityRules()))
+    // Automatically updates when context changes
+    @ObservedSatisfies(using: EligibilitySpec())
     private var isEligible: Bool
 
-    init(
-        user: User,
-        rules: PremiumEligibilityRules = PremiumEligibilityRules(),
-        provider: MockContextProvider = MockContextProvider()
-    ) {
-        self.user = user
-        self.rules = rules
-        self.provider = provider
+    init(user: User, contextProvider: DefaultContextProvider = .shared) {
+        self.contextProvider = contextProvider
 
-        let seededContext = provider.mockContext.withUserData(["user": user])
-        provider.setContext(seededContext)
-        self._isEligible = ObservedSatisfies(provider: provider, using: PremiumEligibilityContextSpec(rules: rules))
+        // Setup reactive context
+        let context = EvaluationContext(userData: ["currentUser": user])
+        contextProvider.setContext(context)
+
+        self._isEligible = ObservedSatisfies(
+            provider: contextProvider,
+            using: EligibilitySpec()
+        )
     }
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Premium Hub")
+        VStack(spacing: 20) {
+            Text("Premium Features")
                 .font(.title)
 
+            // UI updates automatically when context changes
             if isEligible {
-                PremiumContentView(user: currentUser())
+                Text("Access granted!")
+                    .foregroundColor(.green)
             } else {
-                LockedContentView()
+                Text("Access denied")
+                    .foregroundColor(.orange)
+            }
+
+            Button("Toggle Premium") {
+                updateUserStatus()
             }
         }
         .padding()
     }
 
-    mutating func updateUser(_ user: User) {
-        self.user = user
-        provider.setContext(provider.mockContext.withUserData(["user": user]))
-    }
-
-    func eligibilityStatus() -> Bool {
-        rules.evaluate(currentUser())
-    }
-
-    private func currentUser() -> User {
-        provider.mockContext.userData(for: "user", as: User.self) ?? user
-    }
-}
-
-struct PremiumContentView: View {
-    let user: User
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Text("Welcome back, \(user.id.uuidString.prefix(6))!")
-                .font(.headline)
-            Text("Enjoy premium insights tailored to you.")
-                .font(.subheadline)
+    func updateUserStatus() {
+        // Update context - UI will refresh automatically
+        if let user = contextProvider.context.userData(for: "currentUser", as: User.self) {
+            let updated = User(name: user.name, age: user.age, isPremium: !user.isPremium)
+            let newContext = EvaluationContext(userData: ["currentUser": updated])
+            contextProvider.setContext(newContext)
         }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.green.opacity(0.2))
-        .cornerRadius(12)
-    }
-}
-
-struct LockedContentView: View {
-    var body: some View {
-        VStack(spacing: 8) {
-            Text("Premium content locked")
-                .font(.headline)
-            Text("Complete onboarding to unlock feature access.")
-                .font(.subheadline)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.gray.opacity(0.15))
-        .cornerRadius(12)
     }
 }
