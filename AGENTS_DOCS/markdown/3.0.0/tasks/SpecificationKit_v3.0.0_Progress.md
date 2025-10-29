@@ -70,4 +70,5 @@
 SpecificationKit v3.0.0 is now complete and ready for release!
 
 ## 🆕 Recent Updates
-- Manual context support for `@Satisfies` completed and validated (see `AGENTS_DOCS/INPROGRESS/Summary_of_Work.md`).
+- Manual context support for `@Satisfies` archived under `AGENTS_DOCS/TASK_ARCHIVE/2_SatisfiesManualContext_and_P21_Benchmarks/`.
+- Upcoming focus: bootstrap P2.1 benchmarking infrastructure (track via `AGENTS_DOCS/INPROGRESS/next_tasks.md`).
