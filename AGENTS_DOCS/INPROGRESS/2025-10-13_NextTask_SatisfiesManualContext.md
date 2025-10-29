@@ -6,7 +6,7 @@
 - **Source Backlog Entries:**
   - `AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md` lines 49-53
   - `AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md` lines 81-85
-- **Status:** Selected / Ready to plan implementation
+- **Status:** Completed
 - **Blocking Issues:** None identified; requires API design + test harness work.
 
 ## Candidate Review
@@ -28,6 +28,7 @@
   - Confirm thread-safety expectations for cached contexts vs. provider factories.
   - Decide whether manual contexts should participate in builder APIs or remain a dedicated initializer.
 
-## Immediate Next Actions
-1. Prototype the manual context initializer inside `Satisfies.swift`, reusing `AnySpecification` wrapping logic.
-2. Draft a `SatisfiesWrapperTests` skeleton covering manual context, async evaluation, and builder integrations.
+## Completion Notes
+- Added manual `context:` initializers (with optional async context support) to `@Satisfies`, enabling evaluation without a provider.
+- Authored `SatisfiesWrapperTests` validating specification instances, predicate usage, and async evaluation against manual contexts.
+- Updated TODO tracker to reflect the completed wrapper support and new test coverage.

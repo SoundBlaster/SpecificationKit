@@ -111,6 +111,32 @@ public struct Satisfies<Context> {
     }
 
     /**
+     * Creates a Satisfies property wrapper with a manual context value and specification.
+     *
+     * Use this initializer when you already hold the context instance that should be
+     * evaluated, removing the need to depend on a ``ContextProviding`` implementation.
+     *
+     * - Parameters:
+     *   - context: A closure that returns the context to evaluate. The closure defaults to
+     *              capturing the provided value, enabling lazy recomputation when used with
+     *              reference types.
+     *   - asyncContext: Optional asynchronous context supplier used for ``evaluateAsync()``.
+     *   - specification: The specification to evaluate against the context.
+     */
+    public init<Spec: Specification>(
+        context: @autoclosure @escaping () -> Context,
+        asyncContext: (() async throws -> Context)? = nil,
+        using specification: Spec
+    ) where Spec.T == Context {
+        let contextSupplier = context
+        self.contextFactory = contextSupplier
+        self.asyncContextFactory = asyncContext ?? {
+            contextSupplier()
+        }
+        self.specification = AnySpecification(specification)
+    }
+
+    /**
      * Creates a Satisfies property wrapper with a custom context provider and specification type.
      *
      * This initializer creates an instance of the specification type automatically.
@@ -145,6 +171,30 @@ public struct Satisfies<Context> {
     }
 
     /**
+     * Creates a Satisfies property wrapper with a manual context and specification type.
+     *
+     * The specification type must conform to ``ExpressibleByNilLiteral`` so that it can be
+     * instantiated without additional parameters.
+     *
+     * - Parameters:
+     *   - context: A closure that returns the context instance that should be evaluated.
+     *   - asyncContext: Optional asynchronous context supplier used for ``evaluateAsync()``.
+     *   - specificationType: The specification type to instantiate and evaluate.
+     */
+    public init<Spec: Specification>(
+        context: @autoclosure @escaping () -> Context,
+        asyncContext: (() async throws -> Context)? = nil,
+        using specificationType: Spec.Type
+    ) where Spec.T == Context, Spec: ExpressibleByNilLiteral {
+        let contextSupplier = context
+        self.contextFactory = contextSupplier
+        self.asyncContextFactory = asyncContext ?? {
+            contextSupplier()
+        }
+        self.specification = AnySpecification(Spec(nilLiteral: ()))
+    }
+
+    /**
      * Creates a Satisfies property wrapper with a custom context provider and predicate function.
      *
      * This initializer allows you to use a simple closure instead of creating
@@ -175,6 +225,27 @@ public struct Satisfies<Context> {
     ) where Provider.Context == Context {
         self.contextFactory = provider.currentContext
         self.asyncContextFactory = provider.currentContextAsync
+        self.specification = AnySpecification(predicate)
+    }
+
+    /**
+     * Creates a Satisfies property wrapper with a manual context and predicate closure.
+     *
+     * - Parameters:
+     *   - context: A closure that returns the context to evaluate against the predicate.
+     *   - asyncContext: Optional asynchronous context supplier used for ``evaluateAsync()``.
+     *   - predicate: A closure that evaluates the supplied context and returns a boolean result.
+     */
+    public init(
+        context: @autoclosure @escaping () -> Context,
+        asyncContext: (() async throws -> Context)? = nil,
+        predicate: @escaping (Context) -> Bool
+    ) {
+        let contextSupplier = context
+        self.contextFactory = contextSupplier
+        self.asyncContextFactory = asyncContext ?? {
+            contextSupplier()
+        }
         self.specification = AnySpecification(predicate)
     }
 }
