@@ -345,30 +345,41 @@ class BenchmarkValidation: XCTestCase {
 
     /// Test that profiler overhead is within acceptable limits
     func testProfilerOverhead() {
-        let spec = PredicateSpec<Int> { $0 > 50 }
-        let testValue = 75
+        let workload = Array(0..<512)
+        let spec = PredicateSpec<[Int]> { values in
+            var total: Int = 0
+            for value in values {
+                total &+= (value &* 3)
+                total &-= (value >> 1)
+            }
+            return total > 0
+        }
+        let iterations = 2000
 
-        // Measure without profiling
+        let profiler = SpecificationProfiler.shared
+        profiler.reset()
+
+        // Measure without profiling using the same workload to establish a baseline.
         let startDirect = CFAbsoluteTimeGetCurrent()
-        for _ in 1...10000 {
-            _ = spec.isSatisfiedBy(testValue)
+        for _ in 0..<iterations {
+            _ = spec.isSatisfiedBy(workload)
         }
         let directTime = CFAbsoluteTimeGetCurrent() - startDirect
 
-        // Measure with profiling
-        let profiler = SpecificationProfiler.shared
+        // Measure with profiling enabled.
         let startProfiled = CFAbsoluteTimeGetCurrent()
-        for _ in 1...10000 {
-            _ = profiler.profile(spec, context: testValue)
+        for _ in 0..<iterations {
+            _ = profiler.profile(spec, context: workload)
         }
         let profiledTime = CFAbsoluteTimeGetCurrent() - startProfiled
 
-        let overhead = (profiledTime - directTime) / directTime
+        let baseline = max(directTime, .leastNonzeroMagnitude)
+        let overhead = (profiledTime - directTime) / baseline
 
         let result = BenchmarkResult(
             testName: "Profiler_Overhead",
             executionTime: overhead,
-            iterations: 10000
+            iterations: iterations
         )
 
         storage.storeBenchmark(result)

@@ -68,3 +68,6 @@
 
 ## 🎉 RELEASE READY
 SpecificationKit v3.0.0 is now complete and ready for release!
+
+## 🆕 Recent Updates
+- Manual context support for `@Satisfies` completed and validated (see `AGENTS_DOCS/INPROGRESS/Summary_of_Work.md`).
