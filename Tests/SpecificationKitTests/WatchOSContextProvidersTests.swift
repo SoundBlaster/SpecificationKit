@@ -65,6 +65,14 @@ final class WatchOSContextProvidersTests: XCTestCase {
         let stepCount = provider.getValue(for: "todayStepCount")
         let activeCalories = provider.getValue(for: "activeCalories")
 
+        #if os(watchOS)
+            XCTAssertEqual(stepCount as? Double, 0.0)
+            XCTAssertEqual(activeCalories as? Double, 0.0)
+        #else
+            XCTAssertNil(stepCount)
+            XCTAssertNil(activeCalories)
+        #endif
+
         // Should return nil for unknown keys without fallbacks
         let unknownValue = provider.getValue(for: "unknownHealthMetric")
         XCTAssertNil(unknownValue)
