@@ -19,6 +19,7 @@ final class SatisfiesMacroTests: XCTestCase {
         let spec = CooldownIntervalSpec(eventKey: "test", cooldownInterval: 10)
         let context = EvaluationContext(
             currentDate: now,
+            // Place the last event 20 seconds in the past so it exceeds the 10-second cooldown.
             events: ["test": now.addingTimeInterval(-20)]
         )
         let satisfies = Satisfies(context: context, using: spec)

@@ -117,9 +117,9 @@ public struct Satisfies<Context> {
      * evaluated, removing the need to depend on a ``ContextProviding`` implementation.
      *
      * - Parameters:
-     *   - context: A closure that returns the context to evaluate. The closure defaults to
-     *              capturing the provided value, enabling lazy recomputation when used with
-     *              reference types.
+     *   - context: A closure that returns the context to evaluate. The closure captures the
+     *              provided value and is evaluated on each `wrappedValue` access, enabling
+     *              fresh evaluation when used with reference types.
      *   - asyncContext: Optional asynchronous context supplier used for ``evaluateAsync()``.
      *   - specification: The specification to evaluate against the context.
      */
@@ -128,10 +128,9 @@ public struct Satisfies<Context> {
         asyncContext: (() async throws -> Context)? = nil,
         using specification: Spec
     ) where Spec.T == Context {
-        let contextSupplier = context
-        self.contextFactory = contextSupplier
+        self.contextFactory = context
         self.asyncContextFactory = asyncContext ?? {
-            contextSupplier()
+            context()
         }
         self.specification = AnySpecification(specification)
     }
@@ -186,10 +185,9 @@ public struct Satisfies<Context> {
         asyncContext: (() async throws -> Context)? = nil,
         using specificationType: Spec.Type
     ) where Spec.T == Context, Spec: ExpressibleByNilLiteral {
-        let contextSupplier = context
-        self.contextFactory = contextSupplier
+        self.contextFactory = context
         self.asyncContextFactory = asyncContext ?? {
-            contextSupplier()
+            context()
         }
         self.specification = AnySpecification(Spec(nilLiteral: ()))
     }
@@ -241,10 +239,9 @@ public struct Satisfies<Context> {
         asyncContext: (() async throws -> Context)? = nil,
         predicate: @escaping (Context) -> Bool
     ) {
-        let contextSupplier = context
-        self.contextFactory = contextSupplier
+        self.contextFactory = context
         self.asyncContextFactory = asyncContext ?? {
-            contextSupplier()
+            context()
         }
         self.specification = AnySpecification(predicate)
     }
