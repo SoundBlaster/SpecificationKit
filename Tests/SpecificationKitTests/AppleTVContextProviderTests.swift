@@ -228,9 +228,9 @@ final class AppleTVContextProviderCrossPlatformTests: XCTestCase {
         XCTAssertTrue(siriRemoteResult is Bool)
         XCTAssertTrue(darkModeResult is Bool)
         #else
-        XCTAssertEqual(hdrResult as? Bool, false)
-        XCTAssertEqual(siriRemoteResult as? Bool, false)
-        XCTAssertEqual(darkModeResult as? Bool, false)
+        XCTAssertEqual(hdrResult, false)
+        XCTAssertEqual(siriRemoteResult, false)
+        XCTAssertEqual(darkModeResult, false)
         #endif
     }
 
@@ -251,9 +251,9 @@ final class AppleTVContextProviderCrossPlatformTests: XCTestCase {
         XCTAssertTrue(standardResult is Bool)
         XCTAssertTrue(reducedResult is Bool)
         #else
-        XCTAssertEqual(highResult as? Bool, false)
-        XCTAssertEqual(standardResult as? Bool, false)
-        XCTAssertEqual(reducedResult as? Bool, false)
+        XCTAssertEqual(highResult, false)
+        XCTAssertEqual(standardResult, false)
+        XCTAssertEqual(reducedResult, false)
         #endif
     }
 }
