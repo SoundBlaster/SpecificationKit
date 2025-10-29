@@ -12,6 +12,65 @@ import XCTest
 
 final class CachedSatisfiesTests: XCTestCase {
 
+    // MARK: - Test Support Types
+
+    private final class AsyncMockProvider: ContextProviding {
+        typealias Context = EvaluationContext
+
+        enum TestError: Error, Equatable {
+            case failed
+        }
+
+        private let context: EvaluationContext
+        private let delayNanoseconds: UInt64
+        private let shouldThrow: Bool
+        private let invocationCounter = AsyncInvocationCounter()
+
+        init(
+            context: EvaluationContext,
+            delay: TimeInterval = 0.0,
+            shouldThrow: Bool = false
+        ) {
+            self.context = context
+            self.delayNanoseconds = UInt64((delay * 1_000_000_000).rounded())
+            self.shouldThrow = shouldThrow
+        }
+
+        func currentContext() -> EvaluationContext {
+            context
+        }
+
+        func currentContextAsync() async throws -> EvaluationContext {
+            if delayNanoseconds > 0 {
+                try await Task.sleep(nanoseconds: delayNanoseconds)
+            }
+
+            await invocationCounter.increment()
+
+            if shouldThrow {
+                throw TestError.failed
+            }
+
+            return context
+        }
+
+        func asyncCallCount() async -> Int {
+            await invocationCounter.value()
+        }
+
+        private actor AsyncInvocationCounter {
+            private var value = 0
+
+            func increment() {
+                value += 1
+            }
+
+            func value() -> Int {
+                value
+            }
+        }
+    }
+
     // MARK: - Test Specifications
 
     struct CountingSpec: Specification {
@@ -425,5 +484,78 @@ final class CachedSatisfiesTests: XCTestCase {
         let afterSecondStats = cachedSpec.getCacheStats()
         XCTAssertTrue(afterSecondStats.isCached)
         XCTAssertGreaterThan(afterSecondStats.accessCount, afterFirstStats.accessCount)
+    }
+
+    // MARK: - Async Projected Value Tests
+
+    func testProjectedValueEvaluateAsyncUsesAsyncContext() async throws {
+        CachedSatisfies<EvaluationContext>.clearAllCaches()
+
+        let context = EvaluationContext(flags: ["async_feature": true])
+        let provider = AsyncMockProvider(context: context, delay: 0.01)
+        var cachedSpec = CachedSatisfies(
+            provider: provider,
+            predicate: { $0.flag(for: "async_feature") },
+            ttl: 60.0,
+            cacheKey: "async_evaluate_success"
+        )
+
+        let firstResult = try await cachedSpec.projectedValue.evaluateAsync()
+        XCTAssertTrue(firstResult)
+
+        let callsAfterFirst = await provider.asyncCallCount()
+        XCTAssertEqual(callsAfterFirst, 1, "Async context should evaluate exactly once")
+
+        let secondResult = try await cachedSpec.projectedValue.evaluateAsync()
+        XCTAssertTrue(secondResult)
+
+        let callsAfterSecond = await provider.asyncCallCount()
+        XCTAssertEqual(callsAfterSecond, 1, "Cached value should prevent additional async evaluations")
+
+        XCTAssertTrue(cachedSpec.projectedValue.isCached())
+        XCTAssertGreaterThan(cachedSpec.projectedValue.getAccessCount(), 0)
+    }
+
+    func testProjectedValueEvaluateAsyncPropagatesProviderError() async {
+        CachedSatisfies<EvaluationContext>.clearAllCaches()
+
+        let provider = AsyncMockProvider(
+            context: EvaluationContext(),
+            shouldThrow: true
+        )
+        var cachedSpec = CachedSatisfies(
+            provider: provider,
+            predicate: { _ in true },
+            ttl: 60.0,
+            cacheKey: "async_evaluate_error"
+        )
+
+        do {
+            _ = try await cachedSpec.projectedValue.evaluateAsync()
+            XCTFail("Expected async evaluation to throw")
+        } catch let error as AsyncMockProvider.TestError {
+            XCTAssertEqual(error, .failed)
+        } catch {
+            XCTFail("Unexpected error thrown: \(error)")
+        }
+
+        var asyncCalls = await provider.asyncCallCount()
+        XCTAssertEqual(asyncCalls, 1, "Async provider should have been invoked once")
+
+        XCTAssertFalse(cachedSpec.projectedValue.isCached())
+        XCTAssertEqual(cachedSpec.projectedValue.getAccessCount(), 0)
+
+        do {
+            _ = try await cachedSpec.projectedValue.evaluateAsync()
+            XCTFail("Expected async evaluation to throw on retry")
+        } catch let error as AsyncMockProvider.TestError {
+            XCTAssertEqual(error, .failed)
+        } catch {
+            XCTFail("Unexpected error thrown: \(error)")
+        }
+
+        asyncCalls = await provider.asyncCallCount()
+        XCTAssertEqual(asyncCalls, 2, "Each async evaluation attempt should invoke the provider")
+        XCTAssertFalse(cachedSpec.projectedValue.isCached())
     }
 }
