@@ -49,7 +49,7 @@ This file provides a step-by-step plan for implementing the SpecificationKit lib
 - [x] `Satisfies.swift`
   - Support:
     - [x] `@Satisfies(using: Spec.self)` (auto context)
-    - [ ] `@Satisfies(context: ..., using: Spec.self)` (manual context)
+    - [x] `@Satisfies(context: ..., using: Spec.self)` (manual context)
 
 ---
 
@@ -81,8 +81,8 @@ This file provides a step-by-step plan for implementing the SpecificationKit lib
 - [x] Core specification tests (`TimeSinceEventSpec`, `MaxCountSpec`, `CooldownIntervalSpec`, `CompositeSpec`) are covered within `SpecificationKitTests.swift`.
 - [x] Mock context provider tests are included in `SpecificationKitTests.swift`.
 - [x] Macro expansion tests are implemented in `SpecsMacroTests.swift`.
-- [ ] `SatisfiesWrapperTests.swift` is currently missing and should be added to cover the `@Satisfies` property wrapper functionality.
-- [ ] Additional tests for property wrapper edge cases and manual context usage are recommended.
+- [x] `SatisfiesWrapperTests.swift` is currently missing and should be added to cover the `@Satisfies` property wrapper functionality.
+- [x] Additional tests for property wrapper edge cases and manual context usage are recommended.
 
 ---
 

@@ -15,12 +15,16 @@ final class SatisfiesMacroTests: XCTestCase {
 
     func testSatisfiesPropertyWrapperStillWorks() {
         // Ensure that our new macro doesn't break existing property wrapper functionality
+        let now = Date()
         let spec = CooldownIntervalSpec(eventKey: "test", cooldownInterval: 10)
-        let satisfies = Satisfies(using: spec)
+        let context = EvaluationContext(
+            currentDate: now,
+            events: ["test": now.addingTimeInterval(-20)]
+        )
+        let satisfies = Satisfies(context: context, using: spec)
 
-        // This should not crash and should return a boolean
-        let result = satisfies.wrappedValue
-        XCTAssertTrue(result == true || result == false, "Satisfies wrapper should return Bool")
+        // This should evaluate deterministically using the supplied context
+        XCTAssertTrue(satisfies.wrappedValue)
     }
 
     func testMacroImplementationExists() {
