@@ -6,7 +6,7 @@
 - **Source Backlog Entries:**
   - `AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md` lines 99-109
   - `AGENTS_DOCS/markdown/3.0.0/tasks/03_performance_tasks.md` lines 10-105
-- **Status:** Selected / Ready to plan implementation
+- **Status:** Completed — benchmarking target live in repository (2025-10-30)
 - **Blocking Issues:** None identified
 
 ## Candidate Review
@@ -31,3 +31,9 @@
 ## Immediate Next Actions
 1. Scaffold the benchmark target structure (files, target registration, and placeholder XCTestCase) and validate it compiles.
 2. Implement the initial measurement loops for spec evaluation, macro compilation, and property wrapper overhead, recording provisional baseline metrics for review.
+
+## Completion Summary
+- Created the dedicated `SpecificationKitBenchmarks` test target and migrated the legacy performance cases into it for isolated execution.
+- Introduced reusable baseline validation utilities (`BenchmarkBaseline`, `BaselineValidator`, metric/result types) exercised by new unit coverage.
+- Updated documentation trackers (`00_SpecificationKit_TODO.md`, `SpecificationKit_v3.0.0_Progress.md`) and in-progress notes to reflect the infrastructure delivery.
+- Benchmarks run locally; Linux environments lack CoreData, so the suite reports the pre-existing module import limitation during `swift test`.
