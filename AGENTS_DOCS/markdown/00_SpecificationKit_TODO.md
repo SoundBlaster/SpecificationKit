@@ -82,7 +82,7 @@ This file provides a step-by-step plan for implementing the SpecificationKit lib
 - [x] Mock context provider tests are included in `SpecificationKitTests.swift`.
 - [x] Macro expansion tests are implemented in `SpecsMacroTests.swift`.
 - [x] `SatisfiesWrapperTests.swift` now covers the `@Satisfies` property wrapper, including manual context usage (see `AGENTS_DOCS/TASK_ARCHIVE/2_SatisfiesManualContext_and_P21_Benchmarks/Summary_of_Work.md`).
-- [ ] Expand edge-case and stress coverage for property wrappers as new scenarios emerge.
+- [x] Expand edge-case and stress coverage for property wrappers as new scenarios emerge (async cache projections, failure paths).
 
 ---
 

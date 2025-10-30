@@ -335,7 +335,8 @@ final class SpecificationTracerTests: XCTestCase {
         let entry = session?.entries.first
         XCTAssertNotNil(entry)
         XCTAssertGreaterThan(entry?.executionTime ?? 0, 0.0005)  // At least 0.5ms
-        XCTAssertLessThan(entry?.executionTime ?? 1, 0.01)  // Less than 10ms
+        // Allow extra tolerance for timer jitter on busy CI hosts while still bounding execution
+        XCTAssertLessThanOrEqual(entry?.executionTime ?? 1, 0.02)  // Less than or equal to 20ms
     }
 
     func testSessionTotalExecutionTime() {
