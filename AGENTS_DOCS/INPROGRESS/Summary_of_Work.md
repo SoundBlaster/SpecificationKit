@@ -1,16 +1,9 @@
-# Summary of Work — 2025-10-29
+# Summary of Work — 2025-10-29 Archive Reset
 
-## Completed Tasks
-- Expand Property Wrapper Edge-Case Coverage (`2025-10-29_NextTask_PropertyWrapperEdgeCases.md`) — commit `9bc2f7ac44c5cb0638acbabbccf6139a0a362ab0`
+## Current Status
+- Cleared the active queue by archiving `3_PropertyWrapperEdgeCases`.
+- Awaiting new task selection; benchmarking bootstrap remains the next priority.
 
-## Implementation Notes
-- Introduced `AsyncMockProvider` harness inside `CachedSatisfiesTests` to simulate async-only providers and error cases.
-- Added async projection tests that confirm cache reuse on success and that failures avoid contaminating cache state.
-- Updated backlog and progress trackers to reflect the additional coverage.
-
-## Test Execution
-- `swift test` *(fails: environment lacks CoreData module; see build log for `ContextValue.swift`)*
-- `swift build` *(fails: same CoreData module unavailability on Linux toolchain)*
-
-## Follow-ups
-- P2.1 benchmarking infrastructure remains pending (see `AGENTS_DOCS/INPROGRESS/next_tasks.md`).
+## Notes for Next Agent
+- Review `next_tasks.md` for the benchmarking workstream outline.
+- No recoverable blockers are currently tracked.
