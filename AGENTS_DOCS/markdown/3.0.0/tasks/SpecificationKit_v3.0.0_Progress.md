@@ -72,5 +72,5 @@ SpecificationKit v3.0.0 is now complete and ready for release!
 ## 🆕 Recent Updates
 - Manual context support for `@Satisfies` archived under `AGENTS_DOCS/TASK_ARCHIVE/2_SatisfiesManualContext_and_P21_Benchmarks/`.
 - Property wrapper async edge-case coverage archived under `AGENTS_DOCS/TASK_ARCHIVE/3_PropertyWrapperEdgeCases/`.
-- Upcoming focus: bootstrap P2.1 benchmarking infrastructure (track via `AGENTS_DOCS/INPROGRESS/next_tasks.md`).
+- Completed: dedicated `SpecificationKitBenchmarks` target registered with baseline validator coverage (2025-10-30).
 - Added async projection regression tests for `@CachedSatisfies` to cover failure + reuse scenarios (2025-10-29).

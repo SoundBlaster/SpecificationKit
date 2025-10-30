@@ -1,6 +1,6 @@
 //
 //  BenchmarkValidation.swift
-//  SpecificationKitTests
+//  SpecificationKitBenchmarks
 //
 //  Benchmark result validation and regression detection for SpecificationKit v3.0.0
 //
@@ -9,6 +9,112 @@ import Foundation
 import XCTest
 
 @testable import SpecificationKit
+
+/// Baseline thresholds for SpecificationKit performance metrics
+struct BenchmarkBaseline {
+    let specificationEvaluation: TimeInterval
+    let macroCompilationOverhead: Double
+    let wrapperOverhead: Double
+    let memoryUsageIncrease: Double
+    let contextProviderLatency: TimeInterval
+
+    static let `default` = BenchmarkBaseline(
+        specificationEvaluation: 0.001,
+        macroCompilationOverhead: 0.10,
+        wrapperOverhead: 0.05,
+        memoryUsageIncrease: 0.10,
+        contextProviderLatency: 0.010
+    )
+}
+
+enum BenchmarkUnit {
+    case seconds
+    case percentage
+    case bytes
+
+    func formatted(_ value: Double) -> String {
+        switch self {
+        case .seconds:
+            return String(format: "%.4fs", value)
+        case .percentage:
+            return String(format: "%.2f%%", value * 100)
+        case .bytes:
+            return String(format: "%.0f bytes", value)
+        }
+    }
+}
+
+enum BenchmarkMetric {
+    case specificationEvaluation(TimeInterval)
+    case macroCompilation(overhead: Double)
+    case wrapperOverhead(Double)
+    case memoryUsageIncrease(Double)
+    case contextProviderLatency(TimeInterval)
+    case custom(name: String, value: Double, threshold: Double, unit: BenchmarkUnit)
+}
+
+enum BenchmarkComparison {
+    case lessThanOrEqual
+}
+
+struct BenchmarkRegression: CustomStringConvertible {
+    let metricName: String
+    let observedValue: Double
+    let threshold: Double
+    let unit: BenchmarkUnit
+    let comparison: BenchmarkComparison
+
+    var description: String { localizedDescription }
+
+    var localizedDescription: String {
+        switch comparison {
+        case .lessThanOrEqual:
+            return "⚠️  \(metricName) regression: observed \(unit.formatted(observedValue)) exceeds baseline \(unit.formatted(threshold))"
+        }
+    }
+}
+
+enum BenchmarkValidationResult {
+    case success
+    case regression([BenchmarkRegression])
+}
+
+struct BaselineValidator {
+    let baseline: BenchmarkBaseline
+
+    func validate(_ metric: BenchmarkMetric) -> BenchmarkValidationResult {
+        let evaluation = evaluate(metric)
+        guard evaluation.value > evaluation.threshold else {
+            return .success
+        }
+
+        let regression = BenchmarkRegression(
+            metricName: evaluation.name,
+            observedValue: evaluation.value,
+            threshold: evaluation.threshold,
+            unit: evaluation.unit,
+            comparison: .lessThanOrEqual
+        )
+        return .regression([regression])
+    }
+
+    private func evaluate(_ metric: BenchmarkMetric) -> (name: String, value: Double, threshold: Double, unit: BenchmarkUnit) {
+        switch metric {
+        case .specificationEvaluation(let value):
+            return ("Specification Evaluation", value, baseline.specificationEvaluation, .seconds)
+        case .macroCompilation(let overhead):
+            return ("Macro Compilation Overhead", overhead, baseline.macroCompilationOverhead, .percentage)
+        case .wrapperOverhead(let overhead):
+            return ("Wrapper Overhead", overhead, baseline.wrapperOverhead, .percentage)
+        case .memoryUsageIncrease(let increase):
+            return ("Memory Usage Increase", increase, baseline.memoryUsageIncrease, .percentage)
+        case .contextProviderLatency(let latency):
+            return ("Context Provider Latency", latency, baseline.contextProviderLatency, .seconds)
+        case .custom(let name, let value, let threshold, let unit):
+            return (name, value, threshold, unit)
+        }
+    }
+}
 
 /// Benchmark result with environment metadata
 struct BenchmarkResult: Codable {
@@ -337,9 +443,12 @@ class BenchmarkValidation: XCTestCase {
         }
 
         // Validate against baseline
-        XCTAssertLessThan(
-            averageTime, PerformanceBaseline.specificationEvaluation,
-            "Specification evaluation exceeds 1ms baseline")
+        let validationResult = BaselineValidator(baseline: .default)
+            .validate(.specificationEvaluation(averageTime))
+        if case let .regression(regressions) = validationResult {
+            let message = regressions.map(\.localizedDescription).joined(separator: "\n")
+            XCTFail(message)
+        }
         XCTAssertEqual(results.filter { $0 }.count, 1000, "All evaluations should return true")
     }
 

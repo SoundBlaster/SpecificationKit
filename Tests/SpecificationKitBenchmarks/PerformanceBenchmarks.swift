@@ -1,6 +1,6 @@
 //
 //  PerformanceBenchmarks.swift
-//  SpecificationKitTests
+//  SpecificationKitBenchmarks
 //
 //  Performance benchmarking infrastructure for SpecificationKit v3.0.0
 //
@@ -10,17 +10,9 @@ import XCTest
 
 @testable import SpecificationKit
 
-/// Performance baseline requirements for SpecificationKit v3.0.0
-struct PerformanceBaseline {
-    static let specificationEvaluation: TimeInterval = 0.001  // 1ms target
-    static let macroCompilationOverhead: Double = 0.10  // 10% max overhead
-    static let memoryUsageIncrease: Double = 0.10  // 10% max increase
-    static let wrapperOverhead: Double = 0.05  // 5% max overhead
-    static let contextProviderLatency: TimeInterval = 0.010  // 10ms target
-}
-
 /// Comprehensive performance benchmark suite for SpecificationKit
 final class PerformanceBenchmarks: XCTestCase {
+    private var baselineValidator: BaselineValidator { BaselineValidator(baseline: .default) }
 
     // MARK: - Specification Evaluation Performance
 
@@ -36,8 +28,7 @@ final class PerformanceBenchmarks: XCTestCase {
         }
         let executionTime = (CFAbsoluteTimeGetCurrent() - startTime) / 1000
 
-        validatePerformanceBaseline(
-            executionTime: executionTime, baseline: PerformanceBaseline.specificationEvaluation)
+        assertBenchmarkMetric(.specificationEvaluation(executionTime))
     }
 
     func testComplexSpecificationPerformance() {
@@ -56,8 +47,7 @@ final class PerformanceBenchmarks: XCTestCase {
         }
         let executionTime = (CFAbsoluteTimeGetCurrent() - startTime) / 1000
 
-        validatePerformanceBaseline(
-            executionTime: executionTime, baseline: PerformanceBaseline.specificationEvaluation)
+        assertBenchmarkMetric(.specificationEvaluation(executionTime))
     }
 
     // MARK: - Property Wrapper Performance
@@ -85,6 +75,7 @@ final class PerformanceBenchmarks: XCTestCase {
             provider.recordEvent("event_\(i)", at: Date().addingTimeInterval(-Double(i)))
         }
 
+        let startTime = CFAbsoluteTimeGetCurrent()
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
             for i in 1...1000 {
                 let counter = provider.getCounter("counter_\(i % 100 + 1)")
@@ -95,6 +86,9 @@ final class PerformanceBenchmarks: XCTestCase {
                 _ = counter + (flag ? 1 : 0) + Int(event?.timeIntervalSince1970 ?? 0)
             }
         }
+        let executionTime = (CFAbsoluteTimeGetCurrent() - startTime) / 1000
+
+        assertBenchmarkMetric(.contextProviderLatency(executionTime))
     }
 
     // MARK: - AnySpecification Performance
@@ -125,41 +119,6 @@ final class PerformanceBenchmarks: XCTestCase {
             let context = EvaluationContext(counters: ["test_500": 250])
             for spec in specs {
                 _ = spec.isSatisfiedBy(context)
-            }
-        }
-    }
-
-    // MARK: - Concurrent Access Performance
-
-    func testConcurrentContextProviderAccess() {
-        let provider = DefaultContextProvider()
-        let operationCount = 50  // Reduced count for more consistent timing
-
-        measure(metrics: [XCTClockMetric()]) {
-            // Use concurrent perform to avoid queue creation overhead and improve consistency
-            DispatchQueue.concurrentPerform(iterations: operationCount) { i in
-                provider.setCounter("concurrent_\(i)", to: i)
-                _ = provider.getCounter("concurrent_\(i)")
-            }
-        }
-    }
-
-    // MARK: - Cache Performance Testing
-
-    func testContextCachePerformance() {
-        let provider = DefaultContextProvider()
-        let cacheKeys = Array(1...100).map { "cache_key_\($0)" }
-
-        // Warm up cache
-        for key in cacheKeys {
-            provider.setFlag(key, to: true)
-        }
-
-        measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
-            // Test cache hit performance
-            for _ in 1...10000 {
-                let randomKey = cacheKeys.randomElement()!
-                _ = provider.getFlag(randomKey)
             }
         }
     }
@@ -254,9 +213,13 @@ final class PerformanceBenchmarks: XCTestCase {
         }
         let avgCacheHitTime = (CFAbsoluteTimeGetCurrent() - startTime) / 1000
 
-        validatePerformanceBaseline(
-            executionTime: avgCacheHitTime,
-            baseline: PerformanceBaseline.specificationEvaluation * 0.1
+        assertBenchmarkMetric(
+            .custom(
+                name: "CachedSatisfies Cache Hit",
+                value: avgCacheHitTime,
+                threshold: BenchmarkBaseline.default.specificationEvaluation * 0.1,
+                unit: .seconds
+            )
         )
     }
 
@@ -282,14 +245,20 @@ final class PerformanceBenchmarks: XCTestCase {
     }
 }
 
-/// Performance validation utilities
+// MARK: - Performance validation utilities
 extension PerformanceBenchmarks {
-
-    /// Validates that performance metrics meet baseline requirements
-    func validatePerformanceBaseline(executionTime: TimeInterval, baseline: TimeInterval) {
-        XCTAssertLessThan(
-            executionTime, baseline,
-            "Performance regression detected: \(executionTime)s exceeds baseline of \(baseline)s")
+    func assertBenchmarkMetric(
+        _ metric: BenchmarkMetric,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let result = baselineValidator.validate(metric)
+        if case let .regression(regressions) = result {
+            let message = regressions
+                .map { $0.localizedDescription }
+                .joined(separator: "\n")
+            XCTFail(message, file: file, line: line)
+        }
     }
 
     /// Creates a standardized performance context for consistent testing

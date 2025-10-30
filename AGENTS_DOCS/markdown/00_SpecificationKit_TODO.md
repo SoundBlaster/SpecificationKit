@@ -106,4 +106,4 @@ This file provides a step-by-step plan for implementing the SpecificationKit lib
 
 ## 📈 11. Performance Benchmarking
 
-- [ ] P2.1 Benchmarking infrastructure — establish dedicated benchmark target, capture v2.0.0 baselines, and integrate XCTest `measure` suites (see `AGENTS_DOCS/INPROGRESS/next_tasks.md`).
+- [x] P2.1 Benchmarking infrastructure — establish dedicated benchmark target, capture v2.0.0 baselines, and integrate XCTest `measure` suites (see `AGENTS_DOCS/INPROGRESS/next_tasks.md`).

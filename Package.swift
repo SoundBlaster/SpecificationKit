@@ -53,6 +53,13 @@ let package = Package(
             ]
         ),
 
+        .testTarget(
+            name: "SpecificationKitBenchmarks",
+            dependencies: [
+                "SpecificationKit"
+            ]
+        ),
+
         // This is your test target.
         // We've streamlined the dependencies for a cleaner testing setup.
         .testTarget(
