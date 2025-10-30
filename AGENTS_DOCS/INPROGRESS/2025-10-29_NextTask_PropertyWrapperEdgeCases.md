@@ -5,7 +5,7 @@
 - **Chosen Task:** Design and implement additional stress and edge-case tests for SpecificationKit's property wrappers.
 - **Source Backlog Entries:**
   - `AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md` lines 79–109
-- **Status:** Selected / Ready to plan implementation
+- **Status:** Completed (2025-10-29) — async cache evaluation coverage landed
 - **Blocking Issues:** None
 
 ## Candidate Review
@@ -33,5 +33,10 @@
   - Are there performance regressions that should also be benchmarked once new tests exist?
 
 ## Immediate Next Actions
-1. Audit existing wrapper tests to map uncovered behaviors (async contexts, projected values, concurrency).
-2. Design and implement new XCTest cases (plus any supporting fixtures) that exercise the identified edge cases and document expected outcomes.
+1. ✅ Audit existing wrapper tests to map uncovered behaviors (async contexts, projected values, concurrency).
+2. ✅ Implement XCTest cases for async cache projections (success + failure paths) and document outcomes in Summary_of_Work.
+
+## Completion Notes
+- Added `AsyncMockProvider` harness in `CachedSatisfiesTests` to simulate async-only context providers and failure paths.
+- New async projection tests verify cached reuse of async evaluations and error propagation without polluting cache state.
+- Updated backlog and progress trackers to reflect the expanded property wrapper coverage.

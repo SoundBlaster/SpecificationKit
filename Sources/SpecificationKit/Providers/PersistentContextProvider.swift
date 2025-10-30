@@ -319,7 +319,7 @@ public final class PersistentContextProvider: ContextProviding, @unchecked Senda
         // Create ContextValue entity
         let entity = NSEntityDescription()
         entity.name = "ContextValue"
-        entity.managedObjectClassName = "SpecificationKit.ContextValue"
+        entity.managedObjectClassName = NSStringFromClass(ContextValue.self)
 
         // Create attributes
         let keyAttribute = NSAttributeDescription()

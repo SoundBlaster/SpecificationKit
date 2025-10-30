@@ -19,6 +19,10 @@ public protocol ContextProviding {
     /// Creates and returns the current context for specification evaluation
     /// - Returns: A context instance containing the necessary data for evaluation
     func currentContext() -> Context
+
+    /// Async variant returning the current context. Default implementation bridges to sync.
+    /// - Returns: A context instance containing the necessary data for evaluation
+    func currentContextAsync() async throws -> Context
 }
 
 // MARK: - Optional observation capability
@@ -51,14 +55,13 @@ public struct GenericContextProvider<Context>: ContextProviding {
 // MARK: - Async Convenience
 
 extension ContextProviding {
-    /// Async variant returning the current context. Default implementation bridges to sync.
     public func currentContextAsync() async throws -> Context {
         currentContext()
     }
 
-    // Optional observation hooks for providers that can publish updates.
-    // Defaults emit nothing; concrete providers may override.
-    // Intentionally no default observation here to avoid protocol-extension dispatch pitfalls.
+    /// Optional observation hooks for providers that can publish updates.
+    /// Defaults emit nothing; concrete providers may override.
+    /// Intentionally no default observation here to avoid protocol-extension dispatch pitfalls.
 }
 
 // MARK: - Static Context Provider
