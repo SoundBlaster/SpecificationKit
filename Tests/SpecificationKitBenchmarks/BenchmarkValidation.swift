@@ -498,7 +498,8 @@ class BenchmarkValidation: XCTestCase {
         }
         let profiledTime = CFAbsoluteTimeGetCurrent() - startProfiled
 
-        let baseline = max(directTime, .leastNonzeroMagnitude)
+        let minimumBaseline: CFTimeInterval = 1e-6
+        let baseline = max(directTime, minimumBaseline)
         let overhead = (profiledTime - directTime) / baseline
 
         let result = BenchmarkResult(

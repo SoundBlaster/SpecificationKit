@@ -138,32 +138,40 @@ final class AutoContextMacroComprehensiveTests: XCTestCase {
         }
 
         // Test that the injected members work correctly
-        XCTAssertTrue(FeatureFlagCheck.Provider.self == DefaultContextProvider.self)
+        if FeatureFlagCheck.Provider.self != DefaultContextProvider.self {
+            XCTFail("FeatureFlagCheck.Provider should resolve to DefaultContextProvider")
+        }
         XCTAssertNotNil(FeatureFlagCheck.contextProvider)
-        XCTAssertTrue(type(of: FeatureFlagCheck.contextProvider) == DefaultContextProvider.self)
+        if type(of: FeatureFlagCheck.contextProvider) != DefaultContextProvider.self {
+            XCTFail("FeatureFlagCheck.contextProvider should be a DefaultContextProvider")
+        }
 
         // Test that it provides DefaultContextProvider.shared
-        XCTAssertTrue(FeatureFlagCheck.contextProvider === DefaultContextProvider.shared)
+        if FeatureFlagCheck.contextProvider !== DefaultContextProvider.shared {
+            XCTFail("FeatureFlagCheck.contextProvider should reference DefaultContextProvider.shared")
+        }
 
         // Test that it works with @Satisfies
         let provider = DefaultContextProvider.shared
         provider.clearAll()
         provider.setFlag("testFlag", to: true)
 
-        struct TestHarness {
-            @Satisfies(
-                provider: FeatureFlagCheck.contextProvider,
-                using: FeatureFlagCheck(flagKey: "testFlag"))
-            var isEnabled: Bool
-        }
+        @Satisfies(
+            provider: FeatureFlagCheck.contextProvider,
+            using: FeatureFlagCheck(flagKey: "testFlag"))
+        var isFeatureEnabled: Bool
 
-        let harness = TestHarness()
-        XCTAssertTrue(harness.isEnabled)
+        let initialEvaluation = isFeatureEnabled
+        if !initialEvaluation {
+            XCTFail("FeatureFlagCheck should evaluate to true for the initial flag state")
+        }
 
         // Change flag and test again
         provider.setFlag("testFlag", to: false)
-        let harness2 = TestHarness()
-        XCTAssertFalse(harness2.isEnabled)
+        let updatedEvaluation = isFeatureEnabled
+        if updatedEvaluation {
+            XCTFail("FeatureFlagCheck should evaluate to false after toggling the flag")
+        }
     }
 
     func testAutoContextMacro_IntegrationWithCustomSpecification() {
@@ -316,12 +324,16 @@ final class AutoContextMacroComprehensiveTests: XCTestCase {
         }
 
         // Test that Provider typealias is correct
-        XCTAssertTrue(TestProviderAlias.Provider.self == DefaultContextProvider.self)
+        if TestProviderAlias.Provider.self != DefaultContextProvider.self {
+            XCTFail("Provider typealias should equal DefaultContextProvider")
+        }
 
         // Test that we can use Provider in type annotations
         let provider: TestProviderAlias.Provider = DefaultContextProvider.shared
         XCTAssertNotNil(provider)
-        XCTAssertTrue(type(of: provider) == DefaultContextProvider.self)
+        if type(of: provider) != DefaultContextProvider.self {
+            XCTFail("Provider typealias should resolve to DefaultContextProvider")
+        }
     }
 
     func testAutoContextMacro_ContextProviderProperty() {
@@ -339,8 +351,12 @@ final class AutoContextMacroComprehensiveTests: XCTestCase {
         let provider2 = TestContextProvider.contextProvider
 
         // Should be the same instance (DefaultContextProvider.shared)
-        XCTAssertTrue(provider1 === provider2)
-        XCTAssertTrue(provider1 === DefaultContextProvider.shared)
+        if provider1 !== provider2 {
+            XCTFail("Context provider should return the shared provider instance")
+        }
+        if provider1 !== DefaultContextProvider.shared {
+            XCTFail("Context provider should equal DefaultContextProvider.shared")
+        }
 
         // Test that it provides EvaluationContext
         let context: EvaluationContext = provider1.currentContext()
@@ -406,7 +422,9 @@ final class AutoContextMacroComprehensiveTests: XCTestCase {
 
         // If this compiles and runs, the macro generated valid code
         XCTAssertNotNil(CompilationTestSpec.contextProvider)
-        XCTAssertTrue(CompilationTestSpec.Provider.self == DefaultContextProvider.self)
+        if CompilationTestSpec.Provider.self != DefaultContextProvider.self {
+            XCTFail("AutoContext macro should generate DefaultContextProvider alias")
+        }
     }
 
     // MARK: - Thread Safety Tests
@@ -506,19 +524,21 @@ final class AutoContextMacroComprehensiveTests: XCTestCase {
         // - static var contextProvider: DefaultContextProvider { .shared }
 
         // With @AutoContext, these are automatically generated
-        XCTAssertTrue(UserPermissionCheck.Provider.self == DefaultContextProvider.self)
-        XCTAssertTrue(UserPermissionCheck.contextProvider === DefaultContextProvider.shared)
-
-        // Can be used directly with @Satisfies
-        struct PermissionHarness {
-            @Satisfies(
-                provider: UserPermissionCheck.contextProvider,
-                using: UserPermissionCheck(requiredPermission: "read"))
-            var canRead: Bool
+        if UserPermissionCheck.Provider.self != DefaultContextProvider.self {
+            XCTFail("AutoContext macro should link documentation example to DefaultContextProvider")
+        }
+        if UserPermissionCheck.contextProvider !== DefaultContextProvider.shared {
+            XCTFail("Documentation example should reuse DefaultContextProvider.shared")
         }
 
+        // Can be used directly with @Satisfies
         UserPermissionCheck.contextProvider.setFlag("has_read_permission", to: true)
-        let harness = PermissionHarness()
-        XCTAssertTrue(harness.canRead)
+
+        @Satisfies(
+            provider: UserPermissionCheck.contextProvider,
+            using: UserPermissionCheck(requiredPermission: "read"))
+        var canReadPermission: Bool
+
+        XCTAssertTrue(canReadPermission)
     }
 }
