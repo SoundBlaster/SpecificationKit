@@ -378,19 +378,21 @@ final class PersistentContextProviderTests: XCTestCase {
         var receivedChanges: [String] = []
 
         #if canImport(Combine)
-            if let contextProvider = provider as? ContextUpdatesProviding {
-                contextProvider.contextUpdates
-                    .sink { _ in
-                        receivedChanges.append("change")
-                        if receivedChanges.count >= 2 {
-                            expectation.fulfill()
-                        }
-                    }
-                    .store(in: &cancellables)
-            } else {
-                XCTFail("Provider should conform to ContextUpdatesProviding")
+            guard let contextProvider = provider else {
+                XCTFail("Provider should be initialized")
                 return
             }
+
+            let updatesProvider = contextProvider as any ContextUpdatesProviding
+
+            updatesProvider.contextUpdates
+                .sink { _ in
+                    receivedChanges.append("change")
+                    if receivedChanges.count >= 2 {
+                        expectation.fulfill()
+                    }
+                }
+                .store(in: &cancellables)
         #endif
 
         // When
@@ -408,19 +410,21 @@ final class PersistentContextProviderTests: XCTestCase {
         var receivedCount = 0
 
         #if canImport(Combine)
-            if let contextProvider = provider as? ContextUpdatesProviding {
-                Task {
-                    for await _ in contextProvider.contextStream {
-                        receivedCount += 1
-                        if receivedCount >= 2 {
-                            expectation.fulfill()
-                            break
-                        }
+            guard let contextProvider = provider else {
+                XCTFail("Provider should be initialized")
+                return
+            }
+
+            let updatesProvider = contextProvider as any ContextUpdatesProviding
+
+            Task {
+                for await _ in updatesProvider.contextStream {
+                    receivedCount += 1
+                    if receivedCount >= 2 {
+                        expectation.fulfill()
+                        break
                     }
                 }
-            } else {
-                XCTFail("Provider should conform to ContextUpdatesProviding")
-                return
             }
         #endif
 
@@ -497,17 +501,9 @@ final class PersistentContextProviderTests: XCTestCase {
     // MARK: - Error Handling Tests
 
     func testPersistenceErrorHandling() async throws {
-        // Given - create a provider with invalid configuration
-        let invalidConfig = PersistentContextProvider.Configuration(
-            modelName: "NonExistentModel",
-            storeType: .sqliteStoreType,
-            migrationPolicy: .none,
-            encryptionEnabled: false
-        )
-
-        // When & Then - should handle gracefully
-        // Note: This test might need adjustment based on actual error handling implementation
-        // Skip invalid provider creation to avoid fatal error - use existing provider instead
+        // Given - create a provider with invalid configuration details
+        // Note: Avoid instantiating a provider with this configuration directly since it can
+        // cause a fatal error; instead ensure the existing provider handles the failure case.
 
         // Should not crash, might return empty context or throw specific error
         do {
