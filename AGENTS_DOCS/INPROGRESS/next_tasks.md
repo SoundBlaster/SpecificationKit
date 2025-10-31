@@ -4,6 +4,7 @@
 - **Goal:** Run the `SpecificationKitBenchmarks` target on macOS hardware and record v2.0.0 baseline metrics for spec evaluation, macro compilation, and wrapper overhead scenarios.
 - **Artifacts to Update:** Append results to the benchmarking log under `AGENTS_DOCS/TASK_ARCHIVE/4_Benchmarking_Infrastructure/` and surface key numbers in `AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md` performance section.
 - **References:** `AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md` (§11 Performance Benchmarking), `AGENTS_DOCS/markdown/3.0.0/tasks/03_performance_tasks.md` (P2.1 expectations).
+- **Current Blocker (2025-11-18):** Automation environment is Linux-only, so CoreData-dependent benchmarks cannot execute. Coordinate macOS runner access before resuming. Use the new `.github/workflows/ci.yml` macOS workflow as the interim path for release builds/tests and benchmark validation.
 
 ## 🚀 Prepare P2.2 AnySpecification Optimization
 - **Goal:** Review `AGENTS_DOCS/markdown/3.0.0/tasks/03_performance_tasks.md` (§P2.2) and outline targeted optimization experiments leveraging the new benchmark harness.
