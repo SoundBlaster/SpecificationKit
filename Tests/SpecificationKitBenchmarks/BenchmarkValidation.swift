@@ -506,7 +506,7 @@ class BenchmarkValidation: XCTestCase {
 
         let recordedBaseline = max(profileData.totalTime, directTime)
         let baseline = max(recordedBaseline, minimumBaseline)
-        let overheadDelta = max(profiledTime - baseline, 0)
+        let overheadDelta = max(profiledTime - directTime, 0)
         let overheadPerCall = overheadDelta / Double(iterations)
         let overheadRatio = overheadDelta / baseline
 
