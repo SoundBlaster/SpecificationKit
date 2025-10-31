@@ -383,7 +383,7 @@ final class PersistentContextProviderTests: XCTestCase {
                 return
             }
 
-            let updatesProvider = contextProvider as any ContextUpdatesProviding
+            let updatesProvider: ContextUpdatesProviding = contextProvider
 
             updatesProvider.contextUpdates
                 .sink { _ in
