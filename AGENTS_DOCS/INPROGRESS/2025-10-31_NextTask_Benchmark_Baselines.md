@@ -7,7 +7,7 @@
   - `AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md` §10–11 (CI & performance priorities)
   - `AGENTS_DOCS/markdown/3.0.0/tasks/03_performance_tasks.md` §P2.1 baseline checklist
   - `AGENTS_DOCS/INPROGRESS/next_tasks.md` “Capture Benchmark Baselines” queue item
-- **Status:** Selected / Ready to plan implementation
+- **Status:** ⏳ Pending — macOS CI workflow is configured; benchmark execution awaits scheduling on the hosted runner.
 - **Blocking Issues:** None — must execute on macOS to avoid the known Linux CoreData limitation noted in benchmarking summary.
 
 ## Candidate Review
@@ -33,5 +33,10 @@
   - Potential adjustments to accommodate CoreData dependencies or to stub them when capturing baselines.
 
 ## Immediate Next Actions
-1. Run the `SpecificationKitBenchmarks` suite on macOS (release configuration) and capture raw timing/memory outputs.
-2. Summarize the metrics in `AGENTS_DOCS/TASK_ARCHIVE/4_Benchmarking_Infrastructure/` and update roadmap trackers with baseline values and follow-up recommendations.
+1. Trigger the `.github/workflows/ci.yml` macOS workflow (or equivalent hosted runner) so the `SpecificationKitBenchmarks` suite can execute in release configuration.
+2. Once hardware is available, run the benchmarks and capture raw timing/memory outputs for each scenario.
+3. Summarize the metrics in `AGENTS_DOCS/TASK_ARCHIVE/4_Benchmarking_Infrastructure/` and update roadmap trackers with baseline values and follow-up recommendations.
+
+## Progress Log
+- **2025-11-19** — Added GitHub Actions macOS workflow at `.github/workflows/ci.yml` to provide hosted hardware for release builds/tests and the benchmark product. Next step: run the workflow with release benchmarks and capture baseline metrics.
+- **2025-11-18** — Attempted to initiate benchmark run from the current CI container. Environment is Linux-only, so the benchmark target cannot exercise the CoreData-dependent cases. `swift build` also fails with `no such module 'CoreData'`, preventing local validation. Logged the blocker in `AGENTS_DOCS/INPROGRESS/blocked.md` and updated progress/TODO trackers with the hardware requirement. Pending follow-up: provision macOS executor or schedule manual run on supported hardware.
