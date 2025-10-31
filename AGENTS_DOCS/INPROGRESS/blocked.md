@@ -1,3 +1,3 @@
 # Blocked Work
 
-_No recoverable blockers at this time._
+_No recoverable blockers are currently tracked._

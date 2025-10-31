@@ -1,14 +1,12 @@
-# Summary of Work — 2025-10-30 Benchmarking Activation
+# Summary of Work — Ready for Baseline Capture
 
-## Current Status
-- Dedicated benchmarking target (`SpecificationKitBenchmarks`) added; baseline utilities validated via unit coverage.
-- Performance infrastructure ready for downstream optimization tasks.
+## Status Overview
+- Prior benchmarking activation artifacts archived under `AGENTS_DOCS/TASK_ARCHIVE/4_Benchmarking_Infrastructure/`.
+- Awaiting baseline metric capture and AnySpecification optimization planning powered by the new benchmark suite.
 
 ## Notes for Next Agent
-- Execute performance suites on macOS to avoid the Linux `CoreData` limitation until a cross-platform stub is introduced.
-- Next priorities can move to P2.2 optimization tasks once benchmarking metrics are collected.
+- Start with the actionable items in `next_tasks.md`; create a new dated log once baseline runs begin.
+- Log any platform-specific blockers (e.g., Linux CoreData gaps) in `blocked.md` so they can be escalated to the permanent archive if they become long-term issues.
 
-## Completed Work — 2025-10-30
-- P2.1 benchmarking infrastructure delivered with baseline validator coverage.
-- Commit: pending (update with hash after integration).
-- Follow-up: capture baseline metrics from v2.0.0 artifacts during next benchmarking session.
+## Recent Updates
+- 2025-10-30 benchmarking deliverables archived with summary and follow-up notes.
