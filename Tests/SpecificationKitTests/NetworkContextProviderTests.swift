@@ -194,8 +194,7 @@ final class NetworkContextProviderTests: XCTestCase {
 
         // When & Then
         #if canImport(Combine)
-            let contextProvider: ContextUpdatesProviding = provider
-            XCTAssertNotNil(contextProvider.contextUpdates)
+            XCTAssertNotNil(provider.contextUpdates)
         #endif
     }
 
