@@ -19,16 +19,12 @@ final class ContextUpdatesProviderTests: XCTestCase {
         let exp = expectation(description: "contextUpdates emits on flag set")
         var received = 0
 
-        if let p = provider as? ContextUpdatesProviding {
-            p.contextUpdates
-                .sink { _ in
-                    received += 1
-                    if received == 1 { exp.fulfill() }
-                }
-                .store(in: &cancellables)
-        } else {
-            XCTFail("DefaultContextProvider should conform to ContextUpdatesProviding")
-        }
+        provider.contextUpdates
+            .sink { _ in
+                received += 1
+                if received == 1 { exp.fulfill() }
+            }
+            .store(in: &cancellables)
 
         provider.setFlag("demo_flag", to: true)
         wait(for: [exp], timeout: 1.0)
@@ -41,11 +37,9 @@ final class ContextUpdatesProviderTests: XCTestCase {
         let exp = expectation(description: "contextUpdates emits twice for two mutations")
         exp.expectedFulfillmentCount = 2
 
-        if let p = provider as? ContextUpdatesProviding {
-            p.contextUpdates
-                .sink { _ in exp.fulfill() }
-                .store(in: &cancellables)
-        }
+        provider.contextUpdates
+            .sink { _ in exp.fulfill() }
+            .store(in: &cancellables)
 
         _ = provider.incrementCounter("obs_count")
         provider.recordEvent("obs_event")
@@ -57,12 +51,7 @@ final class ContextUpdatesProviderTests: XCTestCase {
         let provider = DefaultContextProvider.shared
         provider.clearAll()
 
-        guard let p = provider as? ContextUpdatesProviding else {
-            XCTFail("DefaultContextProvider should conform to ContextUpdatesProviding")
-            return
-        }
-
-        let stream = p.contextStream
+        let stream = provider.contextStream
         var iterator = stream.makeAsyncIterator()
 
         // Trigger after starting iterator to avoid missed signal

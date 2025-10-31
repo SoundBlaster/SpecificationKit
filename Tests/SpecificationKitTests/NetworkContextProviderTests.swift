@@ -194,18 +194,14 @@ final class NetworkContextProviderTests: XCTestCase {
 
         // When & Then
         #if canImport(Combine)
-            if let contextProvider = provider as? ContextUpdatesProviding {
-                XCTAssertNotNil(contextProvider.contextUpdates)
-            }
+            let contextProvider: ContextUpdatesProviding = provider
+            XCTAssertNotNil(contextProvider.contextUpdates)
         #endif
     }
 
     func testDateParsing() {
         // Test the private date parsing logic through a successful JSON parse simulation
         // This tests the EvaluationContext creation logic
-        let provider = NetworkContextProvider(
-            configuration: configuration, session: URLSession.shared)
-
         // Create a context manually to verify the structure
         let context = EvaluationContext(
             currentDate: Date(),
