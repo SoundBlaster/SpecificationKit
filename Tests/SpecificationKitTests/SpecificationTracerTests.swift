@@ -346,6 +346,7 @@ final class SpecificationTracerTests: XCTestCase {
         for i in 1...5 {
             // Use a more complex predicate that takes measurable time
             let spec = PredicateSpec<Int> { value in
+                Thread.sleep(forTimeInterval: 0.0002)
                 // Simple computation to ensure some execution time
                 let result = (0..<10).reduce(0) { sum, _ in sum + value }
                 return result > 0
