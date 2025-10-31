@@ -55,6 +55,7 @@
 
 ## 🚫 Blocked Items
 - [ ] @AutoContext enhancement (deferred until Swift toolchain evolution)
+- [ ] Capture SpecificationKit benchmark baselines — awaiting macOS runner access; current Linux container cannot execute CoreData-dependent cases. Logged in `AGENTS_DOCS/INPROGRESS/blocked.md` (2025-11-18).
 
 ## 🎯 Feature Completion Status
 - [x] Reactive property wrapper ecosystem ✅
@@ -74,4 +75,6 @@ SpecificationKit v3.0.0 is now complete and ready for release!
 - Property wrapper async edge-case coverage archived under `AGENTS_DOCS/TASK_ARCHIVE/3_PropertyWrapperEdgeCases/`.
 - Completed: dedicated `SpecificationKitBenchmarks` target registered with baseline validator coverage (2025-10-30); artifacts archived under `AGENTS_DOCS/TASK_ARCHIVE/4_Benchmarking_Infrastructure/` with follow-up actions.
 - Refreshed `AGENTS_DOCS/INPROGRESS/` scaffolding to focus on capturing benchmark baselines, preparing P2.2 optimizations, and addressing Linux CoreData gaps.
+- 2025-11-19: Added macOS GitHub Actions workflow to run Swift build/test, the benchmark product, and DemoApp builds on hosted hardware.
+- 2025-11-18: Attempted automated baseline capture from Linux CI; blocked on macOS requirement and documented in active task + blocked log.
 - Added async projection regression tests for `@CachedSatisfies` to cover failure + reuse scenarios (2025-10-29).

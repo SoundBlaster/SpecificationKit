@@ -150,20 +150,16 @@ final class AutoContextMacroComprehensiveTests: XCTestCase {
         provider.clearAll()
         provider.setFlag("testFlag", to: true)
 
-        struct TestHarness {
-            @Satisfies(
-                provider: FeatureFlagCheck.contextProvider,
-                using: FeatureFlagCheck(flagKey: "testFlag"))
-            var isEnabled: Bool
-        }
+        @Satisfies(
+            provider: FeatureFlagCheck.contextProvider,
+            using: FeatureFlagCheck(flagKey: "testFlag"))
+        var isFeatureEnabled: Bool
 
-        let harness = TestHarness()
-        XCTAssertTrue(harness.isEnabled)
+        XCTAssertTrue(isFeatureEnabled)
 
         // Change flag and test again
         provider.setFlag("testFlag", to: false)
-        let harness2 = TestHarness()
-        XCTAssertFalse(harness2.isEnabled)
+        XCTAssertFalse(isFeatureEnabled)
     }
 
     func testAutoContextMacro_IntegrationWithCustomSpecification() {
@@ -510,15 +506,13 @@ final class AutoContextMacroComprehensiveTests: XCTestCase {
         XCTAssertTrue(UserPermissionCheck.contextProvider === DefaultContextProvider.shared)
 
         // Can be used directly with @Satisfies
-        struct PermissionHarness {
-            @Satisfies(
-                provider: UserPermissionCheck.contextProvider,
-                using: UserPermissionCheck(requiredPermission: "read"))
-            var canRead: Bool
-        }
-
         UserPermissionCheck.contextProvider.setFlag("has_read_permission", to: true)
-        let harness = PermissionHarness()
-        XCTAssertTrue(harness.canRead)
+
+        @Satisfies(
+            provider: UserPermissionCheck.contextProvider,
+            using: UserPermissionCheck(requiredPermission: "read"))
+        var canReadPermission: Bool
+
+        XCTAssertTrue(canReadPermission)
     }
 }

@@ -497,17 +497,9 @@ final class PersistentContextProviderTests: XCTestCase {
     // MARK: - Error Handling Tests
 
     func testPersistenceErrorHandling() async throws {
-        // Given - create a provider with invalid configuration
-        let invalidConfig = PersistentContextProvider.Configuration(
-            modelName: "NonExistentModel",
-            storeType: .sqliteStoreType,
-            migrationPolicy: .none,
-            encryptionEnabled: false
-        )
-
-        // When & Then - should handle gracefully
-        // Note: This test might need adjustment based on actual error handling implementation
-        // Skip invalid provider creation to avoid fatal error - use existing provider instead
+        // Given - create a provider with invalid configuration details
+        // Note: Avoid instantiating a provider with this configuration directly since it can
+        // cause a fatal error; instead ensure the existing provider handles the failure case.
 
         // Should not crash, might return empty context or throw specific error
         do {
