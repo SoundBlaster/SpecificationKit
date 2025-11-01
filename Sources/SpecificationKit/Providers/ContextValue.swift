@@ -5,6 +5,7 @@
 //  Created by SpecificationKit on 2025.
 //
 
+#if canImport(CoreData)
 import CoreData
 import Foundation
 
@@ -135,3 +136,5 @@ extension ContextValue {
         return request
     }
 }
+
+#endif
