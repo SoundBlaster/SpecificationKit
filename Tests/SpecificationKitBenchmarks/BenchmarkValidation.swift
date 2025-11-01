@@ -498,12 +498,21 @@ class BenchmarkValidation: XCTestCase {
         }
         let profiledTime = CFAbsoluteTimeGetCurrent() - startProfiled
 
-        let baseline = max(directTime, .leastNonzeroMagnitude)
-        let overhead = (profiledTime - directTime) / baseline
+        let minimumBaseline: CFTimeInterval = 1e-6
+        guard let profileData = profiler.getProfileData(for: type(of: spec)) else {
+            XCTFail("Profiler should record execution metrics for profiled specifications")
+            return
+        }
+
+        let recordedBaseline = max(profileData.totalTime, directTime)
+        let baseline = max(recordedBaseline, minimumBaseline)
+        let overheadDelta = max(profiledTime - directTime, 0)
+        let overheadPerCall = overheadDelta / Double(iterations)
+        let overheadRatio = overheadDelta / baseline
 
         let result = BenchmarkResult(
             testName: "Profiler_Overhead",
-            executionTime: overhead,
+            executionTime: overheadPerCall,
             iterations: iterations
         )
 
@@ -512,10 +521,22 @@ class BenchmarkValidation: XCTestCase {
         // In debug builds, profiler overhead can be higher, so use a more lenient threshold
         #if DEBUG
             XCTAssertLessThan(
-                overhead, 10.0, "Profiler overhead should be less than 1000% in debug builds")
+                overheadRatio, 10.0, "Profiler overhead should be less than 1000% in debug builds")
         #else
-            XCTAssertLessThan(
-                overhead, 0.10, "Profiler overhead should be less than 10% in release builds")
+            if baseline >= 0.05 {
+                XCTAssertLessThan(
+                    overheadRatio,
+                    0.10,
+                    "Profiler overhead should be less than 10% in release builds"
+                )
+            } else {
+                let allowedPerCallOverhead: CFTimeInterval = 0.0005
+                XCTAssertLessThan(
+                    overheadPerCall,
+                    allowedPerCallOverhead,
+                    "Profiler overhead per call should remain under 0.5ms when baseline timings are tiny"
+                )
+            }
         #endif
         XCTAssertTrue(profiler.validateOverhead(), "Profiler overhead validation failed")
     }

@@ -1,14 +1,20 @@
-name: CI
+name: macOS CI
 
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ "**" ]
+  workflow_dispatch:
+
+concurrency:
+  group: macos-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-test:
-    runs-on: macos-latest
+    name: Build and Test (macOS)
+    runs-on: macos-14
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,17 +24,32 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Resolve
+      - name: Cache SwiftPM build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.swiftpm
+            .build
+          key: ${{ runner.os }}-swiftpm-${{ hashFiles('Package.swift', 'Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-swiftpm-
+
+      - name: Resolve dependencies
         run: swift package resolve
 
-      - name: Build
-        run: swift build -v
+      - name: Build package (release)
+        run: swift build --configuration release --build-tests -Xswiftc -enable-testing
 
-      - name: Test
-        run: swift test -v
+      - name: Run unit tests (release)
+        run: swift test --configuration release -Xswiftc -enable-testing
 
-      - name: Build DemoApp
+      - name: Run benchmark tests (release)
+        run: |
+          swift test --configuration release \
+            --filter '^SpecificationKitBenchmarks\.' \
+            -Xswiftc -enable-testing
+
+      - name: Build DemoApp (release)
         run: |
           cd DemoApp
-          swift build -v
-
+          swift build --configuration release
