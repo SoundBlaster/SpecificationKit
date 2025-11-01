@@ -74,7 +74,7 @@ SpecificationKit v3.0.0 is now complete and ready for release!
 - Manual context support for `@Satisfies` archived under `AGENTS_DOCS/TASK_ARCHIVE/2_SatisfiesManualContext_and_P21_Benchmarks/`.
 - Property wrapper async edge-case coverage archived under `AGENTS_DOCS/TASK_ARCHIVE/3_PropertyWrapperEdgeCases/`.
 - Completed: dedicated `SpecificationKitBenchmarks` target registered with baseline validator coverage (2025-10-30); artifacts archived under `AGENTS_DOCS/TASK_ARCHIVE/4_Benchmarking_Infrastructure/` with follow-up actions.
-- Archived the prior baseline prep notes under `AGENTS_DOCS/TASK_ARCHIVE/5_Capture_Benchmark_Baselines/` and refreshed `AGENTS_DOCS/INPROGRESS/` scaffolding to focus on capturing macOS baselines, preparing P2.2 optimizations, and addressing Linux CoreData gaps.
+- Archived the prior baseline prep notes under `AGENTS_DOCS/TASK_ARCHIVE/5_Capture_Benchmark_Baselines/`, then moved the "Baseline Capture Reset" stream into `AGENTS_DOCS/TASK_ARCHIVE/6_Baseline_Capture_Reset/` while refreshing `AGENTS_DOCS/INPROGRESS/` to concentrate on parameterized `@Satisfies` planning.
 - 2025-11-19: Added macOS GitHub Actions workflow to run Swift build/test, the benchmark product, and DemoApp builds on hosted hardware.
 - 2025-11-18: Attempted automated baseline capture from Linux CI; blocked on macOS requirement and documented in active task + blocked log.
 - Added async projection regression tests for `@CachedSatisfies` to cover failure + reuse scenarios (2025-10-29).

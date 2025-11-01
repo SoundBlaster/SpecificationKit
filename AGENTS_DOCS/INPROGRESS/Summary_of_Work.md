@@ -1,21 +1,22 @@
-# Summary of Work — Baseline Capture Reset (2025-11-19)
+# Summary of Work — Parameterized @Satisfies Kickoff (2025-11-19)
 
 ## Current Focus
-- Schedule macOS executions of `SpecificationKitBenchmarks` to record v2.0.0 release baselines.
-- Draft the P2.2 AnySpecification optimization plan informed by the forthcoming metrics.
-- Explore Linux-safe alternatives for CoreData-dependent benchmarks so automated environments can validate performance.
+- Design parameterized entry points for the `@Satisfies` wrapper so specs that require labeled arguments can be constructed without manual instances or macro-only pathways.
+- Stage supporting test coverage and documentation updates that validate the new wrapper ergonomics across macro and non-macro usage.
 
-## Recent Changes
-- Archived prior working notes under `AGENTS_DOCS/TASK_ARCHIVE/5_Capture_Benchmark_Baselines/`, including the dated task log and blocker history.
-- Refreshed `next_tasks.md` and `blocked.md` to reflect actionable follow-ups after the archive.
-- Updated roadmap trackers (`AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md`, `AGENTS_DOCS/markdown/3.0.0/tasks/SpecificationKit_v3.0.0_Progress.md`) to reference the new archive folder.
+## Recent Archive
+- Archived the "Baseline Capture Reset" workstream to `AGENTS_DOCS/TASK_ARCHIVE/6_Baseline_Capture_Reset/`, including historical summaries, blocker notes, and benchmark follow-ups.
 
-## 2025-11-19 Updates (Commit TBD)
-- Implemented a reusable `BenchmarkTimer` to measure average execution time without including XCTest harness overhead and refactored the key performance tests to adopt it.
-- Added conditional `IOKit` imports to the benchmark validation utilities so macOS builds resolve device APIs, while CoreData-backed providers are now guarded behind `canImport(CoreData)` to keep Linux builds compiling.
-- Simplified `BenchmarkStorage`'s fallback path to rely on `FileManager.temporaryDirectory`, matching modern deployment targets and enabling deterministic tests.
+## Immediate Actions
+- Prototype a wrapper initializer that accepts a specification type alongside labeled arguments and forwards them safely to the spec's initializer.
+- Expand unit and macro tests to exercise the parameterized wrapper syntax and refresh documentation snippets to highlight the improved ergonomics.
 
-## Coordination Notes
-- Use the macOS GitHub Actions workflow (`.github/workflows/ci.yml`) for release builds/tests and benchmark runs until direct macOS access is available.
-- Capture benchmark outputs in the benchmarking archive (`AGENTS_DOCS/TASK_ARCHIVE/4_Benchmarking_Infrastructure/`) and surface highlights in project roadmaps once collected.
-- Record new blockers immediately so long-term issues can migrate into `AGENTS_DOCS/TASK_ARCHIVE/BLOCKED/` if necessary.
+## Tracking Notes
+- `AGENTS_DOCS/INPROGRESS/next_tasks.md` captures the actionable breakdown for the wrapper work.
+- `AGENTS_DOCS/INPROGRESS/blocked.md` retains the recoverable macOS benchmark dependency while the hardware prerequisite remains unresolved.
+- Roadmap documents (`AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md`, `AGENTS_DOCS/markdown/3.0.0/tasks/SpecificationKit_v3.0.0_Progress.md`) were updated to point to the new archive folder and reflect the shift to wrapper parameterization.
+- No permanent blockers were added during archival; `AGENTS_DOCS/TASK_ARCHIVE/BLOCKED/` remains absent as of this snapshot.
+
+## Next Status Update
+- Document prototype findings for the new initializer and outline any compiler diagnostics or type-inference risks before implementation begins.
+
