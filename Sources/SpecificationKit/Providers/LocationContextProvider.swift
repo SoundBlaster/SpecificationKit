@@ -481,9 +481,13 @@
                     return distance <= circularRegion.radius
                 }
 
-                // CLRegion.contains(_:) is deprecated across Apple platforms, so we only
-                // evaluate circular regions directly. Non-circular regions fall back to false.
-                return false
+                #if os(macOS) || os(watchOS)
+                    return Self.deprecatedRegionContains(region, coordinate: currentLocation.coordinate)
+                #else
+                    // CLRegion.contains(_:) is unavailable on iOS/tvOS, so non-circular regions
+                    // cannot be evaluated directly.
+                    return false
+                #endif
             }
         }
 
@@ -507,5 +511,26 @@
         #endif
     }
 
+#endif
+
+#if canImport(CoreLocation)
+    #if os(macOS) || os(watchOS)
+        private extension LocationContextProvider {
+            /// Invokes the deprecated `CLRegion.contains(_:)` API directly on platforms where it
+            /// remains publicly available without emitting deprecation warnings from the call site.
+            /// - Parameters:
+            ///   - region: The region whose boundary should be evaluated.
+            ///   - coordinate: The coordinate to test for membership within the region.
+            /// - Returns: `true` if the region reports containment; otherwise, `false`.
+            @available(macOS, deprecated: 10.15)
+            @available(watchOS, deprecated: 6.0)
+            static func deprecatedRegionContains(
+                _ region: CLRegion,
+                coordinate: CLLocationCoordinate2D
+            ) -> Bool {
+                region.contains(coordinate)
+            }
+        }
+    #endif
 #endif
 
