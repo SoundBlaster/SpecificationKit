@@ -3,8 +3,14 @@ name: macOS CI
 on:
   push:
     branches: [ main, master ]
+    paths-ignore:
+      - '**/*.md'
+      - 'DOCS/**'
   pull_request:
     branches: [ "**" ]
+    paths-ignore:
+      - '**/*.md'
+      - 'DOCS/**'
   workflow_dispatch:
 
 concurrency:
