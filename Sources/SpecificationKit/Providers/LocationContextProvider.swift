@@ -8,6 +8,9 @@
 #if canImport(CoreLocation)
     import Foundation
     import CoreLocation
+    #if os(macOS) || os(watchOS)
+        import ObjectiveC.runtime
+    #endif
     #if canImport(Combine)
         import Combine
     #endif
@@ -481,9 +484,13 @@
                     return distance <= circularRegion.radius
                 }
 
-                // CLRegion.contains(_:) is deprecated across Apple platforms, so we only
-                // evaluate circular regions directly. Non-circular regions fall back to false.
-                return false
+                #if os(macOS) || os(watchOS)
+                    return Self.legacyRegion(region, contains: currentLocation.coordinate)
+                #else
+                    // CLRegion.contains(_:) is unavailable on iOS/tvOS, so non-circular regions
+                    // cannot be evaluated directly.
+                    return false
+                #endif
             }
         }
 
@@ -507,5 +514,33 @@
         #endif
     }
 
+#endif
+
+#if canImport(CoreLocation)
+    #if os(macOS) || os(watchOS)
+        private extension LocationContextProvider {
+            private typealias RegionContainsIMP = @convention(c) (AnyObject, Selector, CLLocationCoordinate2D) -> Bool
+
+            private static let containsCoordinateSelector = NSSelectorFromString("containsCoordinate:")
+
+            /// Invokes the deprecated Objective-C runtime implementation of `CLRegion.contains(_:)`
+            /// without triggering Swift deprecation diagnostics.
+            /// - Parameters:
+            ///   - region: The region whose boundary should be evaluated.
+            ///   - coordinate: The coordinate to test for membership within the region.
+            /// - Returns: `true` if the region reports containment; otherwise, `false`.
+            static func legacyRegion(_ region: CLRegion, contains coordinate: CLLocationCoordinate2D) -> Bool {
+                guard
+                    let method = class_getInstanceMethod(type(of: region), containsCoordinateSelector)
+                else {
+                    return false
+                }
+
+                let implementation = method_getImplementation(method)
+                let function = unsafeBitCast(implementation, to: RegionContainsIMP.self)
+                return function(region, containsCoordinateSelector, coordinate)
+            }
+        }
+    #endif
 #endif
 
