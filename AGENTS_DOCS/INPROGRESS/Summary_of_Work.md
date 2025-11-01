@@ -1,16 +1,16 @@
-# Summary of Work — Ready for Baseline Capture
+# Summary of Work — Baseline Capture Reset (2025-11-19)
 
-## Status Overview
-- Prior benchmarking activation artifacts archived under `AGENTS_DOCS/TASK_ARCHIVE/4_Benchmarking_Infrastructure/`.
-- GitHub Actions workflow `.github/workflows/ci.yml` now provisions hosted macOS hardware for `swift build`, `swift test`, and benchmark product execution.
-- Awaiting baseline metric capture and AnySpecification optimization planning powered by the new benchmark suite.
-- 2025-11-18 session confirmed the local automation container still lacks macOS support; `swift build` / `swift test` abort with `no such module 'CoreData'`, so use the macOS CI workflow until dedicated hardware is secured for baseline capture.
+## Current Focus
+- Schedule macOS executions of `SpecificationKitBenchmarks` to record v2.0.0 release baselines.
+- Draft the P2.2 AnySpecification optimization plan informed by the forthcoming metrics.
+- Explore Linux-safe alternatives for CoreData-dependent benchmarks so automated environments can validate performance.
 
-## Notes for Next Agent
-- Start with the actionable items in `next_tasks.md`; create a new dated log once baseline runs begin.
-- Log any platform-specific blockers (e.g., Linux CoreData gaps) in `blocked.md` so they can be escalated to the permanent archive if they become long-term issues.
-- Coordinate with infra stakeholders to secure macOS execution path before attempting the benchmark run again; reference the blocker entry logged on 2025-11-18 for context.
+## Recent Changes
+- Archived prior working notes under `AGENTS_DOCS/TASK_ARCHIVE/5_Capture_Benchmark_Baselines/`, including the dated task log and blocker history.
+- Refreshed `next_tasks.md` and `blocked.md` to reflect actionable follow-ups after the archive.
+- Updated roadmap trackers (`AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md`, `AGENTS_DOCS/markdown/3.0.0/tasks/SpecificationKit_v3.0.0_Progress.md`) to reference the new archive folder.
 
-## Recent Updates
-- 2025-11-19 configured macOS CI workflow to unlock hosted hardware for build/test + benchmark execution; baseline capture remains to be scheduled.
-- 2025-10-30 benchmarking deliverables archived with summary and follow-up notes.
+## Coordination Notes
+- Use the macOS GitHub Actions workflow (`.github/workflows/ci.yml`) for release builds/tests and benchmark runs until direct macOS access is available.
+- Capture benchmark outputs in the benchmarking archive (`AGENTS_DOCS/TASK_ARCHIVE/4_Benchmarking_Infrastructure/`) and surface highlights in project roadmaps once collected.
+- Record new blockers immediately so long-term issues can migrate into `AGENTS_DOCS/TASK_ARCHIVE/BLOCKED/` if necessary.
