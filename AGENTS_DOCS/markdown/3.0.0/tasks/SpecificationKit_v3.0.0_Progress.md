@@ -78,3 +78,4 @@ SpecificationKit v3.0.0 is now complete and ready for release!
 - 2025-11-19: Added macOS GitHub Actions workflow to run Swift build/test, the benchmark product, and DemoApp builds on hosted hardware.
 - 2025-11-18: Attempted automated baseline capture from Linux CI; blocked on macOS requirement and documented in active task + blocked log.
 - Added async projection regression tests for `@CachedSatisfies` to cover failure + reuse scenarios (2025-10-29).
+- 2025-11-19: Hardened benchmark instrumentation (new `BenchmarkTimer`, storage path fallback) and restored macOS device detection imports for the validation utilities.

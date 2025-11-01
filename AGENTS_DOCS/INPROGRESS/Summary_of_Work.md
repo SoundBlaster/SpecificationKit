@@ -10,6 +10,11 @@
 - Refreshed `next_tasks.md` and `blocked.md` to reflect actionable follow-ups after the archive.
 - Updated roadmap trackers (`AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md`, `AGENTS_DOCS/markdown/3.0.0/tasks/SpecificationKit_v3.0.0_Progress.md`) to reference the new archive folder.
 
+## 2025-11-19 Updates (Commit TBD)
+- Implemented a reusable `BenchmarkTimer` to measure average execution time without including XCTest harness overhead and refactored the key performance tests to adopt it.
+- Added conditional `IOKit` imports to the benchmark validation utilities so macOS builds resolve device APIs, while CoreData-backed providers are now guarded behind `canImport(CoreData)` to keep Linux builds compiling.
+- Simplified `BenchmarkStorage`'s fallback path to rely on `FileManager.temporaryDirectory`, matching modern deployment targets and enabling deterministic tests.
+
 ## Coordination Notes
 - Use the macOS GitHub Actions workflow (`.github/workflows/ci.yml`) for release builds/tests and benchmark runs until direct macOS access is available.
 - Capture benchmark outputs in the benchmarking archive (`AGENTS_DOCS/TASK_ARCHIVE/4_Benchmarking_Infrastructure/`) and surface highlights in project roadmaps once collected.

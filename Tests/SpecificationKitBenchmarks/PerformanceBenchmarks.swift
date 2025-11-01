@@ -20,13 +20,16 @@ final class PerformanceBenchmarks: XCTestCase {
         let spec = CooldownIntervalSpec(eventKey: "test_action", cooldownInterval: 10.0)
         let context = createPerformanceTestContext()
 
-        let startTime = CFAbsoluteTimeGetCurrent()
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
             for _ in 1...1000 {
                 _ = spec.isSatisfiedBy(context)
             }
         }
-        let executionTime = (CFAbsoluteTimeGetCurrent() - startTime) / 1000
+
+        var timer = BenchmarkTimer()
+        let executionTime = timer.measureAverageTime(iterations: 1000) {
+            _ = spec.isSatisfiedBy(context)
+        }
 
         assertBenchmarkMetric(.specificationEvaluation(executionTime))
     }
@@ -39,13 +42,16 @@ final class PerformanceBenchmarks: XCTestCase {
         let complexSpec = userAgeSpec.and(subscriptionSpec).and(timeSinceSpec)
         let context = createPerformanceTestContext()
 
-        let startTime = CFAbsoluteTimeGetCurrent()
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
             for _ in 1...1000 {
                 _ = complexSpec.isSatisfiedBy(context)
             }
         }
-        let executionTime = (CFAbsoluteTimeGetCurrent() - startTime) / 1000
+
+        var timer = BenchmarkTimer()
+        let executionTime = timer.measureAverageTime(iterations: 1000) {
+            _ = complexSpec.isSatisfiedBy(context)
+        }
 
         assertBenchmarkMetric(.specificationEvaluation(executionTime))
     }
@@ -75,7 +81,6 @@ final class PerformanceBenchmarks: XCTestCase {
             provider.recordEvent("event_\(i)", at: Date().addingTimeInterval(-Double(i)))
         }
 
-        let startTime = CFAbsoluteTimeGetCurrent()
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
             for i in 1...1000 {
                 let counter = provider.getCounter("counter_\(i % 100 + 1)")
@@ -86,7 +91,15 @@ final class PerformanceBenchmarks: XCTestCase {
                 _ = counter + (flag ? 1 : 0) + Int(event?.timeIntervalSince1970 ?? 0)
             }
         }
-        let executionTime = (CFAbsoluteTimeGetCurrent() - startTime) / 1000
+
+        var timer = BenchmarkTimer()
+        let executionTime = timer.measureAverageTime(iterations: 1000) { iteration in
+            let counter = provider.getCounter("counter_\(iteration % 100 + 1)")
+            let flag = provider.getFlag("flag_\(iteration % 100 + 1)")
+            let event = provider.getEvent("event_\(iteration % 100 + 1)")
+
+            _ = counter + (flag ? 1 : 0) + Int(event?.timeIntervalSince1970 ?? 0)
+        }
 
         assertBenchmarkMetric(.contextProviderLatency(executionTime))
     }

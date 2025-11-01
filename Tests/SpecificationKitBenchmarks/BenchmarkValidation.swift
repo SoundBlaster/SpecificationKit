@@ -7,6 +7,9 @@
 
 import Foundation
 import XCTest
+#if canImport(IOKit)
+import IOKit
+#endif
 
 @testable import SpecificationKit
 
@@ -222,7 +225,7 @@ struct TestEnvironment: Codable {
 /// Benchmark storage and regression detection system
 class BenchmarkStorage {
     private let fileManager: FileManager
-    private let storageDirectory: URL
+    let storageDirectory: URL
 
     init(fileManager: FileManager = .default) {
         self.fileManager = fileManager
@@ -243,13 +246,7 @@ class BenchmarkStorage {
             return documentsPath.appendingPathComponent("SpecificationKitBenchmarks")
         }
 
-        let temporaryDirectory: URL
-        if #available(macOS 10.12, iOS 10.0, tvOS 10.0, watchOS 3.0, *) {
-            temporaryDirectory = fileManager.temporaryDirectory
-        } else {
-            temporaryDirectory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-        }
-
+        let temporaryDirectory = fileManager.temporaryDirectory
         return temporaryDirectory.appendingPathComponent("SpecificationKitBenchmarks", isDirectory: true)
     }
 
