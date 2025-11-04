@@ -5,6 +5,13 @@ All notable changes to SpecificationKit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- Restored non-circular Core Location region evaluation on macOS and watchOS by
+  calling `CLRegion.contains(_:)` directly without relying on runtime
+  indirection, preserving behavior from earlier releases.
+
 ## [3.0.0] - 2025-09-18
 
 ### Added - Major Release Features

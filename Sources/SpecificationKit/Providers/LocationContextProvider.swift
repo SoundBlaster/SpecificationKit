@@ -481,9 +481,19 @@
                     return distance <= circularRegion.radius
                 }
 
-                // CLRegion.contains(_:) is deprecated across Apple platforms, so we only
-                // evaluate circular regions directly. Non-circular regions fall back to false.
-                return false
+                #if os(macOS) || os(watchOS)
+                    let containsRegion: Bool = {
+                        @available(macOS, deprecated: 10.15)
+                        @available(watchOS, deprecated: 6.0)
+                        () -> Bool in
+                        region.contains(currentLocation.coordinate)
+                    }()
+                    return containsRegion
+                #else
+                    // CLRegion.contains(_:) is unavailable on iOS/tvOS, so non-circular regions
+                    // cannot be evaluated directly.
+                    return false
+                #endif
             }
         }
 
