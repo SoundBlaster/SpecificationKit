@@ -481,9 +481,20 @@
                     return distance <= circularRegion.radius
                 }
 
-                // CLRegion.contains(_:) is deprecated across Apple platforms, so we only
-                // evaluate circular regions directly. Non-circular regions fall back to false.
+                // For non-circular regions (e.g., beacon regions, custom regions),
+                // use the deprecated CLRegion.contains(_:) on platforms where it's still available
+                #if os(macOS) || os(watchOS)
+                // CLRegion.contains(_:) is deprecated but still functional on macOS and watchOS
+                // Suppress the deprecation warning as we need to support non-circular regions
+                if #available(macOS 11.0, watchOS 7.0, *) {
+                    return region.contains(currentLocation.coordinate)
+                }
                 return false
+                #else
+                // On iOS and other platforms where CLRegion.contains(_:) is unavailable,
+                // non-circular regions cannot be evaluated
+                return false
+                #endif
             }
         }
 
