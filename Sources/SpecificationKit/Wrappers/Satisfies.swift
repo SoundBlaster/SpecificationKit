@@ -247,6 +247,146 @@ public struct Satisfies<Context> {
     }
 }
 
+// MARK: - Parameterized Specification Support
+
+extension Satisfies {
+    /// Creates a Satisfies property wrapper by constructing a specification with parameters using the default provider.
+    ///
+    /// This initializer allows you to construct specifications that require initialization parameters
+    /// without having to manually create the specification instance.
+    ///
+    /// - Parameters:
+    ///   - specificationType: The specification type to construct (e.g., `CooldownIntervalSpec.self`)
+    ///   - factory: A closure that constructs the specification instance with desired parameters
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// @Satisfies(using: CooldownIntervalSpec.self) {
+    ///     CooldownIntervalSpec(eventKey: "banner", cooldownInterval: 10)
+    /// }
+    /// var canShowBanner: Bool
+    /// ```
+    public init<Spec: Specification>(
+        using specificationType: Spec.Type,
+        factory: () -> Spec
+    ) where Spec.T == EvaluationContext {
+        self.contextFactory = DefaultContextProvider.shared.currentContext
+        self.asyncContextFactory = DefaultContextProvider.shared.currentContextAsync
+        self.specification = AnySpecification(factory())
+    }
+
+    /// Creates a Satisfies property wrapper by constructing a specification with parameters using a custom provider.
+    ///
+    /// - Parameters:
+    ///   - provider: The context provider to use for retrieving evaluation context
+    ///   - specificationType: The specification type to construct
+    ///   - factory: A closure that constructs the specification instance with desired parameters
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// @Satisfies(provider: customProvider, using: MaxCountSpec.self) {
+    ///     MaxCountSpec(counterKey: "attempts", maximumCount: 5)
+    /// }
+    /// var canAttempt: Bool
+    /// ```
+    public init<Provider: ContextProviding, Spec: Specification>(
+        provider: Provider,
+        using specificationType: Spec.Type,
+        factory: () -> Spec
+    ) where Provider.Context == Context, Spec.T == Context {
+        self.contextFactory = provider.currentContext
+        self.asyncContextFactory = provider.currentContextAsync
+        self.specification = AnySpecification(factory())
+    }
+
+    /// Creates a Satisfies property wrapper by constructing a specification with parameters using manual context.
+    ///
+    /// - Parameters:
+    ///   - context: A closure that returns the context to evaluate
+    ///   - asyncContext: Optional asynchronous context supplier
+    ///   - specificationType: The specification type to construct
+    ///   - factory: A closure that constructs the specification instance with desired parameters
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// @Satisfies(context: myContext, using: CooldownIntervalSpec.self) {
+    ///     CooldownIntervalSpec(eventKey: "event", cooldownInterval: 30)
+    /// }
+    /// var isReady: Bool
+    /// ```
+    public init<Spec: Specification>(
+        context: @autoclosure @escaping () -> Context,
+        asyncContext: (() async throws -> Context)? = nil,
+        using specificationType: Spec.Type,
+        factory: () -> Spec
+    ) where Spec.T == Context {
+        self.contextFactory = context
+        self.asyncContextFactory = asyncContext ?? {
+            context()
+        }
+        self.specification = AnySpecification(factory())
+    }
+}
+
+// MARK: - Macro-Friendly Parameterized Initializers
+
+extension Satisfies where Context == EvaluationContext {
+    /// Macro-friendly initializer for parameterized specifications with default provider.
+    ///
+    /// This initializer is designed to be used by macros that want to forward labeled parameters
+    /// to specification constructors while using the default context provider.
+    ///
+    /// - Parameters:
+    ///   - specification: The specification instance constructed with parameters
+    @_disfavoredOverload
+    public init<Spec: Specification>(
+        _specification specification: Spec
+    ) where Spec.T == EvaluationContext {
+        self.contextFactory = DefaultContextProvider.shared.currentContext
+        self.asyncContextFactory = DefaultContextProvider.shared.currentContextAsync
+        self.specification = AnySpecification(specification)
+    }
+}
+
+extension Satisfies {
+    /// Macro-friendly initializer for parameterized specifications with custom provider.
+    ///
+    /// - Parameters:
+    ///   - provider: The context provider to use
+    ///   - specification: The specification instance constructed with parameters
+    @_disfavoredOverload
+    public init<Provider: ContextProviding, Spec: Specification>(
+        _provider provider: Provider,
+        _specification specification: Spec
+    ) where Provider.Context == Context, Spec.T == Context {
+        self.contextFactory = provider.currentContext
+        self.asyncContextFactory = provider.currentContextAsync
+        self.specification = AnySpecification(specification)
+    }
+
+    /// Macro-friendly initializer for parameterized specifications with manual context.
+    ///
+    /// - Parameters:
+    ///   - context: The context to use for evaluation
+    ///   - asyncContext: Optional async context supplier
+    ///   - specification: The specification instance constructed with parameters
+    @_disfavoredOverload
+    public init<Spec: Specification>(
+        _context context: @autoclosure @escaping () -> Context,
+        _asyncContext asyncContext: (() async throws -> Context)? = nil,
+        _specification specification: Spec
+    ) where Spec.T == Context {
+        self.contextFactory = context
+        self.asyncContextFactory = asyncContext ?? {
+            context()
+        }
+        self.specification = AnySpecification(specification)
+    }
+}
+
 // MARK: - AutoContextSpecification Support
 
 extension Satisfies {
