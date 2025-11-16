@@ -40,6 +40,12 @@ This directory contains archived work-in-progress documentation for completed Sp
 **Summary**: Validated that existing `@Satisfies(using:)` overload supports parameterized specifications. Added 7 comprehensive tests demonstrating usage with CooldownIntervalSpec, MaxCountSpec, and TimeSinceEventSpec. Documented property wrapper syntax limitations. P1 requirement fulfilled with zero code changes.
 **Key Finding**: Property wrappers cannot use trailing closure syntax in attribute notation; existing initializer already provides required functionality.
 
+### Archive 8: Swift Package Index Preparation
+**Status**: Completed (2025-11-16)
+**Path**: `8_Swift_Package_Index_Preparation/`
+**Summary**: Prepared SpecificationKit for Swift Package Index publication and created the v3.0.0 semantic version tag. Verified package metadata, license, README, and CHANGELOG completeness. Updated CHANGELOG release date to 2025-11-16. Created annotated git tag `3.0.0` with comprehensive release notes. This completes the final P1 task for v3.0.0, marking the package as release-ready for public distribution.
+**Key Deliverables**: Package metadata verified, CHANGELOG updated, semantic version tag `3.0.0` created, Swift Package Index configuration confirmed (.spi.yml present).
+
 ## Permanent Blockers
 
 Currently, there are no permanent blockers. All blocked items are recoverable and tracked in `AGENTS_DOCS/INPROGRESS/blocked.md`.
