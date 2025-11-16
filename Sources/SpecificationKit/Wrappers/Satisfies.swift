@@ -250,32 +250,6 @@ public struct Satisfies<Context> {
 // MARK: - Parameterized Specification Support
 
 extension Satisfies {
-    /// Creates a Satisfies property wrapper by constructing a specification with parameters using the default provider.
-    ///
-    /// This initializer allows you to construct specifications that require initialization parameters
-    /// without having to manually create the specification instance.
-    ///
-    /// - Parameters:
-    ///   - specificationType: The specification type to construct (e.g., `CooldownIntervalSpec.self`)
-    ///   - factory: A closure that constructs the specification instance with desired parameters
-    ///
-    /// ## Example
-    ///
-    /// ```swift
-    /// @Satisfies(using: CooldownIntervalSpec.self) {
-    ///     CooldownIntervalSpec(eventKey: "banner", cooldownInterval: 10)
-    /// }
-    /// var canShowBanner: Bool
-    /// ```
-    public init<Spec: Specification>(
-        using specificationType: Spec.Type,
-        factory: () -> Spec
-    ) where Spec.T == EvaluationContext {
-        self.contextFactory = DefaultContextProvider.shared.currentContext
-        self.asyncContextFactory = DefaultContextProvider.shared.currentContextAsync
-        self.specification = AnySpecification(factory())
-    }
-
     /// Creates a Satisfies property wrapper by constructing a specification with parameters using a custom provider.
     ///
     /// - Parameters:
@@ -348,6 +322,32 @@ extension Satisfies where Context == EvaluationContext {
         self.contextFactory = DefaultContextProvider.shared.currentContext
         self.asyncContextFactory = DefaultContextProvider.shared.currentContextAsync
         self.specification = AnySpecification(specification)
+    }
+
+    /// Creates a Satisfies property wrapper by constructing a specification with parameters using the default provider.
+    ///
+    /// This initializer allows you to construct specifications that require initialization parameters
+    /// without having to manually create the specification instance.
+    ///
+    /// - Parameters:
+    ///   - specificationType: The specification type to construct (e.g., `CooldownIntervalSpec.self`)
+    ///   - factory: A closure that constructs the specification instance with desired parameters
+    ///
+    /// ## Example
+    ///
+    /// ```swift
+    /// @Satisfies(using: CooldownIntervalSpec.self) {
+    ///     CooldownIntervalSpec(eventKey: "banner", cooldownInterval: 10)
+    /// }
+    /// var canShowBanner: Bool
+    /// ```
+    public init<Spec: Specification>(
+        using specificationType: Spec.Type,
+        factory: () -> Spec
+    ) where Spec.T == EvaluationContext {
+        self.contextFactory = DefaultContextProvider.shared.currentContext
+        self.asyncContextFactory = DefaultContextProvider.shared.currentContextAsync
+        self.specification = AnySpecification(factory())
     }
 }
 
