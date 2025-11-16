@@ -71,7 +71,6 @@
 SpecificationKit v3.0.0 is now complete and ready for release!
 
 ## 🆕 Recent Updates
-- 2025-11-16: Archived AutoContext Future Hooks planning work to `AGENTS_DOCS/TASK_ARCHIVE/9_AutoContext_Future_Hooks/`. Task selection and implementation planning completed; work remains ready for execution. INPROGRESS directory refreshed with updated next_tasks.md and blocked.md. Archive includes detailed implementation notes and acceptance criteria for future macro enhancement work.
 - 2025-11-16: Swift Package Index preparation completed and archived to `AGENTS_DOCS/TASK_ARCHIVE/8_Swift_Package_Index_Preparation/`. Verified package metadata (Package.swift), license (MIT), README, and .spi.yml configuration. Updated CHANGELOG.md release date to 2025-11-16. Created annotated semantic version tag `3.0.0` with comprehensive release notes. Final P1 task for v3.0.0 complete; package is release-ready for public distribution.
 - 2025-11-16: Parameterized `@Satisfies` implementation completed and archived to `AGENTS_DOCS/TASK_ARCHIVE/7_Parameterized_Satisfies_Implementation/`. Validated that existing `init(using:)` overload supports parameterized specs; added 7 comprehensive tests; documented property wrapper syntax limitations. P1 requirement fulfilled with zero code changes.
 - Manual context support for `@Satisfies` archived under `AGENTS_DOCS/TASK_ARCHIVE/2_SatisfiesManualContext_and_P21_Benchmarks/`.

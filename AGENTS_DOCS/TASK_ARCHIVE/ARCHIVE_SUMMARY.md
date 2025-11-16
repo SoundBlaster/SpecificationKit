@@ -46,13 +46,6 @@ This directory contains archived work-in-progress documentation for completed Sp
 **Summary**: Prepared SpecificationKit for Swift Package Index publication and created the v3.0.0 semantic version tag. Verified package metadata, license, README, and CHANGELOG completeness. Updated CHANGELOG release date to 2025-11-16. Created annotated git tag `3.0.0` with comprehensive release notes. This completes the final P1 task for v3.0.0, marking the package as release-ready for public distribution.
 **Key Deliverables**: Package metadata verified, CHANGELOG updated, semantic version tag `3.0.0` created, Swift Package Index configuration confirmed (.spi.yml present).
 
-### Archive 9: AutoContext Future Hooks
-**Status**: Planning Archived (2025-11-16)
-**Path**: `9_AutoContext_Future_Hooks/`
-**Summary**: Task selection and implementation planning for `@AutoContext` macro future enhancement hooks. Prepares macro infrastructure to support future flags (environment, infer, custom provider) even though full implementation awaits Swift toolchain evolution. Work archived during routine cleanup with all planning artifacts preserved for future implementation.
-**Key Artifacts**: Detailed task selection document with implementation notes, acceptance criteria, immediate next actions. Task remains ready to execute as the last P1 item for full v3.0.0 macro feature completion.
-**Next Steps**: Implementation can resume using archived planning documents and entry points identified in the task selection record.
-
 ## Permanent Blockers
 
 Currently, there are no permanent blockers. All blocked items are recoverable and tracked in `AGENTS_DOCS/INPROGRESS/blocked.md`.

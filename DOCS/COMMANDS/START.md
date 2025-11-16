@@ -1,12 +1,14 @@
 # Starting an Active SpecificationKit Task
 
-This command reference describes how to move a task from planning into active implementation while
-respecting the documentation trail that powers SpecificationKit's agent workflow.
+This command reference describes how to implement tasks from `AGENTS_DOCS/INPROGRESS` following TDD and XP practices.
 
 ## Purpose
-- Transition a task from `AGENTS_DOCS/INPROGRESS` into hands-on development.
-- Ensure every build iteration follows the engineering discipline captured in the v3.0.0 task docs.
-- Keep traceability intact so subsequent agents can audit what was built and why.
+- Implement tasks queued in `AGENTS_DOCS/INPROGRESS` with full code, tests, and documentation
+- Ensure every build iteration follows the engineering discipline captured in the v3.0.0 task docs
+- Keep traceability intact so subsequent agents can audit what was built and why
+- **Complete tasks fully** so they are ready for archival via ARCHIVE.md
+
+**Workflow**: START.md (implement) → Summary_of_Work.md (document) → ARCHIVE.md (archive)
 
 ## Goal
 Execute one or more items currently stored under `AGENTS_DOCS/INPROGRESS/`, strictly following the
@@ -60,14 +62,24 @@ methodology and quality bars documented in:
 - Mirror task completion in `AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md` or any specialized
   checklist that referenced the work.
 
-### Step 6. Summarize Completed Work
-- When the active batch of puzzles is done, create
-  `AGENTS_DOCS/INPROGRESS/Summary_of_Work.md` capturing:
-  - Completed task names and their commit identifiers.
-  - Key implementation notes, test suites executed, and benchmark highlights.
-  - Follow-up items or deferred risks.
-- If a task is fully wrapped, prepare it for archival using the procedure in
-  `AGENTS_DOCS/COMMANDS/ARCHIVE.md`.
+### Step 6. Summarize Completed Work (REQUIRED)
+
+**CRITICAL**: You **must** create `AGENTS_DOCS/INPROGRESS/Summary_of_Work.md` when work is complete. This file is **mandatory for archival**.
+
+Create `Summary_of_Work.md` capturing:
+- Completed task names and their commit identifiers
+- Key implementation notes, test suites executed, and benchmark highlights
+- Follow-up items or deferred risks
+- Confirmation that all acceptance criteria are met
+
+**Completion Checklist** (verify before archival):
+- [ ] All code implemented and committed
+- [ ] All tests pass (`swift test`)
+- [ ] Documentation updated
+- [ ] Progress trackers updated
+- [ ] `Summary_of_Work.md` created
+
+Once complete, the task is ready for archival using `AGENTS_DOCS/COMMANDS/ARCHIVE.md`.
 
 ### Step 7. Finalize
 - Run `swift build` and `swift test` from the repository root to verify the package.
@@ -76,11 +88,11 @@ methodology and quality bars documented in:
   `Summary_of_Work.md` record.
 
 ## Expected Output
-- Selected `AGENTS_DOCS/INPROGRESS` tasks are implemented and validated.
-- Progress trackers (`SpecificationKit_v3.0.0_Progress.md`, `00_SpecificationKit_TODO.md`) are in
-  sync with the codebase.
-- `AGENTS_DOCS/INPROGRESS/Summary_of_Work.md` exists with concise documentation of the work.
-- All changes are committed, tests pass, and the workspace has no leftover modifications.
+- Selected `AGENTS_DOCS/INPROGRESS` tasks are **fully implemented, tested, and validated**
+- Progress trackers (`SpecificationKit_v3.0.0_Progress.md`, `00_SpecificationKit_TODO.md`) are in sync with the codebase
+- `AGENTS_DOCS/INPROGRESS/Summary_of_Work.md` exists with concise documentation of the work
+- All changes are committed, tests pass, and the workspace has no leftover modifications
+- **Task is ready for archival** via ARCHIVE.md command
 
 ## Notes
 - Do not skip the rules and progress trackers—they prevent conflicting automation runs.
