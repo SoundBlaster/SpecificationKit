@@ -90,6 +90,53 @@ The macro infrastructure is fully implemented and ready. These features will be 
 
 ### Long-term (12+ months)
 
+#### Architecture Improvements (v4.0.0)
+
+- **SpecificationCore: Platform-Independent Foundation**
+  - **Status:** 🔨 Planning & PRD Complete (2025-11-16)
+  - **Timeline:** 6 weeks implementation planned
+  - **Primary Goal:** Extract platform-independent core logic into separate Swift Package
+  - **Key Objectives:**
+    - Create minimal, platform-independent Swift Package (`SpecificationCore`)
+    - Zero dependencies on platform-specific frameworks (SwiftUI, UIKit, AppKit, etc.)
+    - Support all Swift platforms (iOS, macOS, tvOS, watchOS, Linux, Windows)
+    - Maintain 100% backward compatibility for SpecificationKit
+    - Reduce core package size to < 5,000 LOC (vs ~14,415 in monolithic)
+  - **What Moves to SpecificationCore:**
+    - Core protocols: `Specification`, `DecisionSpec`, `AsyncSpecification`
+    - Property wrappers: `@Satisfies`, `@Decides`, `@Maybe` (non-SwiftUI)
+    - Macros: `@AutoContext`, `@specs`
+    - Context providers: `DefaultContextProvider`, `MockContextProvider`
+    - Base specifications: `MaxCountSpec`, `TimeSinceEventSpec`, `PredicateSpec`
+  - **What Stays in SpecificationKit:**
+    - SwiftUI property wrappers: `@ObservedSatisfies`, `@ObservedDecides`
+    - Platform-specific providers (iOS, macOS, watchOS, tvOS)
+    - Advanced domain specs: `FeatureFlagSpec`, `SubscriptionStatusSpec`
+    - Profiling tools: `SpecificationTracer`, `PerformanceProfiler`
+    - Network/storage integration: `NetworkContextProvider`, `PersistentContextProvider`
+  - **Benefits:**
+    - **Compile Time:** 20%+ improvement for core-only users
+    - **Binary Size:** Reduced footprint for minimal feature sets
+    - **Platform Support:** True cross-platform capability including Linux/Windows
+    - **Testing:** Better isolation and faster test execution
+    - **Flexibility:** Use SpecificationCore standalone or with full SpecificationKit
+  - **Implementation Phases:**
+    - Phase 1 (Weeks 1-2): SpecificationCore package creation
+    - Phase 2 (Weeks 3-4): SpecificationKit refactoring to depend on Core
+    - Phase 3 (Week 5): Validation, documentation, migration guides
+    - Phase 4 (Week 6+): Release and monitoring
+  - **Success Metrics:**
+    - SpecificationCore compiles on all Swift platforms
+    - Zero platform-specific imports in core module
+    - 90%+ test coverage maintained
+    - All existing SpecificationKit tests pass
+    - Build time improvement ≥20% for core-only projects
+  - **Documentation:**
+    - Full PRD: `AGENTS_DOCS/SpecificationCore_PRD/PRD.md`
+    - Workplan: `AGENTS_DOCS/SpecificationCore_PRD/Workplan.md`
+    - TODO List: `AGENTS_DOCS/SpecificationCore_PRD/TODO.md`
+  - **Reference:** `AGENTS_DOCS/SpecificationCore_PRD/` (complete planning docs)
+
 #### Experimental Features
 
 - **Result Builder DSL for Specifications**
@@ -176,7 +223,17 @@ Features we've decided **not** to pursue:
 - Advanced macro composition features
 
 ### v4.0.0 (Planned: 2026)
-- Major architectural enhancements
+- **SpecificationCore Package** - Platform-independent foundation (6-week implementation)
+  - Extract core protocols, property wrappers, and macros to separate package
+  - Zero platform-specific dependencies (supports Linux, Windows, all Apple platforms)
+  - 20%+ compile time improvement for core-only usage
+  - < 5,000 LOC focused package (down from ~14,415)
+  - Full PRD and workplan in `AGENTS_DOCS/SpecificationCore_PRD/`
+- **SpecificationKit Refactoring** - Depends on SpecificationCore
+  - Becomes platform-specific extension package
+  - SwiftUI integrations, platform providers, profiling tools
+  - 100% backward compatibility maintained
+  - Comprehensive migration guide
 - Result Builder DSL (if mature)
 - Breaking API changes (if needed for significant improvements)
 - Minimum Swift version bump to latest stable
