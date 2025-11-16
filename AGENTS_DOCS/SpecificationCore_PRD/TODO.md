@@ -40,7 +40,7 @@
 
 - [ ] **[P0] [Setup]** Create `SpecificationCore/` root directory
 - [ ] **[P0] [Setup]** Create `Package.swift` manifest
-  - Swift 5.10 tools version minimum
+  - Swift 5.10+ tools version minimum
   - Platforms: iOS 13+, macOS 10.15+, tvOS 13+, watchOS 6+
   - Foundation dependency
   - swift-syntax 510.0.0+ dependency

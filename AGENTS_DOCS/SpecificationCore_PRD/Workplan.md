@@ -52,7 +52,7 @@ Week 6+:  Phase 4 - Release & Monitoring
 
 - [ ] Create `SpecificationCore/` directory structure
 - [ ] Create `Package.swift` manifest
-  - Swift 5.9+ tools version
+  - Swift 5.10+ tools version
   - Foundation dependency
   - swift-syntax 510.0.0+ dependency
   - swift-macro-testing 0.4.0+ dev dependency

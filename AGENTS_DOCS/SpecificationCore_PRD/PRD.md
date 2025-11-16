@@ -592,8 +592,8 @@ public struct AsyncSatisfies<S: AsyncSpecification> {
 
 | Swift Version | Status | Notes |
 |---------------|--------|-------|
-| 5.9 | Minimum | Macros, async/await required |
-| 5.10 | Recommended | Improved macro diagnostics |
+| 5.9 | Not Supported | Requires explicit justification to lower minimum version |
+| 5.10 | Minimum | Required by SpecificationCore and SpecificationKit; improved macro diagnostics |
 | 6.0 | Supported | Full concurrency checking |
 
 ---
@@ -670,7 +670,7 @@ public struct AsyncSatisfies<S: AsyncSpecification> {
 **Tasks**:
 
 1. Publish SpecificationCore 1.0.0
-2. Publish SpecificationKit 2.0.0 (depends on Core)
+2. Publish SpecificationKit 4.0.0 (depends on Core)
 3. Announce deprecation timeline
 4. Monitor GitHub issues for migration problems
 5. Provide community support
