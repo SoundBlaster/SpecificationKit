@@ -71,6 +71,7 @@
 SpecificationKit v3.0.0 is now complete and ready for release!
 
 ## 🆕 Recent Updates
+- 2025-11-16: Parameterized `@Satisfies` implementation completed and archived to `AGENTS_DOCS/TASK_ARCHIVE/7_Parameterized_Satisfies_Implementation/`. Validated that existing `init(using:)` overload supports parameterized specs; added 7 comprehensive tests; documented property wrapper syntax limitations. P1 requirement fulfilled with zero code changes.
 - Manual context support for `@Satisfies` archived under `AGENTS_DOCS/TASK_ARCHIVE/2_SatisfiesManualContext_and_P21_Benchmarks/`.
 - Property wrapper async edge-case coverage archived under `AGENTS_DOCS/TASK_ARCHIVE/3_PropertyWrapperEdgeCases/`.
 - Completed: dedicated `SpecificationKitBenchmarks` target registered with baseline validator coverage (2025-10-30); artifacts archived under `AGENTS_DOCS/TASK_ARCHIVE/4_Benchmarking_Infrastructure/` with follow-up actions.
