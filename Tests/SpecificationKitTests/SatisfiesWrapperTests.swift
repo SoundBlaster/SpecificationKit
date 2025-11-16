@@ -62,17 +62,15 @@ final class SatisfiesWrapperTests: XCTestCase {
         XCTAssertTrue(result)
     }
 
-    // MARK: - Parameterized Wrapper Tests (Factory Pattern)
+    // MARK: - Parameterized Wrapper Tests
 
     func test_parameterizedWrapper_withDefaultProvider_CooldownIntervalSpec() {
         // Given
         let provider = DefaultContextProvider.shared
-        provider.recordEvent(for: "banner", at: Date().addingTimeInterval(-20))
+        provider.recordEvent("banner", at: Date().addingTimeInterval(-20))
 
         struct Harness {
-            @Satisfies(using: CooldownIntervalSpec.self) {
-                CooldownIntervalSpec(eventKey: "banner", cooldownInterval: 10)
-            }
+            @Satisfies(using: CooldownIntervalSpec(eventKey: "banner", cooldownInterval: 10))
             var canShowBanner: Bool
         }
 
@@ -86,12 +84,10 @@ final class SatisfiesWrapperTests: XCTestCase {
     func test_parameterizedWrapper_withDefaultProvider_failsWhenCooldownNotMet() {
         // Given
         let provider = DefaultContextProvider.shared
-        provider.recordEvent(for: "notification", at: Date().addingTimeInterval(-5))
+        provider.recordEvent("notification", at: Date().addingTimeInterval(-5))
 
         struct Harness {
-            @Satisfies(using: CooldownIntervalSpec.self) {
-                CooldownIntervalSpec(eventKey: "notification", cooldownInterval: 10)
-            }
+            @Satisfies(using: CooldownIntervalSpec(eventKey: "notification", cooldownInterval: 10))
             var canShowNotification: Bool
         }
 
@@ -105,12 +101,10 @@ final class SatisfiesWrapperTests: XCTestCase {
     func test_parameterizedWrapper_withCustomProvider() {
         // Given
         let mockProvider = MockContextProvider()
-        mockProvider.recordEvent(for: "dialog", at: Date().addingTimeInterval(-30))
+        mockProvider.recordEvent("dialog", at: Date().addingTimeInterval(-30))
 
         struct Harness {
-            @Satisfies(provider: mockProvider, using: CooldownIntervalSpec.self) {
-                CooldownIntervalSpec(eventKey: "dialog", cooldownInterval: 20)
-            }
+            @Satisfies(provider: mockProvider, using: CooldownIntervalSpec(eventKey: "dialog", cooldownInterval: 20))
             var canShowDialog: Bool
         }
 
@@ -124,13 +118,11 @@ final class SatisfiesWrapperTests: XCTestCase {
     func test_parameterizedWrapper_withMaxCountSpec() {
         // Given
         let provider = DefaultContextProvider.shared
-        provider.increment(counter: "attempts")
-        provider.increment(counter: "attempts")
+        provider.incrementCounter("attempts")
+        provider.incrementCounter("attempts")
 
         struct Harness {
-            @Satisfies(using: MaxCountSpec.self) {
-                MaxCountSpec(counterKey: "attempts", maximumCount: 5)
-            }
+            @Satisfies(using: MaxCountSpec(counterKey: "attempts", maximumCount: 5))
             var canAttempt: Bool
         }
 
@@ -144,16 +136,14 @@ final class SatisfiesWrapperTests: XCTestCase {
     func test_parameterizedWrapper_withMaxCountSpec_failsWhenExceeded() {
         // Given
         let provider = DefaultContextProvider.shared
-        provider.increment(counter: "retries")
-        provider.increment(counter: "retries")
-        provider.increment(counter: "retries")
-        provider.increment(counter: "retries")
-        provider.increment(counter: "retries")
+        provider.incrementCounter("retries")
+        provider.incrementCounter("retries")
+        provider.incrementCounter("retries")
+        provider.incrementCounter("retries")
+        provider.incrementCounter("retries")
 
         struct Harness {
-            @Satisfies(using: MaxCountSpec.self) {
-                MaxCountSpec(counterKey: "retries", maximumCount: 3)
-            }
+            @Satisfies(using: MaxCountSpec(counterKey: "retries", maximumCount: 3))
             var canRetry: Bool
         }
 
@@ -167,12 +157,10 @@ final class SatisfiesWrapperTests: XCTestCase {
     func test_parameterizedWrapper_withTimeSinceEventSpec() {
         // Given
         let provider = DefaultContextProvider.shared
-        provider.recordEvent(for: "launch", at: Date().addingTimeInterval(-100))
+        provider.recordEvent("launch", at: Date().addingTimeInterval(-100))
 
         struct Harness {
-            @Satisfies(using: TimeSinceEventSpec.self) {
-                TimeSinceEventSpec(eventKey: "launch", minimumInterval: 50)
-            }
+            @Satisfies(using: TimeSinceEventSpec(eventKey: "launch", minimumInterval: 50))
             var hasBeenLongEnough: Bool
         }
 
@@ -188,16 +176,11 @@ final class SatisfiesWrapperTests: XCTestCase {
         let context = EvaluationContext(
             counters: ["clicks": 3],
             flags: [:],
-            events: [:],
-            currentDate: Date(),
-            launchDate: Date(),
-            calendar: .current
+            events: [:]
         )
 
         struct Harness {
-            @Satisfies(context: context, using: MaxCountSpec.self) {
-                MaxCountSpec(counterKey: "clicks", maximumCount: 5)
-            }
+            @Satisfies(context: context, using: MaxCountSpec(counterKey: "clicks", maximumCount: 5))
             var canClick: Bool
         }
 
