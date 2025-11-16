@@ -541,4 +541,194 @@ final class AutoContextMacroComprehensiveTests: XCTestCase {
 
         XCTAssertTrue(canReadPermission)
     }
+
+    // MARK: - Future Extension Flags Tests
+
+    func testAutoContextMacro_FutureFlag_Environment() {
+        // Test that 'environment' parameter is recognized and provides informative diagnostic
+        assertMacroExpansion(
+            """
+            @AutoContext(environment)
+            struct TestSpec: Specification {
+                typealias T = EvaluationContext
+
+                func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+                    true
+                }
+            }
+            """,
+            expandedSource: """
+                struct TestSpec: Specification {
+                    typealias T = EvaluationContext
+
+                    func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+                        true
+                    }
+
+                    public typealias Provider = DefaultContextProvider
+
+                    public static var contextProvider: DefaultContextProvider {
+                        DefaultContextProvider.shared
+                    }
+                }
+                """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "SwiftUI Environment integration for @AutoContext is planned but not yet implemented. Currently, only @AutoContext (using DefaultContextProvider.shared) is supported.",
+                    line: 1,
+                    column: 1,
+                    severity: .warning
+                )
+            ],
+            macros: testMacros
+        )
+    }
+
+    func testAutoContextMacro_FutureFlag_Infer() {
+        // Test that 'infer' parameter is recognized and provides informative diagnostic
+        assertMacroExpansion(
+            """
+            @AutoContext(infer)
+            struct TestSpec: Specification {
+                typealias T = EvaluationContext
+
+                func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+                    true
+                }
+            }
+            """,
+            expandedSource: """
+                struct TestSpec: Specification {
+                    typealias T = EvaluationContext
+
+                    func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+                        true
+                    }
+
+                    public typealias Provider = DefaultContextProvider
+
+                    public static var contextProvider: DefaultContextProvider {
+                        DefaultContextProvider.shared
+                    }
+                }
+                """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "Context provider inference for @AutoContext is planned but not yet implemented. Currently, only @AutoContext (using DefaultContextProvider.shared) is supported.",
+                    line: 1,
+                    column: 1,
+                    severity: .warning
+                )
+            ],
+            macros: testMacros
+        )
+    }
+
+    func testAutoContextMacro_FutureFlag_CustomProviderType() {
+        // Test that custom provider type parameter is recognized and provides informative diagnostic
+        assertMacroExpansion(
+            """
+            @AutoContext(CustomProvider.self)
+            struct TestSpec: Specification {
+                typealias T = EvaluationContext
+
+                func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+                    true
+                }
+            }
+            """,
+            expandedSource: """
+                struct TestSpec: Specification {
+                    typealias T = EvaluationContext
+
+                    func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+                        true
+                    }
+
+                    public typealias Provider = DefaultContextProvider
+
+                    public static var contextProvider: DefaultContextProvider {
+                        DefaultContextProvider.shared
+                    }
+                }
+                """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "Custom provider type specification for @AutoContext is planned but not yet implemented. Currently, only @AutoContext (using DefaultContextProvider.shared) is supported.",
+                    line: 1,
+                    column: 1,
+                    severity: .warning
+                )
+            ],
+            macros: testMacros
+        )
+    }
+
+    func testAutoContextMacro_InvalidArgument() {
+        // Test that invalid arguments provide clear error messages
+        assertMacroExpansion(
+            """
+            @AutoContext("invalid")
+            struct TestSpec: Specification {
+                typealias T = EvaluationContext
+
+                func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+                    true
+                }
+            }
+            """,
+            expandedSource: """
+                struct TestSpec: Specification {
+                    typealias T = EvaluationContext
+
+                    func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+                        true
+                    }
+                }
+                """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "@AutoContext expects either no arguments, a provider type (e.g., MyProvider.self), or a keyword ('environment' or 'infer').",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ],
+            macros: testMacros
+        )
+    }
+
+    func testAutoContextMacro_MultipleArguments() {
+        // Test that multiple arguments are rejected with clear error
+        assertMacroExpansion(
+            """
+            @AutoContext(environment, infer)
+            struct TestSpec: Specification {
+                typealias T = EvaluationContext
+
+                func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+                    true
+                }
+            }
+            """,
+            expandedSource: """
+                struct TestSpec: Specification {
+                    typealias T = EvaluationContext
+
+                    func isSatisfiedBy(_ context: EvaluationContext) -> Bool {
+                        true
+                    }
+                }
+                """,
+            diagnostics: [
+                DiagnosticSpec(
+                    message: "@AutoContext accepts at most one argument.",
+                    line: 1,
+                    column: 1,
+                    severity: .error
+                )
+            ],
+            macros: testMacros
+        )
+    }
 }

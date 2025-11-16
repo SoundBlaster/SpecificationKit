@@ -66,11 +66,25 @@ var isNightMode: Bool
 
 ## 💡 Future Extensions
 
-| Syntax                            | Behavior                                         |
-|----------------------------------|--------------------------------------------------|
-| `@AutoContext(DefaultContextProvider.self)` | Override provider inline                  |
-| `@AutoContext(environment)`       | Use SwiftUI Environment                         |
-| `@AutoContext(infer)`             | Infer provider from generic context             |
+**Implementation Status:** ✅ **Infrastructure Complete** (as of 2025-11-16)
+
+The macro now includes parsing infrastructure for future enhancement flags. These flags are recognized and parsed but emit informative diagnostics indicating they are not yet fully implemented:
+
+| Syntax                            | Status | Behavior                                         |
+|----------------------------------|--------|--------------------------------------------------|
+| `@AutoContext(DefaultContextProvider.self)` | 🔄 Planned | Override provider inline (emits warning)                  |
+| `@AutoContext(environment)`       | 🔄 Planned | Use SwiftUI Environment (emits warning)                         |
+| `@AutoContext(infer)`             | 🔄 Planned | Infer provider from generic context (emits warning)             |
+
+### Current Behavior
+
+When using future extension flags, the macro will:
+1. **Parse** the argument successfully
+2. **Emit** an informative warning diagnostic explaining the feature is planned but not yet implemented
+3. **Generate** the default implementation using `DefaultContextProvider.shared`
+4. **Compile** successfully with the warning
+
+This allows code to be written using the future syntax and provides a smooth migration path when these features are fully implemented in future Swift toolchain versions.
 
 ---
 
@@ -90,12 +104,32 @@ No need to manually implement anything — macro generates it all.
 
 ## 🧭 Implementation Notes
 
-- This is an attached macro on `struct`
+- This is an attached macro on `struct`, `class`, or `enum`
 - Validates conformance to `Specification`
 - Injects a provider and optional `init()`
+- **Argument Parsing:** The macro parses optional arguments and provides appropriate diagnostics
+- **Future-Ready:** Infrastructure exists for `environment`, `infer`, and custom provider types
+- **Backward Compatible:** Plain `@AutoContext` continues to work as before
+
+### Technical Implementation Details
+
+**File:** `Sources/SpecificationKitMacros/AutoContextMacro.swift`
+
+The macro implementation includes:
+- **Argument Parser:** Recognizes identifier-based flags (`environment`, `infer`) and type expressions (`CustomProvider.self`)
+- **Diagnostic System:** Emits warnings for planned features and errors for invalid syntax
+- **Extensible Architecture:** Enum-based argument classification ready for future implementation
+
+**Test Coverage:** `Tests/SpecificationKitTests/AutoContextMacroComprehensiveTests.swift`
+- Basic expansion tests for struct, class, and enum
+- Integration tests with real specifications
+- Future flag parsing tests with diagnostic validation
+- Edge cases and error scenarios
 
 ---
 
 ## ✅ Summary
 
 `@AutoContext` transforms a plain spec into a **self-sufficient, auto-configured unit** that integrates seamlessly with the `@Satisfies` property wrapper. It minimizes boilerplate, improves readability, and supports future extension toward a fully declarative DSL for specification-based rule logic.
+
+**Latest Update (2025-11-16):** Added infrastructure for parsing future enhancement flags (`environment`, `infer`, custom provider types). These flags are recognized and provide informative diagnostics, creating a smooth evolution path as Swift's macro capabilities expand.
