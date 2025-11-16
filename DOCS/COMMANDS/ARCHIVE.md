@@ -1,12 +1,14 @@
-# Archive Current Work-in-Progress
+# Archive Completed Work
 
 ## 🧩 Purpose
 
-Archive the current contents of [`AGENTS_DOCS/INPROGRESS`](../../AGENTS_DOCS/INPROGRESS) into a new, sequentially numbered folder inside [`AGENTS_DOCS/TASK_ARCHIVE`](../../AGENTS_DOCS/TASK_ARCHIVE) while keeping forward-looking breadcrumbs and blocker logs accurate.
+Archive **completed** task implementations from [`AGENTS_DOCS/INPROGRESS`](../../AGENTS_DOCS/INPROGRESS) into a new, sequentially numbered folder inside [`AGENTS_DOCS/TASK_ARCHIVE`](../../AGENTS_DOCS/TASK_ARCHIVE) while keeping forward-looking breadcrumbs and blocker logs accurate.
+
+**IMPORTANT**: This command archives **only fully implemented and tested features**. Tasks that are only planned or partially implemented should remain in INPROGRESS until completion.
 
 ## 🎯 Goal
 
-Safely relocate every active task artifact into the archive, regenerate any `next_tasks.md` content that still applies, and ensure blocked work is either ready for recovery or clearly documented under a permanent blockers list.
+Safely relocate **completed** task artifacts into the archive, regenerate any `next_tasks.md` content that still applies, and ensure blocked work is either ready for recovery or clearly documented under a permanent blockers list.
 
 ---
 
@@ -37,9 +39,23 @@ AGENTS_DOCS/
 
 ## ⚙️ Execution Steps
 
+### Step 0. Verify Task Completion (MANDATORY)
+
+**CRITICAL**: Before archiving, verify that all tasks in INPROGRESS are **fully completed**:
+
+- [ ] **`Summary_of_Work.md` exists** - This file is **required** and documents what was implemented
+- [ ] **All code is implemented** - Feature/fix is fully coded and integrated
+- [ ] **All tests pass** - Run `swift test` to verify
+- [ ] **Code is committed** - All changes are committed to git
+- [ ] **Documentation is updated** - README, API docs, and inline comments reflect changes
+- [ ] **Progress trackers updated** - Task marked complete in relevant TODO/Progress files
+
+**If any criterion is not met**: DO NOT ARCHIVE. Continue implementation using START.md workflow until all criteria are satisfied.
+
 ### Step 1. Review Current In-Progress Files
 
 - Inspect [`AGENTS_DOCS/INPROGRESS`](../../AGENTS_DOCS/INPROGRESS) and list every Markdown document.
+- Verify that `Summary_of_Work.md` contains complete implementation notes.
 - Capture key context from summaries, notes, or checklists so it is not lost during the move.
 
 ### Step 2. Collect Future Work Notes
@@ -98,9 +114,12 @@ AGENTS_DOCS/
 
 ## 🧠 Tips
 
-- Keep numbering contiguous; never reuse an existing archive prefix.
-- Always double-check `next_tasks.md` against the canonical backlog to avoid resurrecting outdated plans.
-- Use the permanent blocker directory sparingly—only when recovery truly depends on unavailable capabilities.
+- **Archive only completed work** - Planning-only or partially implemented tasks stay in INPROGRESS
+- **Summary_of_Work.md is mandatory** - Never archive without this completion record
+- Keep numbering contiguous; never reuse an existing archive prefix
+- Always double-check `next_tasks.md` against the canonical backlog to avoid resurrecting outdated plans
+- Use the permanent blocker directory sparingly—only when recovery truly depends on unavailable capabilities
+- When in doubt, use START.md to complete the task first, then ARCHIVE.md to archive it
 
 ---
 

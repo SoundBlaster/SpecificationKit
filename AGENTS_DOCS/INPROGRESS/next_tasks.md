@@ -9,19 +9,15 @@
 - **Status**: Ready to implement
 - **Priority**: P1 (Macro System Enhancements)
 - **Reference**: AGENTS_DOCS/markdown/3.0.0/00_3.0.0_TODO_SpecificationKit.md
+- **Archived Planning**: AGENTS_DOCS/TASK_ARCHIVE/9_AutoContext_Future_Hooks/2025-11-16_NextTask_AutoContext_Future_Hooks.md
 
 ## 📦 Future Enhancements (Post-3.0.0)
 - Macro transformation for inline attribute syntax (requires Swift macro evolution)
 - README updates showcasing parameterized spec patterns
 - Additional platform-specific context provider examples
 
-## ✅ Recently Completed
-- **Swift Package Index Preparation** (2025-11-16) - Archived to `AGENTS_DOCS/TASK_ARCHIVE/8_Swift_Package_Index_Preparation/`
-  - Prepared package metadata for Swift Package Index
-  - Created semantic version tag `3.0.0`
-  - Updated CHANGELOG release date to 2025-11-16
-  - Verified README and documentation ready for publication
-- **Parameterized @Satisfies Support** (2025-11-16) - Archived to `AGENTS_DOCS/TASK_ARCHIVE/7_Parameterized_Satisfies_Implementation/`
-  - Validated existing `init(using:)` overload works with parameterized specs
-  - Added 7 comprehensive tests demonstrating usage patterns
-  - Documented property wrapper syntax limitations
+## ✅ Recently Archived
+- **AutoContext Future Hooks Planning** (2025-11-16) - Archived to `AGENTS_DOCS/TASK_ARCHIVE/9_AutoContext_Future_Hooks/`
+  - Task selection and planning completed
+  - Implementation notes and acceptance criteria documented
+  - Ready for implementation when work resumes
