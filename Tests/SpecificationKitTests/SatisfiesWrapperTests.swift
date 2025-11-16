@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import SpecificationKit
 
 final class SatisfiesWrapperTests: XCTestCase {
@@ -15,8 +16,9 @@ final class SatisfiesWrapperTests: XCTestCase {
     func test_manualContext_withSpecificationInstance() {
         // Given
         struct Harness {
-            @Satisfies(context: ManualContext(isEnabled: true, threshold: 3, count: 0),
-                       using: EnabledSpec())
+            @Satisfies(
+                context: ManualContext(isEnabled: true, threshold: 3, count: 0),
+                using: EnabledSpec())
             var isEnabled: Bool
         }
 
@@ -101,18 +103,16 @@ final class SatisfiesWrapperTests: XCTestCase {
     func test_parameterizedWrapper_withCustomProvider() {
         // Given
         let mockProvider = MockContextProvider()
-        mockProvider.recordEvent("dialog", at: Date().addingTimeInterval(-30))
-
-        struct Harness {
-            @Satisfies(provider: mockProvider, using: CooldownIntervalSpec(eventKey: "dialog", cooldownInterval: 20))
-            var canShowDialog: Bool
-        }
+            .withEvent("dialog", date: Date().addingTimeInterval(-30))
 
         // When
-        let harness = Harness()
+        @Satisfies(
+            provider: mockProvider,
+            using: CooldownIntervalSpec(eventKey: "dialog", cooldownInterval: 20))
+        var canShowDialog: Bool
 
         // Then
-        XCTAssertTrue(harness.canShowDialog)
+        XCTAssertTrue(canShowDialog)
     }
 
     func test_parameterizedWrapper_withMaxCountSpec() {
@@ -175,19 +175,15 @@ final class SatisfiesWrapperTests: XCTestCase {
         // Given
         let context = EvaluationContext(
             counters: ["clicks": 3],
-            flags: [:],
-            events: [:]
+            events: [:],
+            flags: [:]
         )
 
-        struct Harness {
-            @Satisfies(context: context, using: MaxCountSpec(counterKey: "clicks", maximumCount: 5))
-            var canClick: Bool
-        }
-
         // When
-        let harness = Harness()
+        @Satisfies(context: context, using: MaxCountSpec(counterKey: "clicks", maximumCount: 5))
+        var canClick: Bool
 
         // Then
-        XCTAssertTrue(harness.canClick)
+        XCTAssertTrue(canClick)
     }
 }
