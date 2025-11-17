@@ -3,11 +3,25 @@ import XCTest
 
 final class SpecsIfMacroTests: XCTestCase {
 
-    // MARK: - Macro Diagnostic Tests
+    // MARK: - Macro Limitation Notes
 
-    /// Test that the macro provides helpful diagnostic messages
-    /// Note: Full macro expansion testing would require swift-macro-testing framework
-    /// These tests verify the runtime behavior of specs using ConditionalSpecification
+    /// The @specsIf macro has fundamental limitations due to Swift macro system constraints:
+    /// 1. Member macros cannot generate protocol conformance implementations
+    /// 2. The macro can only add helper members, not complete the Specification protocol
+    /// 3. Users would still need to manually implement isSatisfiedBy
+    ///
+    /// Therefore, the macro primarily serves as:
+    /// - A discovery mechanism for the ConditionalSpecification pattern
+    /// - Educational documentation about conditional specifications
+    /// - A future-proof placeholder for when macro capabilities expand
+    ///
+    /// The recommended approach is to use ConditionalSpecification directly,
+    /// as demonstrated in the tests below.
+
+    // MARK: - Recommended Approach Tests
+
+    /// Test that demonstrates the recommended ConditionalSpecification approach
+    /// This is what @specsIf would ideally generate if macros had more capabilities
 
     func testSpecsIfMacro_RecommendedAlternative_UsingConditionalSpecification() {
         // Given - Testing the recommended approach using ConditionalSpecification

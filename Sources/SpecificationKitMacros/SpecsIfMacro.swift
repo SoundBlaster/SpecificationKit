@@ -107,34 +107,41 @@ public struct SpecsIfMacro: MemberMacro {
         // Store the condition closure
         let conditionProperty: DeclSyntax =
             """
-            private let condition: (T) -> Bool = \(conditionExpr)
+            private let _specsIfCondition: (T) -> Bool = \(conditionExpr)
             """
         members.append(conditionProperty)
 
-        // Override isSatisfiedBy to check condition first
+        // Add a helper property that wraps the base specification
+        // Users must define _baseSpecification that returns their core spec
+        let wrappedSpecProperty: DeclSyntax =
+            """
+            private var _conditionalWrapper: ConditionalSpecification<T> {
+                ConditionalSpecification(condition: _specsIfCondition, wrapping: _baseSpecification)
+            }
+            """
+        members.append(wrappedSpecProperty)
+
+        // Provide default isSatisfiedBy implementation that uses the wrapper
         let isSatisfiedByMethod: DeclSyntax =
             """
             public func isSatisfiedBy(_ candidate: T) -> Bool {
-                guard condition(candidate) else {
-                    return false
-                }
-                return _originalIsSatisfiedBy(candidate)
+                _conditionalWrapper.isSatisfiedBy(candidate)
             }
             """
         members.append(isSatisfiedByMethod)
 
-        // Add a method to call the original implementation
-        // This is a marker that the user needs to rename their original method
-        let originalMarker: DeclSyntax =
+        // Add documentation for the required _baseSpecification property
+        let baseSpecDocumentation: DeclSyntax =
             """
-            private func _originalIsSatisfiedBy(_ candidate: T) -> Bool {
-                // IMPLEMENTATION NOTE: The @specsIf macro requires you to implement
-                // the core specification logic here instead of in isSatisfiedBy.
-                // Alternatively, use the ConditionalSpecification wrapper directly.
-                fatalError("@specsIf macro requires manual implementation adjustment. Use ConditionalSpecification wrapper instead.")
-            }
+            // IMPLEMENTATION REQUIRED: Define _baseSpecification to return your core specification
+            // Example:
+            // private var _baseSpecification: some Specification<T> {
+            //     PredicateSpec { candidate in
+            //         // Your specification logic here
+            //     }
+            // }
             """
-        members.append(originalMarker)
+        members.append(baseSpecDocumentation)
 
         return members
     }
@@ -149,12 +156,19 @@ public struct SpecsIfMacro: MemberMacro {
     ) {
         switch argument {
         case .condition:
-            // Valid - also emit informational note about alternative approach
-            let diagnostic = Diagnostic(
+            // Valid - emit warning about macro limitations
+            let limitationDiagnostic = Diagnostic(
+                node: Syntax(node),
+                message: SpecsIfDiagnostic.macroLimitations
+            )
+            context.diagnose(limitationDiagnostic)
+
+            // Also emit informational note about alternative approach
+            let alternativeDiagnostic = Diagnostic(
                 node: Syntax(node),
                 message: SpecsIfDiagnostic.considerWrapperAlternative
             )
-            context.diagnose(diagnostic)
+            context.diagnose(alternativeDiagnostic)
 
         case .missing:
             let diagnostic = Diagnostic(
@@ -179,6 +193,7 @@ public struct SpecsIfMacro: MemberMacro {
 private enum SpecsIfDiagnostic: String, DiagnosticMessage {
     case missingCondition
     case invalidCondition
+    case macroLimitations
     case considerWrapperAlternative
 
     var message: String {
@@ -187,8 +202,10 @@ private enum SpecsIfDiagnostic: String, DiagnosticMessage {
             return "@specsIf requires a 'condition:' argument with a closure that takes the context and returns Bool."
         case .invalidCondition:
             return "@specsIf condition must be a closure expression of type (T) -> Bool."
+        case .macroLimitations:
+            return "@specsIf macro cannot generate complete Specification conformance due to Swift macro system limitations. You must still implement isSatisfiedBy yourself."
         case .considerWrapperAlternative:
-            return "Consider using ConditionalSpecification wrapper directly for more flexible conditional logic: ConditionalSpecification(condition: { ... }, wrapping: YourSpec())"
+            return "Recommended: Use ConditionalSpecification wrapper directly instead: ConditionalSpecification(condition: { ... }, wrapping: YourSpec()) or YourSpec().when { ... }"
         }
     }
 
@@ -200,6 +217,8 @@ private enum SpecsIfDiagnostic: String, DiagnosticMessage {
         switch self {
         case .missingCondition, .invalidCondition:
             return .error
+        case .macroLimitations:
+            return .warning
         case .considerWrapperAlternative:
             return .note
         }

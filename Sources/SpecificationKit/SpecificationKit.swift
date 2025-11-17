@@ -60,36 +60,46 @@ public macro SatisfiesSpec(
     _ parameters: Any...
 ) = #externalMacro(module: "SpecificationKitMacros", type: "SatisfiesMacro")
 
-/// Conditionally enables a specification based on a runtime condition.
-/// Generates members that wrap the specification's `isSatisfiedBy` method to check
-/// the condition first before evaluating the specification.
+/// **EXPERIMENTAL:** Conditionally enables a specification based on a runtime condition.
 ///
-/// **Note:** For most use cases, prefer using `ConditionalSpecification` wrapper directly
-/// or the `.when()` / `.unless()` convenience methods on `Specification`.
+/// ## ⚠️ Current Limitations
+///
+/// Due to Swift macro system constraints, this macro **cannot generate complete Specification conformance**.
+/// Member macros cannot provide protocol conformance implementations, so you must still implement
+/// `isSatisfiedBy(_:)` yourself. The macro only generates helper members.
+///
+/// ## ✅ Recommended Approach
+///
+/// **Use `ConditionalSpecification` wrapper directly** instead of this macro:
+///
+/// ```swift
+/// // Direct wrapper usage (recommended)
+/// let premiumSpec = ConditionalSpecification(
+///     condition: { ctx in ctx.flag(for: "premium") },
+///     wrapping: MaxCountSpec(counterKey: "api_calls", maximumCount: 1000)
+/// )
+///
+/// // Or using convenience method (also recommended)
+/// let spec = MaxCountSpec(counterKey: "api_calls", maximumCount: 1000)
+///     .when { ctx in ctx.flag(for: "premium") }
+/// ```
+///
+/// ## 🔮 Future Evolution
+///
+/// This macro serves as a placeholder for future macro capabilities. When Swift macros
+/// gain the ability to generate complete protocol conformances, this macro will be enhanced
+/// to provide a fully functional attribute-based syntax.
+///
+/// ## Current Behavior
+///
+/// The macro currently emits:
+/// - A warning about macro limitations
+/// - Helper members (`_specsIfCondition`, `_conditionalWrapper`)
+/// - A note recommending `ConditionalSpecification` wrapper usage
 ///
 /// - Parameters:
 ///   - condition: A closure `(T) -> Bool` that determines if the spec should be evaluated
-///
-/// Example usage:
-/// ```swift
-/// @specsIf(condition: { ctx in ctx.flag(for: "premium") })
-/// struct PremiumFeatureSpec: Specification {
-///     typealias T = EvaluationContext
-///     // specification implementation
-/// }
-/// ```
-///
-/// Equivalent using wrapper (recommended):
-/// ```swift
-/// let premiumSpec = ConditionalSpecification(
-///     condition: { ctx in ctx.flag(for: "premium") },
-///     wrapping: PremiumFeatureSpec()
-/// )
-///
-/// // Or using convenience method:
-/// let premiumSpec = PremiumFeatureSpec().when { ctx in ctx.flag(for: "premium") }
-/// ```
-@attached(member, names: named(condition), named(isSatisfiedBy), named(_originalIsSatisfiedBy))
+@attached(member, names: named(_specsIfCondition), named(_conditionalWrapper), named(isSatisfiedBy))
 public macro specsIf(
     condition: Any
 ) = #externalMacro(module: "SpecificationKitMacros", type: "SpecsIfMacro")
