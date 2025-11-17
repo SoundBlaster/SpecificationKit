@@ -53,6 +53,14 @@ This directory contains archived work-in-progress documentation for completed Sp
 **Key Deliverables**: Argument parsing infrastructure added to `AutoContextMacro.swift`, 5 new test cases in `AutoContextMacroComprehensiveTests.swift`, documentation updated in `05_AutoContext.md`, backward compatibility maintained.
 **Git Commit**: `1b415ec` - Add @AutoContext future hooks parsing infrastructure
 
+### Archive 23: Experimental Macro Prototype for Conditional Specification Composition
+**Status**: Completed (2025-11-17)
+**Path**: `23_Experimental_Macro_Prototype/`
+**Summary**: Implemented experimental macro system for conditional specification composition, consisting of production-ready `ConditionalSpecification` wrapper class and experimental `@specsIf` attribute macro with diagnostic guidance. Added convenience extensions `.when()` and `.unless()` for ergonomic conditional composition. 22 comprehensive test cases (14 wrapper + 8 macro), all passing. Post-implementation P1 fix improved macro's honest limitation disclosure and diagnostics.
+**Key Deliverables**: ConditionalSpecification wrapper class with thread-safe, value-type semantics and short-circuit evaluation. @specsIf experimental macro with diagnostic guidance recommending wrapper-first approach. 1,045 lines of production code and tests. All 567 tests pass with zero regressions.
+**Key Finding**: Swift member macros have fundamental constraints (cannot generate protocol conformance implementations). Wrapper-first approach more practical than complex macro patterns.
+**Git Commits**: `644bf13` - Add experimental @specsIf macro and ConditionalSpecification wrapper, `2cb1340` - Fix P1: Make @specsIf macro honest about limitations
+
 ## Permanent Blockers
 
 Currently, there are no permanent blockers. All blocked items are recoverable and tracked in `AGENTS_DOCS/INPROGRESS/blocked.md`.

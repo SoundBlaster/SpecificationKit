@@ -28,14 +28,6 @@ The following items are planned for post-3.0.0 releases:
 
 ## ✅ Recently Completed
 
-- **Experimental Macro Prototype Implementation** (2025-11-17) - ✅ ARCHIVED
-  - Implemented ConditionalSpecification wrapper class with production-ready conditional specification evaluation
-  - Implemented @specsIf attribute macro with diagnostic guidance
-  - Added convenience extensions .when() and .unless() for ergonomic conditional composition
-  - 22 comprehensive test cases (14 wrapper + 8 macro), all passing
-  - Files created: ConditionalSpecification.swift, SpecsIfMacro.swift, test files (1,045 lines total)
-  - Archive: `AGENTS_DOCS/TASK_ARCHIVE/23_Experimental_Macro_Prototype/`
-
 - **AutoContext Future Hooks Implementation** (2025-11-17) - ✅ ARCHIVED
   - Added parsing infrastructure for future enhancement flags (`environment`, `infer`, custom provider types)
   - Implemented diagnostic system with informative warnings for planned features
