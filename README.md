@@ -34,6 +34,7 @@ A powerful Swift library implementing the **Specification Pattern** with support
 - [Demo App](#-demo-app)
 - [Architecture](#-architecture)
 - [Documentation](#-documentation)
+- [Roadmap](#-roadmap)
 - [Migration Guide](#-migration-spec--decides)
 - [Contributing](#-contributing)
 - [License](#-license)
@@ -868,6 +869,26 @@ cd docs && python3 -m http.server 8000
 **Xcode Documentation**:
 - Open the project: `open Package.swift`
 - **Product → Build Documentation** (⌃⇧⌘D)
+
+## 🗺️ Roadmap
+
+See our comprehensive [ROADMAP.md](ROADMAP.md) for planned features and future development.
+
+### Upcoming Highlights
+
+**@AutoContext Enhancements** (Infrastructure Ready)
+- 📱 `@AutoContext(environment)` - SwiftUI Environment integration
+- 🧠 `@AutoContext(infer)` - Smart provider inference
+- 🎯 `@AutoContext(CustomProvider.self)` - Custom provider types
+
+*Parsing infrastructure is complete and ready—these features will activate when Swift's macro capabilities evolve.*
+
+**Performance & Platform**
+- ⚡ Benchmark baseline capture on macOS hardware
+- 📱 Enhanced platform-specific context providers
+- 🎨 Advanced macro composition features
+
+[View full roadmap →](ROADMAP.md)
 
 ## 🔁 Migration: @Spec → @Decides
 
