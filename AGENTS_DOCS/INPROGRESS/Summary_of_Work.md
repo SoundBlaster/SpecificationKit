@@ -199,12 +199,42 @@ swift test
 3. **Performance Profiling**: Benchmark conditional specification overhead in real-world scenarios
 4. **Documentation Examples**: Add cookbook examples for common conditional specification patterns
 
+## Post-Implementation Review Fix (P1)
+
+### Code Review Feedback
+Received critical feedback that the `@specsIf` macro generated `fatalError` stub code that would crash at runtime if the condition evaluated to true.
+
+### Resolution
+**Commit**: 2cb1340 - "Fix P1: Make @specsIf macro honest about limitations"
+
+**Changes**:
+1. Removed fatalError stub from macro expansion
+2. Updated macro to generate only helper members
+3. Added clear WARNING diagnostic about macro system limitations
+4. Enhanced documentation to emphasize ConditionalSpecification as recommended approach
+5. Marked macro as EXPERIMENTAL with honest limitation disclosure
+
+**Technical Insight**:
+Swift member macros have fundamental constraints:
+- Cannot generate protocol conformance implementations
+- Cannot modify or rename existing methods
+- Can only add new members to a type
+
+The macro now serves as a discovery/education tool rather than a functional implementation, clearly guiding users to the production-ready `ConditionalSpecification` wrapper.
+
+**Validation**:
+- All 567 tests pass
+- Clean build with honest diagnostics
+- No runtime traps
+
 ## Lessons Learned
 
 1. **Macro Limitations**: Current Swift macro system has constraints that make wrapper-first approach more practical
-2. **Diagnostic Value**: Informational diagnostics can guide users to best practices without forcing behavior
-3. **Test-First Development**: TDD methodology caught API design issues early (e.g., parameter naming consistency)
-4. **Composition Power**: Existing `Specification` protocol operators provided composition "for free"
+2. **Honest API Design**: Better to emit clear warnings and guide users to working alternatives than to generate code that traps at runtime
+3. **Code Review Value**: Peer review caught a critical runtime safety issue before release
+4. **Diagnostic Value**: Informational diagnostics can guide users to best practices without forcing behavior
+5. **Test-First Development**: TDD methodology caught API design issues early (e.g., parameter naming consistency)
+6. **Composition Power**: Existing `Specification` protocol operators provided composition "for free"
 
 ## Conclusion
 
