@@ -16,5 +16,6 @@ struct SpecificationKitPlugin: CompilerPlugin {
         SpecsMacro.self,
         AutoContextMacro.self,
         SatisfiesMacro.self,
+        SpecsIfMacro.self,
     ]
 }

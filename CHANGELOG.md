@@ -5,6 +5,26 @@ All notable changes to SpecificationKit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added - Experimental Features (P2)
+- **ConditionalSpecification**: Wrapper for conditionally enabling specifications based on runtime conditions
+  - `ConditionalSpecification<T>` struct for wrapping specifications with condition closures
+  - `.when(_:)` convenience method for readable conditional specification creation
+  - `.unless(_:)` convenience method for negated condition semantics
+  - Full composition support with `.and()`, `.or()`, `.not()` operators
+  - 14 comprehensive test cases covering basic functionality, edge cases, and real-world scenarios
+- **@specsIf Macro** (Experimental): Attribute macro for conditional specification enablement
+  - Syntax: `@specsIf(condition: { ctx in ... })`
+  - Diagnostic messages guiding users to `ConditionalSpecification` wrapper for most use cases
+  - Infrastructure for future macro-based conditional composition patterns
+  - 8 test cases demonstrating macro usage and recommended alternatives
+
+### Technical Notes
+- The `@specsIf` macro currently emits informational diagnostics recommending the `ConditionalSpecification` wrapper or `.when()/.unless()` convenience methods for most use cases
+- The macro implementation provides a foundation for future macro evolution in conditional specification composition
+- All implementations include comprehensive documentation and usage examples
+
 ## [3.0.0] - 2025-11-16
 
 ### Added - Major Release Features
