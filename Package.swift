@@ -23,7 +23,8 @@ let package = Package(
     ],
     dependencies: [
         // SpecificationCore: Platform-independent core functionality
-        .package(path: "../SpecificationCore"),
+        // TODO: Switch to a tagged version once SpecificationCore is released (e.g., from: "1.0.0")
+        .package(url: "https://github.com/SoundBlaster/SpecificationCore", branch: "claude/specificationcore"),
         // Depend on the latest Swift Syntax package for macro support.
         .package(url: "https://github.com/swiftlang/swift-syntax", from: "510.0.0"),
         // Add swift-macro-testing for a simplified macro testing experience.
