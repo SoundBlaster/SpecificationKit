@@ -93,6 +93,13 @@ This file provides a step-by-step plan for implementing the SpecificationKit lib
 - [x] `LICENSE`
 - [x] `CHANGELOG.md`
 - [x] Example: `DemoApp/` folder
+- [ ] **P1** Migrate DocC documentation from SpecificationKit to SpecificationCore for Core types
+  - Create `SpecificationCore/Sources/SpecificationCore/Documentation.docc/` structure
+  - Migrate/create articles for all Core protocols, specs, wrappers, and macros
+  - Create Core-focused tutorials (Getting Started, Composing Specs, Working with Context)
+  - Remove Core documentation from SpecificationKit
+  - Update cross-package references
+  - See: `AGENTS_DOCS/INPROGRESS/DocC_Migration_Planning.md`
 
 ---
 
