@@ -22,6 +22,8 @@ let package = Package(
         )
     ],
     dependencies: [
+        // SpecificationCore: Platform-independent core functionality
+        .package(url: "https://github.com/SoundBlaster/SpecificationCore", from: "1.0.0"),
         // Depend on the latest Swift Syntax package for macro support.
         .package(url: "https://github.com/swiftlang/swift-syntax", from: "510.0.0"),
         // Add swift-macro-testing for a simplified macro testing experience.
@@ -47,7 +49,10 @@ let package = Package(
         // It depends on the macro target to use the macros.
         .target(
             name: "SpecificationKit",
-            dependencies: ["SpecificationKitMacros"],
+            dependencies: [
+                "SpecificationCore",
+                "SpecificationKitMacros"
+            ],
             resources: [
                 .process("Resources")
             ]
