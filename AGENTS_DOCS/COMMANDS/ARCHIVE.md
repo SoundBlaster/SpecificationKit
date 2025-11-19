@@ -2,7 +2,7 @@
 
 ## 🧩 Purpose
 
-Archive **completed** task implementations from [`AGENTS_DOCS/INPROGRESS`](../../AGENTS_DOCS/INPROGRESS) into a new, sequentially numbered folder inside [`AGENTS_DOCS/TASK_ARCHIVE`](../../AGENTS_DOCS/TASK_ARCHIVE) while keeping forward-looking breadcrumbs and blocker logs accurate.
+Archive **completed** task implementations from [`AGENTS_DOCS/INPROGRESS`](../INPROGRESS) into a new, sequentially numbered folder inside [`AGENTS_DOCS/TASK_ARCHIVE`](../TASK_ARCHIVE) while keeping forward-looking breadcrumbs and blocker logs accurate.
 
 **IMPORTANT**: This command archives **only fully implemented and tested features**. Tasks that are only planned or partially implemented should remain in INPROGRESS until completion.
 
@@ -14,11 +14,11 @@ Safely relocate **completed** task artifacts into the archive, regenerate any `n
 
 ## 🔗 Reference Materials
 
-- [Program-wide TODO rollup (`AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md`)](../../AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md)
-- [v3 execution tracker (`AGENTS_DOCS/markdown/3.0.0/tasks/SpecificationKit_v3.0.0_Progress.md`)](../../AGENTS_DOCS/markdown/3.0.0/tasks/SpecificationKit_v3.0.0_Progress.md)
-- [Latest in-progress summary (`AGENTS_DOCS/INPROGRESS/Summary_of_Work.md`)](../../AGENTS_DOCS/INPROGRESS/Summary_of_Work.md)
-- [Prior archive summaries (`AGENTS_DOCS/TASK_ARCHIVE/`)](../../AGENTS_DOCS/TASK_ARCHIVE)
-- [Permanent blocker log (`AGENTS_DOCS/TASK_ARCHIVE/BLOCKED/` — create if missing)](../../AGENTS_DOCS/TASK_ARCHIVE/BLOCKED)
+- [Program-wide TODO rollup (`AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md`)](../markdown/00_SpecificationKit_TODO.md)
+- [v3 execution tracker (`AGENTS_DOCS/markdown/3.0.0/tasks/SpecificationKit_v3.0.0_Progress.md`)](../markdown/3.0.0/tasks/SpecificationKit_v3.0.0_Progress.md)
+- [Latest in-progress summary (`AGENTS_DOCS/INPROGRESS/Summary_of_Work.md`)](../INPROGRESS/Summary_of_Work.md)
+- [Prior archive summaries (`AGENTS_DOCS/TASK_ARCHIVE/`)](../TASK_ARCHIVE)
+- [Permanent blocker log (`AGENTS_DOCS/TASK_ARCHIVE/BLOCKED/` — create if missing)](../TASK_ARCHIVE/BLOCKED)
 
 ---
 
@@ -56,7 +56,7 @@ AGENTS_DOCS/
 
 ### Step 1. Review Current In-Progress Files
 
-- Inspect [`AGENTS_DOCS/INPROGRESS`](../../AGENTS_DOCS/INPROGRESS) and list every Markdown document
+- Inspect [`AGENTS_DOCS/INPROGRESS`](../INPROGRESS) and list every Markdown document
 - Verify that `Summary_of_Work.md` contains complete implementation notes with:
   - What was implemented (features, APIs, tests)
   - Key decisions made during implementation
@@ -66,23 +66,23 @@ AGENTS_DOCS/
 
 ### Step 2. Collect Future Work Notes
 
-- Read [`AGENTS_DOCS/INPROGRESS/next_tasks.md`](../../AGENTS_DOCS/INPROGRESS/next_tasks.md) if it exists and extract actionable follow-ups
+- Read [`AGENTS_DOCS/INPROGRESS/next_tasks.md`](../INPROGRESS/next_tasks.md) if it exists and extract actionable follow-ups
 - Cross-check these notes against the backlog references above to confirm they remain relevant
 - Note any new tasks discovered during implementation that should be added to the backlog
 
 ### Step 3. Classify Blocked Items
 
-- Open [`AGENTS_DOCS/INPROGRESS/blocked.md`](../../AGENTS_DOCS/INPROGRESS/blocked.md) when present
+- Open [`AGENTS_DOCS/INPROGRESS/blocked.md`](../INPROGRESS/blocked.md) when present
 - For each entry decide:
   - **Recoverable blockers:** keep them in `blocked.md` and update wording if context changed
   - **Permanently blocked work:**
-    1. Create a Markdown file under [`AGENTS_DOCS/TASK_ARCHIVE/BLOCKED`](../../AGENTS_DOCS/TASK_ARCHIVE/BLOCKED) summarizing the blocker, prerequisites to resume, and links to historical context
+    1. Create a Markdown file under [`AGENTS_DOCS/TASK_ARCHIVE/BLOCKED`](../TASK_ARCHIVE/BLOCKED) summarizing the blocker, prerequisites to resume, and links to historical context
     2. Remove the entry from `blocked.md` so the day-to-day list only contains recoverable items
-- Update or create [`AGENTS_DOCS/TASK_ARCHIVE/BLOCKED/README.md`](../../AGENTS_DOCS/TASK_ARCHIVE/BLOCKED/README.md) if guidance needs refinement
+- Update or create [`AGENTS_DOCS/TASK_ARCHIVE/BLOCKED/README.md`](../TASK_ARCHIVE/BLOCKED/README.md) if guidance needs refinement
 
 ### Step 4. Determine the Next Archive Folder Name
 
-- Base path: [`AGENTS_DOCS/TASK_ARCHIVE`](../../AGENTS_DOCS/TASK_ARCHIVE)
+- Base path: [`AGENTS_DOCS/TASK_ARCHIVE`](../TASK_ARCHIVE)
 - Inspect existing directories: `ls AGENTS_DOCS/TASK_ARCHIVE` to find the highest numbered prefix
 - Folder naming pattern: `{N}_{Task_Name}` using the next integer after the highest existing prefix (e.g., if highest is `1_FirstTask`, use `2_SecondTask`)
 - Create the folder: `mkdir -p AGENTS_DOCS/TASK_ARCHIVE/{N}_{Task_Name}`
@@ -150,10 +150,10 @@ If you maintain a global archive index (e.g., `ARCHIVE_SUMMARY.md`), append an e
 
 ### Step 7. Rebuild `AGENTS_DOCS/INPROGRESS`
 
-- Recreate [`AGENTS_DOCS/INPROGRESS/next_tasks.md`](../../AGENTS_DOCS/INPROGRESS/next_tasks.md) using the actionable items gathered in Step 2
+- Recreate [`AGENTS_DOCS/INPROGRESS/next_tasks.md`](../INPROGRESS/next_tasks.md) using the actionable items gathered in Step 2
   - Omit this file entirely if there are no follow-up tasks
   - Prioritize tasks and link to relevant backlog items
-- Recreate [`AGENTS_DOCS/INPROGRESS/blocked.md`](../../AGENTS_DOCS/INPROGRESS/blocked.md) with the remaining recoverable blockers from Step 3
+- Recreate [`AGENTS_DOCS/INPROGRESS/blocked.md`](../INPROGRESS/blocked.md) with the remaining recoverable blockers from Step 3
   - Omit this file if no blockers remain
   - For each blocker, note what's needed to unblock it
 - Add any scaffolding files needed for upcoming work (e.g., fresh task shells, new research logs)

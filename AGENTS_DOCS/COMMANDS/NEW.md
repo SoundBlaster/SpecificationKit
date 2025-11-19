@@ -20,13 +20,13 @@ Transform an incoming feature description (from a sentence to a detailed plan) i
 
 ## 🔗 Reference Materials
 
-- [Program-wide TODO (`AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md`)](../../AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md)
-- [v3 execution tracker (`AGENTS_DOCS/markdown/3.0.0/tasks/SpecificationKit_v3.0.0_Progress.md`)](../../AGENTS_DOCS/markdown/3.0.0/tasks/SpecificationKit_v3.0.0_Progress.md)
-- [Executive summary with TDD mandate (`AGENTS_DOCS/markdown/3.0.0/tasks/00_executive_summary.md`)](../../AGENTS_DOCS/markdown/3.0.0/tasks/00_executive_summary.md)
-- [Agent coordination guide (`AGENTS_DOCS/markdown/3.0.0/tasks/summary_for_agents.md`)](../../AGENTS_DOCS/markdown/3.0.0/tasks/summary_for_agents.md)
-- [Prior archive summaries (`AGENTS_DOCS/TASK_ARCHIVE/`)](../../AGENTS_DOCS/TASK_ARCHIVE)
-- [SpecificationCore PRD (`AGENTS_DOCS/SpecificationCore_PRD/`)](../../AGENTS_DOCS/SpecificationCore_PRD)
-- [Architecture docs (`AGENTS_DOCS/markdown/`)](../../AGENTS_DOCS/markdown)
+- [Program-wide TODO (`AGENTS_DOCS/markdown/00_SpecificationKit_TODO.md`)](../markdown/00_SpecificationKit_TODO.md)
+- [v3 execution tracker (`AGENTS_DOCS/markdown/3.0.0/tasks/SpecificationKit_v3.0.0_Progress.md`)](../markdown/3.0.0/tasks/SpecificationKit_v3.0.0_Progress.md)
+- [Executive summary with TDD mandate (`AGENTS_DOCS/markdown/3.0.0/tasks/00_executive_summary.md`)](../markdown/3.0.0/tasks/00_executive_summary.md)
+- [Agent coordination guide (`AGENTS_DOCS/markdown/3.0.0/tasks/summary_for_agents.md`)](../markdown/3.0.0/tasks/summary_for_agents.md)
+- [Prior archive summaries (`AGENTS_DOCS/TASK_ARCHIVE/`)](../TASK_ARCHIVE)
+- [SpecificationCore PRD (`AGENTS_DOCS/SpecificationCore_PRD/`)](../SpecificationCore_PRD)
+- [Architecture docs (`AGENTS_DOCS/markdown/`)](../markdown)
 
 ---
 
