@@ -6,12 +6,12 @@ A powerful Swift library implementing the **Specification Pattern** with support
 [![iOS 13.0+](https://img.shields.io/badge/iOS-13.0+-blue.svg)](https://developer.apple.com/ios/)
 [![macOS 10.15+](https://img.shields.io/badge/macOS-10.15+-blue.svg)](https://developer.apple.com/macos/)
 [![Swift Package Manager](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://swift.org/package-manager/)
-[![Version 3.0.0](https://img.shields.io/badge/Version-3.0.0-green.svg)]()
+[![Version 4.0.0](https://img.shields.io/badge/Version-4.0.0-green.svg)]()
 
 ## 📑 Table of Contents
 
 - [Features](#-features)
-- [What's New in v3.0.0](#-whats-new-in-v300)
+- [What's New in v4.0.0](#-whats-new-in-v400)
 - [Installation](#-installation)
 - [Quick Start](#-quick-start)
   - [Basic Usage](#basic-usage)
@@ -56,102 +56,19 @@ A powerful Swift library implementing the **Specification Pattern** with support
 - 🔒 **Type-Safe** - Leverages Swift's type system for compile-time safety
 - ⚡ **Performance Optimized** - Lightweight with `@inlinable` methods and specialized storage
 
-## 📢 What's New in v3.0.0
+## 📢 What's New in v4.0.0
 
-### @ConditionalSatisfies - Runtime Specification Selection
+### SpecificationCore Foundation
 
-Choose specifications dynamically based on runtime conditions:
+- The core Specification pattern implementation now lives in **[SpecificationCore](https://github.com/SoundBlaster/SpecificationCore)**, a standalone Swift Package Manager module. Use it directly for lightweight rule engines or pair it with SpecificationKit for platform-aware features.
 
-```swift
-@ConditionalSatisfies(
-    condition: { context in context.flag(for: "use_strict_mode") },
-    whenTrue: StrictValidationSpec(),
-    whenFalse: BasicValidationSpec()
-)
-var validationPassed: Bool
+### Platform & Product Components Only
 
-// Platform-specific specs
-@ConditionalSatisfies.iOS(
-    iOS: MobileLayoutSpec(),
-    other: DesktopLayoutSpec()
-)
-var shouldUseMobileLayout: Bool
-```
+- SpecificationKit now focuses on **platform-specific** integrations (SwiftUI observation, platform context providers) and **product-level** specifications. Base building blocks reside in SpecificationCore to keep the kit lean and focused.
 
-### Advanced Specification Types
+### Simplified Dependency Graph
 
-**WeightedSpec** for probability-based selection (A/B testing):
-```swift
-let abTestSpec = WeightedSpec([
-    (FeatureFlagSpec(flag: "variant_a"), 0.5, "variant_a"),
-    (FeatureFlagSpec(flag: "variant_b"), 0.3, "variant_b"),
-    (FeatureFlagSpec(flag: "control"), 0.2, "control")
-])
-```
-
-**HistoricalSpec** for time-series analysis:
-```swift
-let performanceSpec = HistoricalSpec(
-    provider: MetricsHistoryProvider(),
-    window: .lastN(30),
-    aggregation: .median
-)
-```
-
-**ThresholdSpec** for dynamic threshold evaluation:
-```swift
-let alertSpec = ThresholdSpec(
-    keyPath: \.responseTime,
-    threshold: .adaptive { getCurrentBaseline() },
-    operator: .greaterThan
-)
-```
-
-### Performance Optimizations
-
-- **@inlinable Methods**: Cross-module compiler optimizations
-- **Specialized Storage**: Different strategies for predicates, constants, and specifications
-- **Collection Extensions**: Early-return optimizations for `allSatisfied()` and `anySatisfied()`
-- **<0.1ms Evaluation**: Baseline performance for typical specifications
-
-### Enhanced Reactive Wrappers
-
-**@ObservedDecides** for reactive decision specifications:
-```swift
-@ObservedDecides([
-    (PremiumUserSpec(), "premium_layout"),
-    (TabletDeviceSpec(), "tablet_layout"),
-    (CompactSizeSpec(), "mobile_layout")
-], or: "default_layout")
-var layoutType: String
-```
-
-**@ObservedMaybe** for reactive optional decisions:
-```swift
-@ObservedMaybe(provider: DefaultContextProvider.shared,
-               firstMatch: [
-                   (FeatureFlagSpec(flagKey: "feature_x"), "Enabled")
-               ])
-private var featureMessage: String?
-```
-
-### Performance Testing & Profiling
-
-- **SpecificationProfiler**: Runtime performance analysis with microsecond precision
-- **13 Performance Test Cases**: Comprehensive validation of optimization effectiveness
-- **Benchmark Baselines**: Automated performance regression detection
-
-### Platform-Specific Providers
-
-Context providers for iOS, macOS, watchOS, and tvOS with platform-specific capabilities:
-
-```swift
-// Cross-platform device capability checking
-let darkModeSpec = PlatformContextProviders.createDeviceCapabilitySpec(.darkMode)
-
-@Satisfies(using: darkModeSpec)
-var supportsDarkMode: Bool // Works on all platforms with graceful fallbacks
-```
+- By delegating primitives to SpecificationCore, SpecificationKit reduces duplication, speeds up builds, and makes it easier to share a consistent specification foundation across multiple apps and services.
 
 ## 📦 Installation
 
@@ -161,13 +78,13 @@ Add SpecificationKit to your project in Xcode:
 
 1. Go to **File** → **Add Package Dependencies**
 2. Enter the repository URL: `https://github.com/SoundBlaster/SpecificationKit`
-3. Select version `3.0.0` or later
+3. Select version `4.0.0` or later
 
 Or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/SoundBlaster/SpecificationKit", from: "3.0.0")
+    .package(url: "https://github.com/SoundBlaster/SpecificationKit", from: "4.0.0")
 ]
 ```
 
@@ -758,7 +675,7 @@ print(report)
 
 ## 🔍 Debugging and Tracing
 
-SpecificationKit v3.0.0 includes `SpecificationTracer` for detailed execution analysis:
+SpecificationKit v4.0.0 includes `SpecificationTracer` for detailed execution analysis:
 
 ```swift
 let tracer = SpecificationTracer.shared
