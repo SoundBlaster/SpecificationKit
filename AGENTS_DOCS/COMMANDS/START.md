@@ -79,7 +79,7 @@ Create `Summary_of_Work.md` capturing:
 - [ ] Progress trackers updated
 - [ ] `Summary_of_Work.md` created
 
-Once complete, the task is ready for archival using `AGENTS_DOCS/COMMANDS/ARCHIVE.md`.
+Once complete, the task is ready for archival using [`ARCHIVE.md`](ARCHIVE.md).
 
 ### Step 7. Finalize
 - Run `swift build` and `swift test` from the repository root to verify the package.
