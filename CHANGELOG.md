@@ -7,11 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [4.0.1] - 2026-09-19
-
-### Fixed
-- Require SpecificationCore 1.0.1, which fixes Swift 6.3+ compilation ambiguity in `FirstMatchSpec.Builder.build()`.
-
 ### Added - Experimental Features (P2)
 - **ConditionalSpecification**: Wrapper for conditionally enabling specifications based on runtime conditions
   - `ConditionalSpecification<T>` struct for wrapping specifications with condition closures
@@ -29,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `@specsIf` macro currently emits informational diagnostics recommending the `ConditionalSpecification` wrapper or `.when()/.unless()` convenience methods for most use cases
 - The macro implementation provides a foundation for future macro evolution in conditional specification composition
 - All implementations include comprehensive documentation and usage examples
+
+## [4.0.1] - 2026-09-19
+
+### Fixed
+- Require SpecificationCore 1.0.1, which fixes Swift 6.3+ compilation ambiguity in `FirstMatchSpec.Builder.build()`.
 
 ## [3.0.0] - 2025-11-16
 
