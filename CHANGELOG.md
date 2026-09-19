@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.1] - 2026-09-19
+
+### Fixed
+- Require SpecificationCore 1.0.1, which fixes Swift 6.3+ compilation ambiguity in `FirstMatchSpec.Builder.build()`.
+
 ### Added - Experimental Features (P2)
 - **ConditionalSpecification**: Wrapper for conditionally enabling specifications based on runtime conditions
   - `ConditionalSpecification<T>` struct for wrapping specifications with condition closures
