@@ -40,6 +40,36 @@ import XCTest
             }
         }
 
+        #if canImport(Combine)
+            final class UpdatingContextProvider: ContextProviding, ContextUpdatesProviding {
+                typealias Context = EvaluationContext
+
+                private var context: EvaluationContext
+                private let updatesSubject = PassthroughSubject<Void, Never>()
+
+                init(context: EvaluationContext) {
+                    self.context = context
+                }
+
+                func currentContext() -> EvaluationContext {
+                    context
+                }
+
+                var contextUpdates: AnyPublisher<Void, Never> {
+                    updatesSubject.eraseToAnyPublisher()
+                }
+
+                var contextStream: AsyncStream<Void> {
+                    AsyncStream { _ in }
+                }
+
+                func updateContext(_ context: EvaluationContext) {
+                    self.context = context
+                    updatesSubject.send()
+                }
+            }
+        #endif
+
         // MARK: - Basic Initialization Tests
 
         func testObservedSatisfies_InitWithDefaultProvider() {
@@ -112,6 +142,7 @@ import XCTest
 
             // When
             var observedSatisfiesTrue = ObservedSatisfies(provider: testProvider, using: spec)
+            XCTAssertTrue(observedSatisfiesTrue.wrappedValue)
             observedSatisfiesTrue.update()
 
             // Update provider context
@@ -134,6 +165,7 @@ import XCTest
             // When
             var observedSatisfiesTrue = ObservedSatisfies(
                 provider: testProvider, predicate: predicate)
+            XCTAssertTrue(observedSatisfiesTrue.wrappedValue)
             observedSatisfiesTrue.update()
 
             // Update provider context
@@ -146,6 +178,34 @@ import XCTest
             XCTAssertNotNil(observedSatisfiesTrue)
             XCTAssertNotNil(observedSatisfiesFalse)
         }
+
+        #if canImport(Combine)
+            func testObservedSatisfies_ReevaluatesWhenContextChangesBeforeFirstUpdate() {
+                // Given
+                let provider = UpdatingContextProvider(
+                    context: EvaluationContext(flags: ["feature_enabled": true])
+                )
+                var observedSatisfies = ObservedSatisfies(
+                    provider: provider,
+                    predicate: { $0.flag(for: "feature_enabled") }
+                )
+                XCTAssertTrue(observedSatisfies.wrappedValue)
+
+                // The provider emits before DynamicProperty.update() wires the observer.
+                provider.updateContext(EvaluationContext(flags: ["feature_enabled": false]))
+
+                // When
+                observedSatisfies.update()
+
+                // Then - The deferred first evaluation observes the latest context.
+                let expectation = expectation(description: "deferred evaluation")
+                DispatchQueue.main.async {
+                    XCTAssertFalse(observedSatisfies.wrappedValue)
+                    expectation.fulfill()
+                }
+                wait(for: [expectation], timeout: 1.0)
+            }
+        #endif
 
         // MARK: - Edge Cases
 
