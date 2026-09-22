@@ -193,6 +193,16 @@
                                 if v != self.value { self.value = v }
                             }
                         }
+
+                    // The provider may have changed between initialization and the
+                    // first DynamicProperty.update(). Re-evaluate after wiring so an
+                    // event emitted in that gap is not lost, without publishing from
+                    // inside SwiftUI's update pass.
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self else { return }
+                        let v = evaluate()
+                        if v != self.value { self.value = v }
+                    }
                 }
             }
 
