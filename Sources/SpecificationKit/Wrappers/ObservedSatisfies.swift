@@ -173,18 +173,25 @@
             final class Observer: ObservableObject {
                 @Published var value: Bool = false
                 var cancellable: AnyCancellable?
+
+                init(value: Bool) {
+                    self.value = value
+                }
+
                 func wire(updates: AnyPublisher<Void, Never>?, evaluate: @escaping () -> Bool) {
-                    // compute immediately
-                    let v = evaluate()
-                    if v != value { value = v }
                     guard cancellable == nil, let updates else { return }
                     cancellable =
                         updates
                         .receive(on: DispatchQueue.main)
                         .sink { [weak self] in
-                            guard let self else { return }
-                            let v2 = evaluate()
-                            if v2 != self.value { self.value = v2 }
+                            // Defer publication until the current SwiftUI update has
+                            // completed. Providers can emit while a view is being
+                            // reconciled, and publishing from that callback is undefined.
+                            DispatchQueue.main.async {
+                                guard let self else { return }
+                                let v = evaluate()
+                                if v != self.value { self.value = v }
+                            }
                         }
                 }
             }
@@ -216,15 +223,19 @@
             provider: Provider,
             using specification: Spec
         ) where Provider.Context == Context, Spec.T == Context {
-            self.contextFactory = provider.currentContext
-            self.specification = AnySpecification(specification)
+            let contextFactory = provider.currentContext
+            let specification = AnySpecification(specification)
+            self.contextFactory = contextFactory
+            self.specification = specification
             #if canImport(Combine)
                 if let p = provider as? ContextUpdatesProviding {
                     self.updates = p.contextUpdates
                 } else {
                     self.updates = nil
                 }
-                self._observer = ObservedObject(wrappedValue: Observer())
+                self._observer = ObservedObject(
+                    wrappedValue: Observer(value: specification.isSatisfiedBy(contextFactory()))
+                )
             #endif
         }
 
@@ -232,15 +243,19 @@
             provider: Provider,
             predicate: @escaping (Context) -> Bool
         ) where Provider.Context == Context {
-            self.contextFactory = provider.currentContext
-            self.specification = AnySpecification { ctx in predicate(ctx) }
+            let contextFactory = provider.currentContext
+            let specification = AnySpecification { ctx in predicate(ctx) }
+            self.contextFactory = contextFactory
+            self.specification = specification
             #if canImport(Combine)
                 if let p = provider as? ContextUpdatesProviding {
                     self.updates = p.contextUpdates
                 } else {
                     self.updates = nil
                 }
-                self._observer = ObservedObject(wrappedValue: Observer())
+                self._observer = ObservedObject(
+                    wrappedValue: Observer(value: specification.isSatisfiedBy(contextFactory()))
+                )
             #endif
         }
 

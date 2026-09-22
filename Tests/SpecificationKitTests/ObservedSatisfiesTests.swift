@@ -112,6 +112,7 @@ import XCTest
 
             // When
             var observedSatisfiesTrue = ObservedSatisfies(provider: testProvider, using: spec)
+            XCTAssertTrue(observedSatisfiesTrue.wrappedValue)
             observedSatisfiesTrue.update()
 
             // Update provider context
@@ -134,6 +135,7 @@ import XCTest
             // When
             var observedSatisfiesTrue = ObservedSatisfies(
                 provider: testProvider, predicate: predicate)
+            XCTAssertTrue(observedSatisfiesTrue.wrappedValue)
             observedSatisfiesTrue.update()
 
             // Update provider context
