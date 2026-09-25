@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The macro implementation provides a foundation for future macro evolution in conditional specification composition
 - All implementations include comprehensive documentation and usage examples
 
+## [4.0.1] - 2026-09-19
+
+### Fixed
+- Require SpecificationCore 1.0.1, which fixes Swift 6.3+ compilation ambiguity in `FirstMatchSpec.Builder.build()`.
+
 ## [3.0.0] - 2025-11-16
 
 ### Added - Major Release Features
